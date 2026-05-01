@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+# which one is recommended for production use?
+## named vs bind mounts for production use?
+# named volumes are generally recommended for production use as they provide better performance and data integrity compared to bind mounts. 
+# Named volumes are managed by Docker and are stored in a specific location on the host machine, which can help prevent issues with file permissions and 
+# ensure that data is properly persisted even if the container is removed or recreated. Additionally, named volumes can be easily backed up and restored, making them a more 
+# reliable choice for production environments. 
+
+# bind mounts can be useful for development purposes, as they allow you to easily access and modify files on the host machine. 
+# However, they can introduce potential security risks and performance issues in production environments, especially if the host machine is shared with other 
+# applications or users. Therefore, it is generally recommended to use named volumes for production use and reserve bind mounts for development and testing purposes.
+
+## check if posytgresql is running
+# you can check if PostgreSQL is running by using the following command in your terminal:
+# docker exec -it postgres-db psql -U admin -d mydatabase
+# psql -h localhost -p 5432 -U admin -d mydatabase

@@ -1,0 +1,52 @@
+This compose file defines a 6-service RAG (Retrieval-Augmented Generation) stack. Here's how it fits together:
+
+Services
+Startup Order (via depends_on)
+
+postgres ──┐
+           ├──► api
+opensearch ┤
+           └──► airflow
+api and airflow both wait for postgres and opensearch to pass their healthchecks before starting.
+
+api — Your FastAPI/Python app
+Built from the local Dockerfile
+Exposed on port 8000
+Reads config from .env, but overrides the database/search/LLM hostnames to use Docker's internal service names (postgres, opensearch, ollama) instead of localhost
+postgres — Relational DB
+Postgres 16, stores structured data
+Named volume postgres_data persists data across restarts
+Healthcheck uses pg_isready — checked every 5s (fastest polling in the file)
+opensearch — Vector/full-text search
+The search backend for RAG retrieval
+Security plugin disabled (dev setup)
+JVM heap capped at 512MB via OPENSEARCH_JAVA_OPTS
+memlock: -1 prevents the OS from swapping its memory out (required for Elasticsearch/OpenSearch)
+opensearch-dashboards — Search UI
+Web UI for browsing OpenSearch indices at port 5601
+Depends on opensearch but no health condition (soft dependency)
+ollama — Local LLM inference
+Runs LLM models locally (like Llama, Mistral, etc.)
+Volume ollama_data caches downloaded models so they survive restarts
+airflow — Pipeline orchestration
+Built from ./airflow/Dockerfile
+Mounts ./airflow/dags and ./src as live volumes — changes to your DAGs and source code reflect immediately without rebuilding
+Runs the Airflow webserver/scheduler on port 8080
+Shared Network
+All services are on rag-network (a Docker bridge network). This is why services can reach each other by name — api can connect to http://opensearch:9200 because they're on the same network.
+
+Named Volumes
+postgres_data, opensearch_data, ollama_data, airflow_logs — these persist data on the host even when containers are stopped or removed.
+
+Key Design Choices
+.env + environment overrides: .env holds your local config (API keys, etc.), but compose explicitly overrides the service hostnames so inter-container calls route correctly inside Docker.
+Health conditions on critical deps: api and airflow use condition: service_healthy on postgres/opensearch, so they won't start until those backends are actually ready — not just running.
+so it means it does not run in the order mentioned, lets say api service and airflow will only be build once postgresql and open search are healthy
+Exactly right. The order in the file doesn't matter — Docker Compose uses the depends_on conditions to determine actual startup order.
+
+Specifically for this file:
+
+postgres and opensearch start first (they have no dependencies)
+api and airflow are held back until both pass their healthchecks
+opensearch-dashboards and ollama start independently — dashboards has a soft depends_on: opensearch (no condition), so it just waits for the container to exist, not to be healthy
+The condition: service_healthy is the key part — it means Compose actively polls the healthcheck defined on that service and only proceeds once it returns healthy. Without that condition, depends_on just waits for the container to start, not for the app inside to be ready.

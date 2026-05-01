@@ -1,0 +1,71 @@
+## FAST API async (production server):
+
+
+Gunicorn + Uvicorn workers (recommended for production)
+The optimal setup is both together:
+
+
+Gunicorn (process manager) → Uvicorn workers (async)
+
+gunicorn src.main:app \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --workers 4 \
+  --bind 0.0.0.0:8000
+Why not Uvicorn alone?
+Feature	Uvicorn alone	Gunicorn + Uvicorn
+Async handling	Yes	Yes
+Process management	Basic	Production-grade
+Worker crash recovery	No	Yes — auto restarts
+Graceful reload	No	Yes
+Worker memory limits	No	Yes
+Battle-tested process manager	No	Yes
+Uvicorn alone is fine for development but has no supervisor — if a worker crashes, it stays dead.
+
+Update your Dockerfile
+
+CMD ["gunicorn", "src.main:app", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--workers", "4", \
+     "--bind", "0.0.0.0:8000", \
+     "--timeout", "120", \
+     "--keep-alive", "5"]
+Add gunicorn to pyproject.toml:
+
+
+uv add gunicorn
+Summary
+Uvicorn alone — development only
+Gunicorn + UvicornWorker — production standard for FastAPI
+FastAPI's own documentation recommends this combination for production deployments.
+
+_____________________________________________________________________________________________________________________________________
+## Development mode
+
+can you use gunicorn and uvicorn for dev server from the very starting
+No — Gunicorn doesn't support --reload (hot reload) well, which makes it painful for development.
+
+Recommended setup
+Environment	Command
+Development	uvicorn src.main:app --reload
+Production	gunicorn src.main:app --worker-class uvicorn.workers.UvicornWorker --workers 4
+Why not Gunicorn for dev?
+--reload (auto-restart on file change) only works with Uvicorn directly
+Gunicorn spawns multiple processes — harder to read logs and debug
+Slower startup for every code change
+Standard pattern — two Dockerfiles
+Dockerfile (production — what you already have):
+
+
+CMD ["gunicorn", "src.main:app", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--workers", "4", \
+     "--bind", "0.0.0.0:8000"]
+Dockerfile.dev (development):
+
+
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+Or just run Uvicorn directly on the host without Docker for dev:
+
+
+uv run uvicorn src.main:app --reload
+This is the same pattern FastAPI's own documentation recommends.

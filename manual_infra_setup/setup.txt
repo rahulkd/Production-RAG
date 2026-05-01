@@ -1,0 +1,10 @@
+As I am planning to build a production RAG system on cloud, I will be using AWS bedrock for open source llm models for LLM inference.
+Now this is my project structure, I want to setup the infra for the rag project:
+Infra:
+1. Docker based service orchestration
+2. Fast api with health checks and docs
+3. postgresql for structural storage
+4. open search setup
+5. Airflow integration
+6. Open source llm model in amazon bedrock
+

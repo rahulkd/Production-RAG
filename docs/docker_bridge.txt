@@ -1,0 +1,64 @@
+compose.yml explained
+Your stack has 6 services that form the RAG pipeline:
+
+
+Browser/Client
+      │
+      ▼
+  [api :8000]  ──────────────────────────────────────┐
+      │                                               │
+      ├──▶ [opensearch :9200]  ◀── [opensearch-      │
+      │         ▲                   dashboards :5601] │
+      ├──▶ [postgres :5432]                           │
+      ├──▶ [ollama :11434]                            │
+      └──▶ [airflow :8080] ────────────────────────── ┘
+Service	Image	Port	Purpose
+api	local build	8000	FastAPI RAG backend
+opensearch	opensearch 2.19	9200	Vector + full-text search
+opensearch-dashboards	opensearch-dashboards 2.19	5601	Kibana-like UI for OpenSearch
+airflow	local build	8080	Pipeline orchestration / DAGs
+ollama	ollama 0.11.2	11434	Local LLM inference
+postgres	postgres 16	5432	Metadata / relational storage
+Key patterns:
+
+depends_on with condition: service_healthy — api and airflow won't start until postgres and opensearch pass their health checks
+restart: unless-stopped on postgres and opensearch — they survive reboots automatically
+Inside containers, services talk by hostname (opensearch:9200). Outside (from your browser), you use localhost:9200
+What is a bridge network?
+
+networks:
+  rag-network:
+    driver: bridge
+A bridge network is Docker's virtual LAN. Think of it as a private switch all 6 containers are plugged into:
+
+
+┌─────────────── rag-network (bridge) ──────────────────┐
+│  api  │  opensearch  │  postgres  │  ollama  │  airflow │
+└───────────────────────────────────────────────────────┘
+         ▲ isolated from host except for the `ports:` mappings
+Containers on the same bridge can reach each other by service name (e.g. http://opensearch:9200)
+The host machine can only reach them through the ports you explicitly expose (9200:9200 etc.)
+Without a shared network, containers would be completely isolated from each other
+Makefile — already exists and covers everything
+Run all commands from inside production-agentic-rag-course-week1.0/:
+
+
+make start       # build images and start all services (detached)
+make stop        # stop and remove containers
+make restart     # restart without rebuilding
+make status      # show which containers are running
+make logs        # tail all logs (Ctrl+C to exit)
+make health      # ping all services and show status
+make clean       # stop + delete volumes (wipes all data)
+On the EC2 instance, navigate to the project folder first:
+
+
+cd ~/path/to/production-agentic-rag-course-week1.0
+make start
+Then in your local browser (via the SSH tunnels already set up):
+
+URL	What you see
+http://localhost:9200	OpenSearch cluster health
+http://localhost:5601	OpenSearch Dashboards
+http://localhost:5432	PostgreSQL (DB client)
+http://localhost:8080	Airflow UI

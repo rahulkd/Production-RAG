@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Str0ng#Pass$$2024
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    restart: unless-stopped
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    container_name: opensearch-dashboards
+    ports:
+      - "5601:5601"
+    environment:
+      - OPENSEARCH_HOSTS=["https://opensearch:9200"]
+    depends_on:
+      - opensearch
+    restart: unless-stopped
+
+volumes:
+  opensearch_data:
+
+
+## test open search
+## curl -k -u 'admin:Str0ng#Pass$2024' https://localhost:9200/_cluster/health?pretty
+## username: admin
+## password: Str0ng#Pass$2024
+
+

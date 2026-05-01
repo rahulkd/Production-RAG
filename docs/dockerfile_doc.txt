@@ -1,0 +1,42 @@
+Dockerfile Explanation
+This uses a multi-stage build — two stages to keep the final image small and secure.
+
+Stage 1: base — Build stage
+
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS base
+Uses the official uv image as the builder. bookworm is the Debian version.
+
+
+COPY pyproject.toml uv.lock ./
+Copies only dependency files first — not the source code. This is a Docker layer caching trick: if your dependencies don't change, Docker reuses this cached layer and skips reinstalling packages on every build.
+
+
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+UV_COMPILE_BYTECODE=1 — pre-compiles .py files to .pyc bytecode → faster startup
+UV_LINK_MODE=copy — silences warnings when uv can't use hard links across filesystems (common inside Docker)
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+--mount=type=cache — mounts a persistent build cache so packages aren't re-downloaded on every build
+--frozen — uses exact versions from uv.lock, no version resolution
+--no-dev — skips dev dependencies (tests, linters) in production
+Stage 2: final — Runtime stage
+
+FROM python:3.12.8-slim AS final
+Starts fresh from a minimal Python image — no uv, no build tools, no cache. This is why it's slim.
+
+
+COPY --from=base /app /app
+Copies only the installed virtualenv from the build stage — not the uv binary or any build artifacts.
+
+
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+Runs a FastAPI app with 4 Uvicorn worker processes.
+
+Why uv instead of pip?
+pip	uv
+Speed	Slow	10-100x faster (written in Rust)
+Lock file	Needs pip-tools separately	Built-in uv.lock
+Dependency resolution	Slow	Near-instant
+Virtual env management	Separate venv command	Built-in
+uv is a modern Python package manager by Astral (same team as ruff). It replaces pip + pip-tools + virtualenv in one tool, and is significantly faster — especially noticeable in Docker builds where reinstalling packages from scratch is common.

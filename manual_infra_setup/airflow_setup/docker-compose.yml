@@ -1,0 +1,70 @@
+version: '3.8'
+
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.9.0
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://admin:1234@postgres-db/airflow
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
+  networks:
+    - postgresql_setup_default
+
+services:
+  airflow-init:
+    <<: *airflow-common
+    container_name: airflow-init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db init &&
+        airflow users create \
+          --username admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email rahulkd.das@gmail.com \
+          --password admin
+    restart: on-failure
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: airflow-webserver
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow-scheduler
+    command: scheduler
+    restart: unless-stopped
+
+networks:
+  postgresql_setup_default:
+    external: true
+
+
+#Then open browser: http://localhost:8080
+
+## Credentials for Airflow UI:
+#Username: admin
+#Password: admin
+
+## docker compose up airflow-init -> This runs only one time, the container will exit after initializing the database and creating the admin user. After that, you can start the webserver and scheduler using docker compose up airflow-webserver airflow-scheduler.
+## docker compose up -d airflow-webserver airflow-scheduler (run main services in detached mode)
+## connects with external network postgresql_setup_default, make sure to have the PostgreSQL database running and accessible with the provided connection string in the environment variables.
+## airflow database should be created in postgres and the admin user should be created before starting the webserver and scheduler.
