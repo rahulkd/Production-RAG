@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ArxivClient — Modular Workflow Documentation</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 960px;
+    margin: 40px auto;
+    padding: 0 24px;
+    color: #1f2328;
+    line-height: 1.6;
+    background: #ffffff;
+  }
+  h1 {
+    border-bottom: 2px solid #d0d7de;
+    padding-bottom: 12px;
+    color: #0969da;
+  }
+  h2 {
+    border-bottom: 1px solid #d0d7de;
+    padding-bottom: 6px;
+    margin-top: 40px;
+    color: #1f2328;
+  }
+  h3 {
+    margin-top: 28px;
+    color: #24292f;
+  }
+  h4 {
+    margin-top: 20px;
+    color: #57606a;
+  }
+  code {
+    background: #f6f8fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    font-size: 0.9em;
+    color: #cf222e;
+  }
+  pre {
+    background: #f6f8fa;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #d0d7de;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: #1f2328;
+    font-size: 0.85em;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+  }
+  th, td {
+    border: 1px solid #d0d7de;
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #f6f8fa;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background: #f9fafb;
+  }
+  .layer-box {
+    background: #f6f8fa;
+    border-left: 4px solid #0969da;
+    padding: 12px 18px;
+    margin: 18px 0;
+    border-radius: 4px;
+  }
+  .toc {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    padding: 16px 24px;
+    border-radius: 6px;
+    margin: 24px 0;
+  }
+  .toc ul {
+    margin: 8px 0;
+  }
+  .toc a {
+    color: #0969da;
+    text-decoration: none;
+  }
+  .toc a:hover {
+    text-decoration: underline;
+  }
+  .note {
+    background: #fff8c5;
+    border-left: 4px solid #d4a72c;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .pattern-tag {
+    display: inline-block;
+    background: #ddf4ff;
+    color: #0969da;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+</style>
+</head>
+<body>
+
+<h1>ArxivClient — Modular Workflow Documentation</h1>
+
+<p>The <code>ArxivClient</code> class is an async client for the arXiv public API. It handles three responsibilities:</p>
+<ol>
+  <li>Querying arXiv for paper metadata (by category, custom query, or ID).</li>
+  <li>Parsing arXiv's Atom XML response into typed <code>ArxivPaper</code> objects.</li>
+  <li>Downloading the PDFs of those papers to a local cache.</li>
+</ol>
+
+<div class="toc">
+  <strong>Table of Contents</strong>
+  <ul>
+    <li><a href="#overview">Architectural Overview</a></li>
+    <li><a href="#layer1">Layer 1 — Configuration Surface (Properties)</a></li>
+    <li><a href="#layer2">Layer 2 — Public Fetch API (3 entry points)</a></li>
+    <li><a href="#layer3">Layer 3 — Rate Limiting + Network</a></li>
+    <li><a href="#layer4">Layer 4 — XML Parsing</a></li>
+    <li><a href="#layer5">Layer 5 — PDF Download</a></li>
+    <li><a href="#sequence">End-to-End Sequence</a></li>
+    <li><a href="#patterns">Key Design Patterns</a></li>
+  </ul>
+</div>
+
+<h2 id="overview">Architectural Overview</h2>
+
+<p>The class has <strong>5 distinct layers</strong>. Each layer has one responsibility, and data flows strictly top-down.</p>
+
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│ Layer 1: CONFIGURATION (properties)                         │
+│   pdf_cache_dir, base_url, namespaces, rate_limit_delay,    │
+│   timeout_seconds, max_results, search_category             │
+└─────────────────────────────────────────────────────────────┘
+                            │ provides config to
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Layer 2: PUBLIC FETCH API (3 methods)                       │
+│   fetch_papers           — by category + date range         │
+│   fetch_papers_with_query — raw query string                │
+│   fetch_paper_by_id      — single paper lookup              │
+└─────────────────────────────────────────────────────────────┘
+                            │ each calls
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Layer 3: NETWORK + RATE LIMITING (inline pattern)           │
+│   - Check _last_request_time, sleep if too soon             │
+│   - httpx.AsyncClient.get(url) with timeout                 │
+│   - response.raise_for_status() → typed exceptions          │
+└─────────────────────────────────────────────────────────────┘
+                            │ raw XML body
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Layer 4: XML PARSING                                        │
+│   _parse_response       — finds all &lt;atom:entry&gt;            │
+│   _parse_single_entry   — orchestrates per-entry extraction │
+│     ├─ _get_arxiv_id    — id from URL                       │
+│     ├─ _get_text        — generic text extractor            │
+│     ├─ _get_authors     — list of author names              │
+│     ├─ _get_categories  — category tags                     │
+│     └─ _get_pdf_url     — PDF link (forces HTTPS)           │
+└─────────────────────────────────────────────────────────────┘
+                            │ List[ArxivPaper]
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Layer 5: PDF DOWNLOAD                                       │
+│   download_pdf          — cache-first public entry          │
+│   _get_pdf_path         — filesystem-safe path naming       │
+│   _download_with_retry  — streaming + linear backoff        │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+
+<h2 id="layer1">Layer 1 — Configuration Surface (Properties)</h2>
+
+<p><strong>Purpose:</strong> isolate all settings access behind a single layer so the rest of the class never touches <code>self._settings</code> directly.</p>
+
+<table>
+  <thead>
+    <tr><th>Property</th><th>Returns</th><th>Why it matters</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>pdf_cache_dir</code></td><td><code>Path</code> (lazy-created)</td><td>Uses <code>@cached_property</code> — directory created <strong>only on first PDF download</strong>, not at init time</td></tr>
+    <tr><td><code>base_url</code></td><td>arXiv API URL</td><td>Endpoint for all queries</td></tr>
+    <tr><td><code>namespaces</code></td><td>dict of XML namespace prefixes</td><td>Required by <code>ElementTree.find("atom:entry", ...)</code> to resolve <code>atom:</code> prefixes</td></tr>
+    <tr><td><code>rate_limit_delay</code></td><td>float (seconds)</td><td>arXiv recommends 3s between calls</td></tr>
+    <tr><td><code>timeout_seconds</code></td><td>int</td><td>HTTP timeout for metadata calls</td></tr>
+    <tr><td><code>max_results</code></td><td>int</td><td>Default page size</td></tr>
+    <tr><td><code>search_category</code></td><td>string</td><td>Default category (e.g. <code>cs.AI</code>)</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  The only mutable state on the instance is <code>_last_request_time</code> — used by the rate limiter.
+</div>
+
+<h2 id="layer2">Layer 2 — Public Fetch API (3 entry points)</h2>
+
+<p>All three return <code>List[ArxivPaper]</code> (or single paper) and share the same pipeline: build URL → rate-limit → HTTP GET → parse XML.</p>
+
+<h3><code>fetch_papers(...)</code> — Category-based fetch</h3>
+<ul>
+  <li>Builds a search query: <code>cat:cs.AI</code></li>
+  <li>If <code>from_date</code>/<code>to_date</code> provided, appends <code>AND submittedDate:[YYYYMMDD0000+TO+YYYYMMDD2359]</code>
+    <ul>
+      <li><code>0000</code> = start of day, <code>2359</code> = end of day</li>
+      <li>Wildcards <code>*</code> used when only one bound is provided</li>
+    </ul>
+  </li>
+  <li>Caps <code>max_results</code> at 2000 (arXiv's per-request hard limit)</li>
+  <li><strong>Use case:</strong> "Give me the latest 100 cs.AI papers from yesterday"</li>
+</ul>
+
+<h3><code>fetch_papers_with_query(...)</code> — Custom query string</h3>
+<ul>
+  <li>Accepts any raw arXiv query (<code>au:LeCun</code>, <code>ti:transformer</code>, boolean combinations)</li>
+  <li>Uses a slightly more permissive <code>safe = ":+[]*"</code> to keep <code>*</code> wildcards intact</li>
+  <li><strong>Use case:</strong> "Find all papers by LeCun on transformers"</li>
+</ul>
+
+<h3><code>fetch_paper_by_id(arxiv_id)</code> — Single paper lookup</h3>
+<ul>
+  <li>Strips version suffix: <code>2507.17748v1</code> → <code>2507.17748</code></li>
+  <li>Uses <code>id_list=</code> parameter instead of <code>search_query=</code></li>
+  <li>Returns <code>Optional[ArxivPaper]</code> — <code>None</code> when not found (logged as warning, not raised)</li>
+</ul>
+
+<h2 id="layer3">Layer 3 — Rate Limiting + Network</h2>
+
+<p>This isn't a separate method, it's a <strong>shared pattern</strong> copy-pasted into each fetch method:</p>
+
+<pre><code>if self._last_request_time is not None:
+    time_since_last = time.time() - self._last_request_time
+    if time_since_last &lt; self.rate_limit_delay:
+        await asyncio.sleep(self.rate_limit_delay - time_since_last)
+self._last_request_time = time.time()</code></pre>
+
+<p><strong>Logic:</strong> "If less than <code>rate_limit_delay</code> seconds have passed since the last request, sleep for the remaining time."</p>
+
+<h3>HTTP Transport</h3>
+
+<p>Uses <code>httpx.AsyncClient</code> as a context manager (auto-closes connection):</p>
+
+<pre><code>async with httpx.AsyncClient(timeout=...) as client:
+    response = await client.get(url)
+    response.raise_for_status()
+    xml_data = response.text</code></pre>
+
+<h3>Exception Normalization</h3>
+
+<p>Converts httpx errors into project-specific typed exceptions:</p>
+
+<table>
+  <thead>
+    <tr><th>httpx error</th><th>Raised as</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>TimeoutException</code></td><td><code>ArxivAPITimeoutError</code></td></tr>
+    <tr><td><code>HTTPStatusError</code> (4xx/5xx)</td><td><code>ArxivAPIException</code></td></tr>
+    <tr><td>Anything else</td><td><code>ArxivAPIException</code></td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  This is important — callers can catch <code>ArxivAPIException</code> without depending on <code>httpx</code>.
+</div>
+
+<h2 id="layer4">Layer 4 — XML Parsing</h2>
+
+<p>arXiv returns Atom XML feeds. Parsing happens in two stages.</p>
+
+<h3>Stage 1: <code>_parse_response(xml_data)</code> — feed-level</h3>
+<ul>
+  <li>Parses XML root via <code>ET.fromstring</code></li>
+  <li>Finds all <code>&lt;atom:entry&gt;</code> elements</li>
+  <li>Delegates each to <code>_parse_single_entry</code></li>
+  <li>Catches <code>ET.ParseError</code> → raises <code>ArxivParseError</code></li>
+</ul>
+
+<h3>Stage 2: <code>_parse_single_entry(entry)</code> — per-paper</h3>
+
+<div class="note">
+  <strong>Resilience pattern:</strong> returns <code>None</code> on failure rather than raising — so one bad entry doesn't kill an entire batch of 100 papers.
+</div>
+
+<p>It calls 5 field extractors:</p>
+
+<table>
+  <thead>
+    <tr><th>Extractor</th><th>What it does</th><th>Edge case handling</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>_get_arxiv_id</code></td><td>Parses <code>&lt;atom:id&gt;</code> URL, returns last path segment</td><td>Returns <code>None</code> if missing → entry skipped</td></tr>
+    <tr><td><code>_get_text</code></td><td>Generic text extractor for any path</td><td><code>clean_newlines=True</code> collapses line breaks (used for title/abstract)</td></tr>
+    <tr><td><code>_get_authors</code></td><td>Iterates <code>&lt;atom:author&gt;</code>, reads each <code>&lt;atom:name&gt;</code></td><td>Skips empty names</td></tr>
+    <tr><td><code>_get_categories</code></td><td>Iterates <code>&lt;atom:category&gt;</code>, reads <code>term</code> attribute</td><td>Skips entries without <code>term</code></td></tr>
+    <tr><td><code>_get_pdf_url</code></td><td>Finds <code>&lt;atom:link type="application/pdf"&gt;</code></td><td><strong>Forces HTTPS</strong> — rewrites <code>http://arxiv.org/</code> → <code>https://arxiv.org/</code></td></tr>
+  </tbody>
+</table>
+
+<p>Result is assembled into an <code>ArxivPaper</code> Pydantic model.</p>
+
+<h2 id="layer5">Layer 5 — PDF Download</h2>
+
+<p>Separate from metadata fetching — only triggered when a caller explicitly wants the PDF.</p>
+
+<h3><code>download_pdf(paper, force_download=False)</code> — public entry</h3>
+
+<p><strong>Cache-first strategy:</strong></p>
+<ol>
+  <li>If <code>paper.pdf_url</code> is empty → return <code>None</code></li>
+  <li>Compute local cache path via <code>_get_pdf_path</code></li>
+  <li><strong>If file exists and <code>force_download=False</code></strong> → return cached path <strong>without network call</strong></li>
+  <li>Otherwise delegate to <code>_download_with_retry</code></li>
+</ol>
+
+<h3><code>_get_pdf_path(arxiv_id)</code> — filesystem-safe naming</h3>
+
+<p>Replaces <code>/</code> with <code>_</code> in the ID. Important for old-style IDs like <code>math.GT/0309136</code> that contain a slash — without this, you'd get <code>pdf_cache_dir/math.GT/0309136.pdf</code>, treating part of the ID as a subdirectory.</p>
+
+<h3><code>_download_with_retry(url, path, max_retries=3)</code> — streaming + backoff</h3>
+
+<h4>Streaming download</h4>
+
+<p>Uses <code>client.stream(...)</code> and <code>response.aiter_bytes()</code>:</p>
+
+<pre><code>async with client.stream("GET", url) as response:
+    with open(path, "wb") as f:
+        async for chunk in response.aiter_bytes():
+            f.write(chunk)</code></pre>
+
+<p>This keeps memory usage flat regardless of PDF size (a 50MB PDF won't load 50MB into RAM).</p>
+
+<h4>Retry policy — linear backoff</h4>
+
+<ul>
+  <li>Attempt 1 fails → wait 5s</li>
+  <li>Attempt 2 fails → wait 10s</li>
+  <li>Attempt 3 fails → raise typed exception</li>
+</ul>
+
+<h4>Distinguishes failure types</h4>
+
+<table>
+  <thead>
+    <tr><th>Error type</th><th>After exhausting retries</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>httpx.TimeoutException</code></td><td><code>PDFDownloadTimeoutError</code></td></tr>
+    <tr><td><code>httpx.HTTPError</code></td><td><code>PDFDownloadException</code></td></tr>
+    <tr><td>Anything else</td><td><code>PDFDownloadException</code> (immediately, no retry)</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Cleanup:</strong> if all retries fail, the partially-written file is deleted via <code>path.unlink()</code>.</p>
+
+<h2 id="sequence">End-to-End Sequence</h2>
+
+<pre><code>Caller
+  │
+  │ await client.fetch_papers(from_date="20240101")
+  ▼
+fetch_papers
+  │ 1. Build query: "cat:cs.AI AND submittedDate:[202401010000+TO+*]"
+  │ 2. URL-encode (preserving :+[])
+  │ 3. Rate limit check → maybe asyncio.sleep
+  │ 4. httpx.AsyncClient.get(url)
+  │
+  ▼
+_parse_response(xml_data)
+  │ Find all &lt;atom:entry&gt;
+  ▼
+_parse_single_entry(entry)  ── repeated for each entry
+  │ ├─ _get_arxiv_id      → "2401.00001v1"
+  │ ├─ _get_text(title)   → "Attention Is All You Need v2"
+  │ ├─ _get_authors       → ["Vaswani", "Shazeer", ...]
+  │ ├─ _get_text(summary) → "We propose..."
+  │ ├─ _get_text(published) → "2024-01-01T..."
+  │ ├─ _get_categories    → ["cs.AI", "cs.CL"]
+  │ └─ _get_pdf_url       → "https://arxiv.org/pdf/2401.00001v1"
+  ▼
+ArxivPaper (Pydantic model)
+  │
+  │ Caller now has list of papers
+  │ For each paper they want:
+  ▼
+await client.download_pdf(paper)
+  │ Cache hit?  → return path immediately
+  │ Cache miss? ↓
+  ▼
+_download_with_retry
+  │ Stream PDF to disk in chunks
+  │ Retry up to 3 times with linear backoff
+  ▼
+Path("/cache/2401.00001v1.pdf")</code></pre>
+
+<h2 id="patterns">Key Design Patterns</h2>
+
+<ol>
+  <li><span class="pattern-tag">DI</span><strong>Dependency Injection</strong> — <code>ArxivSettings</code> is passed in, not imported globally. Makes testing and reconfiguration trivial.</li>
+  <li><span class="pattern-tag">Lazy</span><strong>Lazy initialization</strong> — <code>pdf_cache_dir</code> directory is only created on first PDF access via <code>@cached_property</code>.</li>
+  <li><span class="pattern-tag">Resilient</span><strong>Resilient parsing</strong> — bad XML entries are skipped (logged), not raised. One malformed paper doesn't kill a 100-paper batch.</li>
+  <li><span class="pattern-tag">Typed Errors</span><strong>Typed exception hierarchy</strong> — callers catch <code>ArxivAPIException</code> / <code>PDFDownloadException</code> without depending on <code>httpx</code>.</li>
+  <li><span class="pattern-tag">Cache-first</span><strong>Cache-first downloads</strong> — checks disk before going to the network, with a <code>force_download</code> escape hatch.</li>
+  <li><span class="pattern-tag">Streaming</span><strong>Streaming downloads</strong> — constant memory regardless of PDF size.</li>
+  <li><span class="pattern-tag">Security</span><strong>HTTPS enforcement</strong> — <code>_get_pdf_url</code> rewrites <code>http://</code> to <code>https://</code> so the downloader can never fall back to plaintext.</li>
+  <li><span class="pattern-tag">Safety</span><strong>Filesystem-safe IDs</strong> — <code>_get_pdf_path</code> sanitizes legacy IDs like <code>math.GT/0309136</code>.</li>
+</ol>
+
+<hr style="margin-top: 48px; border: none; border-top: 1px solid #d0d7de;">
+<p style="text-align: center; color: #57606a; font-size: 0.9em;">
+  Documentation for <code>src/services/arxiv/client.py</code>
+</p>
+
+</body>
+</html>

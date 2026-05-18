@@ -1,0 +1,40 @@
+Option 2: SSH (recommended for long-term)
+Generate an SSH key (if you don't have one):
+
+ssh-keygen -t ed25519 -C "rahulkd.das@gmail.com"
+Copy the public key:
+
+cat ~/.ssh/id_ed25519.pub
+Add it to GitHub → Settings → SSH and GPG keys
+Switch your remote to SSH:
+
+git remote set-url origin git@github.com:rahulkd/Production-RAG.git
+Push:
+
+git push origin RAG_infrastrcuture_setup
+SSH is the better long-term setup — no tokens to rotate. The PAT approach is faster if you just want to push now.
+
+## worked 
+
+cat ~/.ssh/id_ed25519.pub 
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBJrN79/xq2W4LyiqRreJ5cLv+PSOJmQ9/QpWGKrFtep rahulkd.das@gmail.com
+You already have an SSH key. Now just:
+
+Copy that public key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBJrN79/xq2W4LyiqRreJ5cLv+PSOJmQ9/QpWGKrFtep rahulkd.das@gmail.com
+
+Go to GitHub → Settings → SSH and GPG keys → New SSH key, paste it in, save.
+
+Switch your remote to SSH:
+
+
+git remote set-url origin git@github.com:rahulkd/Production-RAG.git
+Test the connection:
+
+
+ssh -T git@github.com
+You should see: Hi rahulkd! You've successfully authenticated...
+
+Then push:
+
+
+git push origin RAG_infrastrcuture_setup

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PDF Parser — Modular Workflow Documentation</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 960px;
+    margin: 40px auto;
+    padding: 0 24px;
+    color: #1f2328;
+    line-height: 1.6;
+    background: #ffffff;
+  }
+  h1 {
+    border-bottom: 2px solid #d0d7de;
+    padding-bottom: 12px;
+    color: #0969da;
+  }
+  h2 {
+    border-bottom: 1px solid #d0d7de;
+    padding-bottom: 6px;
+    margin-top: 40px;
+    color: #1f2328;
+  }
+  h3 {
+    margin-top: 28px;
+    color: #24292f;
+  }
+  h4 {
+    margin-top: 20px;
+    color: #57606a;
+  }
+  code {
+    background: #f6f8fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    font-size: 0.9em;
+    color: #cf222e;
+  }
+  pre {
+    background: #f6f8fa;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #d0d7de;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: #1f2328;
+    font-size: 0.85em;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+  }
+  th, td {
+    border: 1px solid #d0d7de;
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #f6f8fa;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background: #f9fafb;
+  }
+  .toc {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    padding: 16px 24px;
+    border-radius: 6px;
+    margin: 24px 0;
+  }
+  .toc ul {
+    margin: 8px 0;
+  }
+  .toc a {
+    color: #0969da;
+    text-decoration: none;
+  }
+  .toc a:hover {
+    text-decoration: underline;
+  }
+  .note {
+    background: #fff8c5;
+    border-left: 4px solid #d4a72c;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .pattern-tag {
+    display: inline-block;
+    background: #ddf4ff;
+    color: #0969da;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .layer-header {
+    background: linear-gradient(90deg, #ddf4ff 0%, transparent 100%);
+    padding: 8px 14px;
+    border-left: 4px solid #0969da;
+    margin: 24px 0 12px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<h1>PDF Parser — Modular Workflow Documentation</h1>
+
+<p>The PDF parser module turns a downloaded PDF file into a structured <code>PdfContent</code> object containing reconstructed sections and raw text. It is built around <strong>Docling</strong> (an ML-based PDF understanding library) and lives in <code>src/services/pdf_parser/</code>.</p>
+
+<div class="toc">
+  <strong>Table of Contents</strong>
+  <ul>
+    <li><a href="#overview">Architectural Overview</a></li>
+    <li><a href="#layer1">Layer 1 — <code>factory.py</code> (Singleton Factory)</a></li>
+    <li><a href="#layer2">Layer 2 — <code>parser.py</code> (Facade)</a></li>
+    <li><a href="#layer3">Layer 3 — <code>docling.py</code> (Implementation)</a>
+      <ul>
+        <li><a href="#phaseA">Phase A — Setup</a></li>
+        <li><a href="#phaseB">Phase B — Validation</a></li>
+        <li><a href="#phaseC">Phase C — Parsing</a></li>
+        <li><a href="#phaseD">Phase D — Error Handling</a></li>
+      </ul>
+    </li>
+    <li><a href="#sequence">End-to-End Sequence</a></li>
+    <li><a href="#patterns">Key Design Patterns</a></li>
+  </ul>
+</div>
+
+<h2 id="overview">Architectural Overview</h2>
+
+<p>The module is composed of <strong>3 files</strong> forming a clean <strong>3-layer hierarchy</strong>, each with a single responsibility:</p>
+
+<pre><code>┌──────────────────────────────────────────────────────────────┐
+│ factory.py — Provides a cached singleton (app entry point)   │
+│   make_pdf_parser_service() / reset_pdf_parser()             │
+└──────────────────────────────────────────────────────────────┘
+                            │ instantiates
+                            ▼
+┌──────────────────────────────────────────────────────────────┐
+│ parser.py — Thin facade with high-level orchestration        │
+│   PDFParserService.parse_pdf()                               │
+└──────────────────────────────────────────────────────────────┘
+                            │ delegates to
+                            ▼
+┌──────────────────────────────────────────────────────────────┐
+│ docling.py — Actual implementation                           │
+│   DoclingParser._validate_pdf() + _warm_up + parse_pdf()     │
+└──────────────────────────────────────────────────────────────┘</code></pre>
+
+<div class="note">
+  <strong>Why this layering?</strong> The factory caches the heavyweight model, the facade keeps callers parser-agnostic (Docling can be swapped for GROBID later), and the implementation owns the actual Docling logic.
+</div>
+
+<h2 id="layer1">Layer 1 — <code>factory.py</code> (Singleton Factory)</h2>
+
+<p><strong>Purpose:</strong> Provide a memoized PDF parser instance so the heavyweight Docling/PyTorch models load <strong>only once</strong> per process.</p>
+
+<h3><code>make_pdf_parser_service()</code> — cached factory</h3>
+<ul>
+  <li>Decorated with <code>@lru_cache(maxsize=1)</code> — first call creates the instance, all subsequent calls return the same cached one</li>
+  <li>Reads config from <code>get_settings().pdf_parser</code> (max pages, max file size, OCR flag, table extraction flag)</li>
+</ul>
+
+<div class="note">
+  <strong>Why caching matters:</strong> Docling loads PyTorch / transformer models. Re-instantiating per request would burn seconds and GB of RAM.
+</div>
+
+<h3><code>reset_pdf_parser()</code> — cache buster</h3>
+<ul>
+  <li>Calls <code>cache_clear()</code> on the <code>lru_cache</code></li>
+  <li>Used in tests or when configuration changes at runtime</li>
+</ul>
+
+<h2 id="layer2">Layer 2 — <code>parser.py</code> (Facade)</h2>
+
+<p><strong>Purpose:</strong> Provide a stable API surface so callers don't depend on Docling directly. If GROBID (or any other parser) is added later, this is the layer that chooses between parsers.</p>
+
+<h3><code>PDFParserService.__init__(...)</code></h3>
+<ul>
+  <li>Constructs a single <code>DoclingParser</code> with the configured limits</li>
+  <li>All real work is delegated to the parser instance</li>
+</ul>
+
+<h3><code>PDFParserService.parse_pdf(pdf_path)</code> — main entry point</h3>
+
+<p>Pipeline:</p>
+<ol>
+  <li><strong>Existence check</strong> — raises <code>PDFValidationError</code> if the file is missing</li>
+  <li><strong>Delegate</strong> to <code>self.docling_parser.parse_pdf(pdf_path)</code></li>
+  <li><strong>Normalize errors:</strong>
+    <ul>
+      <li><code>PDFValidationError</code> / <code>PDFParsingException</code> → re-raised unchanged</li>
+      <li>Any other exception → wrapped in <code>PDFParsingException</code></li>
+    </ul>
+  </li>
+  <li><strong>Null check</strong> — if Docling returns <code>None</code> without raising, the wrapper raises <code>PDFParsingException</code></li>
+</ol>
+
+<div class="note">
+  <strong>Key role:</strong> This layer exists so swapping parsers (Docling → GROBID → Marker) doesn't require changing any caller code.
+</div>
+
+<h2 id="layer3">Layer 3 — <code>docling.py</code> (Implementation)</h2>
+
+<p>This is where the actual PDF processing happens. Three logical phases.</p>
+
+<div class="layer-header" id="phaseA">Phase A — Setup (<code>__init__</code> + <code>_warm_up_models</code>)</div>
+
+<p><strong><code>__init__</code></strong> configures the Docling pipeline:</p>
+
+<pre><code>PdfPipelineOptions(
+    do_table_structure=True,   # enable table extraction
+    do_ocr=False,              # OCR is slow, off by default
+)
+DocumentConverter(format_options={InputFormat.PDF: PdfFormatOption(...)})</code></pre>
+
+<p>It stores limits as instance variables:</p>
+<ul>
+  <li><code>max_pages</code> (default 20)</li>
+  <li><code>max_file_size_bytes</code> (converted from MB at init time)</li>
+  <li><code>_warmed_up</code> flag</li>
+</ul>
+
+<p><strong><code>_warm_up_models()</code></strong> is a placeholder — flips a boolean to track first use. Useful hook if you want to pre-load models with a dummy doc later.</p>
+
+<div class="layer-header" id="phaseB">Phase B — Validation (<code>_validate_pdf</code>)</div>
+
+<p>Four sequential checks, each raising <code>PDFValidationError</code> on failure:</p>
+
+<table>
+  <thead>
+    <tr><th>Check</th><th>What it does</th><th>Why it matters</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Empty file</strong></td><td><code>stat().st_size == 0</code></td><td>Guards against zero-byte downloads</td></tr>
+    <tr><td><strong>Size limit</strong></td><td>File size ≤ <code>max_file_size_bytes</code></td><td>Prevents memory blowup on huge papers</td></tr>
+    <tr><td><strong>Magic bytes</strong></td><td>First 8 bytes start with <code>%PDF-</code></td><td>Detects renamed / corrupted files cheaply</td></tr>
+    <tr><td><strong>Page count</strong></td><td><code>len(pypdfium2.PdfDocument(...))</code> ≤ <code>max_pages</code></td><td>Prevents slow processing on 100-page tomes</td></tr>
+  </tbody>
+</table>
+
+<p>The page count uses <code>pypdfium2</code> (a lightweight C-binding wrapper around PDFium) — much faster than letting Docling load the whole document just to count pages.</p>
+
+<div class="layer-header" id="phaseC">Phase C — Parsing (<code>parse_pdf</code>)</div>
+
+<p>The actual conversion pipeline:</p>
+
+<pre><code>1. _validate_pdf(pdf_path)         ← gate
+2. _warm_up_models()                ← lazy first-call hook
+3. converter.convert(...)           ← Docling does the heavy lifting
+4. Iterate doc.texts:               ← assemble sections
+     - If label is "title" or "section_header" → start new section
+     - Else → append text to current section's content
+5. Build PdfContent(...)            ← Pydantic output</code></pre>
+
+<p><strong>Section assembly trick:</strong> Docling returns a flat stream of text elements with labels. The code walks this stream, <strong>using headers as section boundaries</strong> to reconstruct hierarchical structure. The <code>current_section</code> dict accumulates text until the next header arrives.</p>
+
+<p><strong>Output shape:</strong></p>
+
+<pre><code>PdfContent(
+    sections=[...],          # reconstructed sections
+    figures=[],              # intentionally empty (arXiv API has this)
+    tables=[],               # intentionally empty
+    raw_text=doc.export_to_text(),
+    references=[],
+    parser_used=ParserType.DOCLING,
+    metadata={"source": "docling", "note": "..."},
+)</code></pre>
+
+<div class="note">
+  <strong>Design choice:</strong> Figures, tables, and references are left empty because arXiv's API already provides this metadata more reliably. The PDF parser focuses on what arXiv doesn't give you: structured full-text content.
+</div>
+
+<div class="layer-header" id="phaseD">Phase D — Error Handling</div>
+
+<p>Two distinct error paths:</p>
+
+<h4>1. Soft failures → return <code>None</code> (let caller continue):</h4>
+<ul>
+  <li><code>"too large"</code> or <code>"too many pages"</code> → log info, return <code>None</code></li>
+</ul>
+
+<h4>2. Hard failures → raise <code>PDFParsingException</code>:</h4>
+
+<table>
+  <thead>
+    <tr><th>Detected substring</th><th>Diagnosis</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>"not valid"</code></td><td>Corrupted PDF</td></tr>
+    <tr><td><code>"timeout"</code></td><td>Processing timeout</td></tr>
+    <tr><td><code>"memory"</code> / <code>"ram"</code></td><td>Out of memory</td></tr>
+    <tr><td><code>"max_num_pages"</code> / <code>"page"</code></td><td>Page-limit related</td></tr>
+    <tr><td>(anything else)</td><td>Generic parsing failure</td></tr>
+  </tbody>
+</table>
+
+<p>This string-sniffing pattern is fragile but pragmatic — Docling doesn't expose typed errors, so the wrapper inspects messages to give callers actionable diagnostics.</p>
+
+<h2 id="sequence">End-to-End Sequence</h2>
+
+<pre><code>Application startup
+       │
+       ▼
+make_pdf_parser_service()           ← @lru_cache: first call creates, rest reuse
+       │
+       ▼
+PDFParserService(__init__)
+       │
+       ▼
+DoclingParser(__init__)             ← Docling/PyTorch models loaded ONCE here
+       │
+       │  ... time passes, request arrives ...
+       ▼
+service.parse_pdf(pdf_path)
+       │
+       │  exists() check → raises PDFValidationError if missing
+       ▼
+docling_parser.parse_pdf(pdf_path)
+       │
+       │  _validate_pdf:
+       │    ├─ size > 0?
+       │    ├─ size ≤ limit?
+       │    ├─ magic bytes %PDF-?
+       │    └─ page count ≤ limit?
+       │
+       ▼
+docling.DocumentConverter.convert(...)
+       │
+       ▼
+Iterate doc.texts → build sections from header boundaries
+       │
+       ▼
+PdfContent(sections, raw_text, parser_used=DOCLING, ...)</code></pre>
+
+<h2 id="patterns">Key Design Patterns</h2>
+
+<ol>
+  <li><span class="pattern-tag">Singleton</span><strong>Singleton via lru_cache</strong> — heavyweight model loaded once per process</li>
+  <li><span class="pattern-tag">Facade</span><strong>Facade pattern</strong> — <code>PDFParserService</code> shields callers from Docling</li>
+  <li><span class="pattern-tag">Lazy</span><strong>Lazy warm-up</strong> — <code>_warmed_up</code> flag tracks first use</li>
+  <li><span class="pattern-tag">Fast pre-check</span><strong>Cheap pre-validation</strong> — <code>pypdfium2</code> for page counts (avoids loading full doc into Docling)</li>
+  <li><span class="pattern-tag">Soft vs hard</span><strong>Soft vs hard failures</strong> — size / page-limit issues return <code>None</code>; corruption raises</li>
+  <li><span class="pattern-tag">Separation</span><strong>Single source of truth for content</strong> — figures / tables left to arXiv API; PDF parser owns structured text only</li>
+  <li><span class="pattern-tag">Diagnosis</span><strong>Error message sniffing</strong> — inspects error strings to surface meaningful exception types</li>
+</ol>
+
+<hr style="margin-top: 48px; border: none; border-top: 1px solid #d0d7de;">
+<p style="text-align: center; color: #57606a; font-size: 0.9em;">
+  Documentation for <code>src/services/pdf_parser/</code>
+</p>
+
+</body>
+</html>
