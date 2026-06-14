@@ -4,7 +4,11 @@ from src.config import get_settings
 
 from .parser import PDFParserService
 
-
+## usage of lru_cache in make_pdf_parser_service allows us to automatically memoize the PDF parser instance, 
+## which is important because loading PyTorch models can be expensive. By caching the result of this factory function,
+## we ensure that we only create one instance of the PDF parser service per application lifecycle, and subsequent calls will return the 
+## cached instance without reloading the model. This is a simple and effective way to manage resources while still allowing for easy access 
+## to the PDF parser service throughout the application.
 @lru_cache(maxsize=1)
 def make_pdf_parser_service() -> PDFParserService:
     """

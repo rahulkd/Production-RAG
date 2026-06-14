@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MetadataFetcher — Modular Workflow Documentation</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    color: #1f2328;
+    line-height: 1.6;
+    background: #ffffff;
+  }
+  h1 {
+    border-bottom: 2px solid #d0d7de;
+    padding-bottom: 12px;
+    color: #0969da;
+  }
+  h2 {
+    border-bottom: 1px solid #d0d7de;
+    padding-bottom: 6px;
+    margin-top: 40px;
+    color: #1f2328;
+  }
+  h3 {
+    margin-top: 28px;
+    color: #24292f;
+  }
+  h4 {
+    margin-top: 20px;
+    color: #57606a;
+  }
+  code {
+    background: #f6f8fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    font-size: 0.9em;
+    color: #cf222e;
+  }
+  pre {
+    background: #f6f8fa;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #d0d7de;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: #1f2328;
+    font-size: 0.85em;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+  }
+  th, td {
+    border: 1px solid #d0d7de;
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #f6f8fa;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background: #f9fafb;
+  }
+  .toc {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    padding: 16px 24px;
+    border-radius: 6px;
+    margin: 24px 0;
+  }
+  .toc ul {
+    margin: 8px 0;
+  }
+  .toc a {
+    color: #0969da;
+    text-decoration: none;
+  }
+  .toc a:hover {
+    text-decoration: underline;
+  }
+  .note {
+    background: #fff8c5;
+    border-left: 4px solid #d4a72c;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .key-insight {
+    background: #dafbe1;
+    border-left: 4px solid #1a7f37;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .pattern-tag {
+    display: inline-block;
+    background: #ddf4ff;
+    color: #0969da;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .layer-header {
+    background: linear-gradient(90deg, #ddf4ff 0%, transparent 100%);
+    padding: 8px 14px;
+    border-left: 4px solid #0969da;
+    margin: 24px 0 12px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+  }
+  .timeline {
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    background: #0d1117;
+    color: #58a6ff;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.85em;
+  }
+</style>
+</head>
+<body>
+
+<h1>MetadataFetcher — Modular Workflow Documentation</h1>
+
+<p>The <strong>orchestration layer</strong> that ties everything together: the arXiv client (metadata + PDF downloads), the PDF parser (content extraction), and the database (persistence). DAGs and API endpoints call into this module — not into the individual services directly.</p>
+
+<div class="toc">
+  <strong>Table of Contents</strong>
+  <ul>
+    <li><a href="#overview">Architectural Overview</a></li>
+    <li><a href="#layer1">Layer 1 — Factory: <code>make_metadata_fetcher</code></a></li>
+    <li><a href="#layer2">Layer 2 — Constructor: <code>__init__</code></a></li>
+    <li><a href="#layer3">Layer 3 — Top-Level Orchestration: <code>fetch_and_process_papers</code></a></li>
+    <li><a href="#layer4">Layer 4 — Concurrent Pipeline: <code>_process_pdfs_batch</code></a></li>
+    <li><a href="#layer5">Layer 5 — Per-Paper Pipeline: <code>_download_and_parse_pipeline</code></a></li>
+    <li><a href="#layer6">Layer 6 — Serialization: <code>_serialize_parsed_content</code></a></li>
+    <li><a href="#layer7">Layer 7 — Persistence: <code>_store_papers_to_db</code></a></li>
+    <li><a href="#sequence">End-to-End Sequence</a></li>
+    <li><a href="#patterns">Key Design Patterns</a></li>
+  </ul>
+</div>
+
+<h2 id="overview">Architectural Overview</h2>
+
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│ make_metadata_fetcher()  ← Factory (production defaults)    │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│ MetadataFetcher                                             │
+│                                                             │
+│  fetch_and_process_papers()    ← Top-level 3-step pipeline  │
+│         │                                                   │
+│         ├─ Step 1: arxiv_client.fetch_papers()              │
+│         │                                                   │
+│         ├─ Step 2: _process_pdfs_batch()                    │
+│         │            └─ _download_and_parse_pipeline()      │
+│         │                  (one per paper, concurrent)      │
+│         │                                                   │
+│         └─ Step 3: _store_papers_to_db()                    │
+│                     └─ _serialize_parsed_content()          │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+
+<h2 id="layer1">Layer 1 — Factory: <code>make_metadata_fetcher(...)</code></h2>
+
+<p><strong>Purpose:</strong> Build a <code>MetadataFetcher</code> with production-tuned concurrency defaults.</p>
+
+<table>
+  <thead>
+    <tr><th>Default</th><th>Value</th><th>Reasoning</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>max_concurrent_downloads</code></td><td>5</td><td>I/O-bound — network can absorb several simultaneous requests</td></tr>
+    <tr><td><code>max_concurrent_parsing</code></td><td>1</td><td>CPU-bound (Docling + PyTorch) — too many parallel parses thrash CPU/RAM</td></tr>
+  </tbody>
+</table>
+
+<div class="key-insight">
+  <strong>Key insight:</strong> the asymmetric defaults exist because <strong>downloads and parsing have different bottlenecks</strong>, so they get separate concurrency limits.
+</div>
+
+<h2 id="layer2">Layer 2 — Constructor: <code>__init__(...)</code></h2>
+
+<p>Wires the three dependencies and the two concurrency limits onto the instance:</p>
+<ul>
+  <li><code>arxiv_client</code> — used for both metadata fetch and PDF download</li>
+  <li><code>pdf_parser</code> — for content extraction</li>
+  <li><code>pdf_cache_dir</code> — falls back to <code>arxiv_client.pdf_cache_dir</code> if not supplied</li>
+  <li><code>max_concurrent_downloads</code> and <code>max_concurrent_parsing</code> — used to construct semaphores per request</li>
+</ul>
+
+<p>No I/O happens in <code>__init__</code> — everything is lazy until <code>fetch_and_process_papers</code> is called.</p>
+
+<h2 id="layer3">Layer 3 — Top-Level Orchestration: <code>fetch_and_process_papers(...)</code></h2>
+
+<p>This is the <strong>single public entry point</strong> to the entire pipeline. Three sequential steps, each gated by a flag so callers can opt in/out.</p>
+
+<div class="layer-header">Step 1: Fetch metadata</div>
+
+<pre><code>papers = await self.arxiv_client.fetch_papers(
+    max_results=..., from_date=..., to_date=...,
+    sort_by="submittedDate", sort_order="descending"
+)</code></pre>
+
+<ul>
+  <li>Always runs (no flag).</li>
+  <li>Empty result → log warning + return early with zero stats.</li>
+</ul>
+
+<div class="layer-header">Step 2: PDF processing (optional, <code>process_pdfs=True</code>)</div>
+
+<ul>
+  <li>Delegates to <code>_process_pdfs_batch</code></li>
+  <li>Aggregates <code>pdfs_downloaded</code> / <code>pdfs_parsed</code> counts into the results dict</li>
+</ul>
+
+<div class="layer-header">Step 3: Database storage (optional, <code>store_to_db=True</code>)</div>
+
+<ul>
+  <li>Requires a <code>db_session</code> — if missing, the request is logged as an error but the pipeline doesn't crash</li>
+  <li>Calls <code>_store_papers_to_db</code> with the parsed content dictionary from Step 2</li>
+</ul>
+
+<h3>Result aggregation</h3>
+
+<p>Returns a stats dict:</p>
+
+<pre><code>{
+    "papers_fetched": int,
+    "pdfs_downloaded": int,
+    "pdfs_parsed": int,
+    "papers_stored": int,
+    "errors": [str, ...],     # first 5 logged in summary
+    "processing_time": float, # in seconds
+}</code></pre>
+
+<p>Any uncaught exception is wrapped in <code>PipelineException</code> and re-raised — callers get a single typed error.</p>
+
+<h2 id="layer4">Layer 4 — Concurrent Pipeline: <code>_process_pdfs_batch(papers)</code></h2>
+
+<p>This is where the pipeline becomes interesting. <strong>Each paper goes through its own download+parse mini-pipeline, all running concurrently with semaphore-controlled parallelism.</strong></p>
+
+<h3>The semaphore pattern</h3>
+
+<pre><code>download_semaphore = asyncio.Semaphore(max_concurrent_downloads)  # 5
+parse_semaphore    = asyncio.Semaphore(max_concurrent_parsing)    # 1 (prod) or 3 (default)</code></pre>
+
+<p>A semaphore is a counter — only N coroutines can hold it at once. Others wait until someone releases it.</p>
+
+<h3>Launching all pipelines at once</h3>
+
+<pre><code>pipeline_tasks = [
+    self._download_and_parse_pipeline(paper, download_semaphore, parse_semaphore)
+    for paper in papers
+]
+pipeline_results = await asyncio.gather(*pipeline_tasks, return_exceptions=True)</code></pre>
+
+<div class="note">
+  <strong>Key detail:</strong> <code>return_exceptions=True</code> — exceptions become return values instead of crashing <code>gather</code>. One bad paper can't kill the whole batch.
+</div>
+
+<h3>Result classification (per paper)</h3>
+
+<p>For each <code>(paper, result)</code> pair:</p>
+<ul>
+  <li><code>result</code> is an <code>Exception</code> → general pipeline error</li>
+  <li><code>result</code> is <code>(True, ParsedPaper)</code> → both download + parse succeeded</li>
+  <li><code>result</code> is <code>(True, None)</code> → download succeeded but parse failed</li>
+  <li><code>result</code> is <code>(False, None)</code> → download failed</li>
+</ul>
+
+<p>The classifier populates four lists: <code>errors</code>, <code>download_failures</code>, <code>parse_failures</code>, <code>parsed_papers</code>.</p>
+
+<h2 id="layer5">Layer 5 — Per-Paper Pipeline: <code>_download_and_parse_pipeline(...)</code></h2>
+
+<p>This is the core of the parallelism trick — <strong>overlapping download and parse phases</strong>.</p>
+
+<pre><code>async with download_semaphore:        # ← up to 5 in this block at once
+    pdf_path = await arxiv_client.download_pdf(paper)
+    # releases download_semaphore here
+
+async with parse_semaphore:           # ← up to 1 (prod) in this block at once
+    pdf_content = await pdf_parser.parse_pdf(pdf_path)</code></pre>
+
+<div class="key-insight">
+  <strong>Why this is fast:</strong> the moment <code>download_pdf</code> returns, the download semaphore is released → another paper's download can start. Meanwhile the current paper enters the parse semaphore queue. The two queues drain in parallel.
+</div>
+
+<h3>Visual timeline (5 papers, 5 download / 1 parse slot)</h3>
+
+<pre class="timeline">Paper 1: [DDDDDDDD][PPPPPPPP]
+Paper 2: [DDDDDDDD]          [PPPPPPPP]
+Paper 3: [DDDDDDDD]                   [PPPPPPPP]
+Paper 4: [DDDDDDDD]                            [PPPPPPPP]
+Paper 5: [DDDDDDDD]                                     [PPPPPPPP]
+         └─ all 5 downloading in parallel
+                  └─ parses queue up serially (CPU-bound)</pre>
+
+<h3>Output</h3>
+
+<p>Returns a tuple <code>(download_success, parsed_paper)</code>:</p>
+<ul>
+  <li><code>parsed_paper</code> is constructed by wrapping the paper's <code>ArxivMetadata</code> and the parsed <code>PdfContent</code> into a single <code>ParsedPaper</code></li>
+  <li>If parsing fails, returns <code>(True, None)</code> — the metadata-only path is still viable</li>
+</ul>
+
+<h3>Error handling</h3>
+
+<p>Wraps any exception in <code>MetadataFetchingException</code> (typed exception layer, just like the arXiv and PDF parser services).</p>
+
+<h2 id="layer6">Layer 6 — Serialization: <code>_serialize_parsed_content(parsed_paper)</code></h2>
+
+<p>Converts a Pydantic <code>ParsedPaper</code> into a <code>dict</code> ready for DB insertion.</p>
+
+<table>
+  <thead>
+    <tr><th>Transformation</th><th>Why</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>sections</code> → list of <code>{"title", "content"}</code> dicts</td><td>Strips Pydantic wrapping for JSON storage</td></tr>
+    <tr><td><code>references</code> → plain list</td><td>Same — pure JSON-serializable</td></tr>
+    <tr><td><code>parser_used.value</code> (not the Enum)</td><td>Stores string <code>"docling"</code>, not <code>"ParserType.DOCLING"</code></td></tr>
+    <tr><td><code>pdf_processed: True</code></td><td>Marks the record as having parsed content</td></tr>
+    <tr><td><code>pdf_processing_date: now()</code></td><td>Audit timestamp</td></tr>
+  </tbody>
+</table>
+
+<p>If serialization itself fails (rare), returns a degraded dict with <code>pdf_processed: False</code> and the error in <code>parser_metadata</code> — the paper still gets stored, just without parsed content.</p>
+
+<h2 id="layer7">Layer 7 — Persistence: <code>_store_papers_to_db(...)</code></h2>
+
+<p>Writes papers to PostgreSQL via <code>PaperRepository</code>. Four patterns to note:</p>
+
+<h3>Pattern 1: Date string normalization</h3>
+
+<pre><code>published_date = (
+    date_parser.parse(paper.published_date)
+    if isinstance(paper.published_date, str)
+    else paper.published_date
+)</code></pre>
+
+<p>arXiv returns dates as ISO strings; the DB column expects <code>datetime</code>. Uses <code>dateutil.parser</code> (more lenient than <code>datetime.fromisoformat</code>).</p>
+
+<h3>Pattern 2: Graceful merge of metadata + parsed content</h3>
+
+<pre><code>paper_data = {core_metadata...}
+if parsed_paper:
+    paper_data.update(self._serialize_parsed_content(parsed_paper))
+else:
+    paper_data.update({"pdf_processed": False, "parser_metadata": {"note": "..."}})</code></pre>
+
+<p>Papers with <strong>and</strong> without parsed PDFs both get stored — the schema (<code>PaperCreate</code>) makes parsed content optional, supporting the progressive-enrichment pattern.</p>
+
+<h3>Pattern 3: Upsert via repository</h3>
+
+<pre><code>stored_paper = paper_repo.upsert(paper_create)</code></pre>
+
+<ul>
+  <li>Inserts if new, updates if <code>arxiv_id</code> already exists</li>
+  <li>Prevents duplicates on re-runs (idempotent — you can re-fetch the same date range without polluting the DB)</li>
+</ul>
+
+<h3>Pattern 4: Single commit + rollback</h3>
+
+<pre><code>db_session.commit()        # commit all papers at once
+# on error:
+db_session.rollback()      # all-or-nothing
+stored_count = 0</code></pre>
+
+<p><strong>Atomicity:</strong> if the commit fails, the entire batch is rolled back, and <code>stored_count</code> is reset to 0.</p>
+
+<h2 id="sequence">End-to-End Sequence</h2>
+
+<pre><code>Caller (e.g. Airflow DAG)
+       │
+       │ await fetcher.fetch_and_process_papers(
+       │       max_results=100, from_date="20240101", store_to_db=True,
+       │       db_session=session)
+       ▼
+fetch_and_process_papers
+       │
+       │  ──── Step 1: Metadata ─────────────────────
+       ▼
+arxiv_client.fetch_papers(...)  →  List[ArxivPaper] (100 papers)
+       │
+       │  ──── Step 2: PDFs (concurrent) ───────────
+       ▼
+_process_pdfs_batch
+       │
+       │  Build 100 _download_and_parse_pipeline tasks
+       │  asyncio.gather(*tasks, return_exceptions=True)
+       ▼
+Per-paper pipeline (×100, scheduled concurrently):
+       │
+       │  download_semaphore (5)  → arxiv_client.download_pdf(paper)
+       │       │
+       │       ▼
+       │  parse_semaphore (1)     → pdf_parser.parse_pdf(pdf_path)
+       │       │
+       │       ▼
+       │  ParsedPaper(arxiv_metadata, pdf_content)
+       ▼
+Aggregated results: {parsed_papers: {arxiv_id → ParsedPaper}}
+       │
+       │  ──── Step 3: Database ────────────────────
+       ▼
+_store_papers_to_db
+       │
+       │  For each paper:
+       │    ├─ _serialize_parsed_content (if parsed)
+       │    └─ PaperRepository.upsert(PaperCreate(**paper_data))
+       │
+       │  Single commit at the end; rollback on failure
+       ▼
+{papers_fetched: 100, pdfs_downloaded: 98, pdfs_parsed: 95, papers_stored: 100, ...}</code></pre>
+
+<h2 id="patterns">Key Design Patterns</h2>
+
+<ol>
+  <li><span class="pattern-tag">Concurrency</span><strong>Asymmetric semaphores</strong> — downloads (I/O-bound) and parsing (CPU-bound) get separate concurrency limits</li>
+  <li><span class="pattern-tag">Pipeline</span><strong>Overlapping pipeline</strong> — release the download semaphore as soon as the download completes; don't hold it through parsing</li>
+  <li><span class="pattern-tag">Resilience</span><strong><code>return_exceptions=True</code></strong> — <code>asyncio.gather</code> doesn't crash on a single failure</li>
+  <li><span class="pattern-tag">Graceful</span><strong>Graceful degradation</strong> — failed parse still saves metadata; missing PDF URL still saves what's known</li>
+  <li><span class="pattern-tag">Atomicity</span><strong>Atomic commit</strong> — all-or-nothing DB persistence per batch</li>
+  <li><span class="pattern-tag">Idempotent</span><strong>Upsert idempotency</strong> — re-running over the same date range is safe</li>
+  <li><span class="pattern-tag">Typed Errors</span><strong>Typed exception layer</strong> — <code>MetadataFetchingException</code> / <code>PipelineException</code> shield callers from internal errors</li>
+  <li><span class="pattern-tag">Structured</span><strong>Single results dict</strong> — caller gets a structured summary instead of opaque return values</li>
+</ol>
+
+<hr style="margin-top: 48px; border: none; border-top: 1px solid #d0d7de;">
+<p style="text-align: center; color: #57606a; font-size: 0.9em;">
+  Documentation for <code>src/services/metadata_fetcher.py</code>
+</p>
+
+</body>
+</html>

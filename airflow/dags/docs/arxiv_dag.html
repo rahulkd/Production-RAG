@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>arXiv Ingestion DAG — Modular Workflow Documentation</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    color: #1f2328;
+    line-height: 1.6;
+    background: #ffffff;
+  }
+  h1 {
+    border-bottom: 2px solid #d0d7de;
+    padding-bottom: 12px;
+    color: #0969da;
+  }
+  h2 {
+    border-bottom: 1px solid #d0d7de;
+    padding-bottom: 6px;
+    margin-top: 40px;
+    color: #1f2328;
+  }
+  h3 {
+    margin-top: 28px;
+    color: #24292f;
+  }
+  h4 {
+    margin-top: 20px;
+    color: #57606a;
+  }
+  code {
+    background: #f6f8fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    font-size: 0.9em;
+    color: #cf222e;
+  }
+  pre {
+    background: #f6f8fa;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #d0d7de;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: #1f2328;
+    font-size: 0.85em;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+  }
+  th, td {
+    border: 1px solid #d0d7de;
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #f6f8fa;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background: #f9fafb;
+  }
+  .toc {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    padding: 16px 24px;
+    border-radius: 6px;
+    margin: 24px 0;
+  }
+  .toc ul {
+    margin: 8px 0;
+  }
+  .toc a {
+    color: #0969da;
+    text-decoration: none;
+  }
+  .toc a:hover {
+    text-decoration: underline;
+  }
+  .note {
+    background: #fff8c5;
+    border-left: 4px solid #d4a72c;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .key-insight {
+    background: #dafbe1;
+    border-left: 4px solid #1a7f37;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .pattern-tag {
+    display: inline-block;
+    background: #ddf4ff;
+    color: #0969da;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .task-card {
+    background: #f6f8fa;
+    border-left: 4px solid #0969da;
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .task-card h4 {
+    margin-top: 0;
+    color: #0969da;
+  }
+</style>
+</head>
+<body>
+
+<h1>arXiv Ingestion DAG — Modular Workflow Documentation</h1>
+
+<p>The Airflow setup is split into <strong>2 modules</strong> following Airflow best practice (DAG definition separate from task code):</p>
+
+<pre><code>airflow/dags/
+├── arxiv_paper_ingestion.py    ← DAG definition (schedule, operators, graph)
+└── arxiv_ingestion/
+    └── tasks.py                ← Task function implementations</code></pre>
+
+<div class="toc">
+  <strong>Table of Contents</strong>
+  <ul>
+    <li><a href="#module1">Module 1 — DAG Definition</a></li>
+    <li><a href="#module2">Module 2 — Task Functions</a>
+      <ul>
+        <li><a href="#shared">Shared Infrastructure: <code>get_cached_services</code></a></li>
+        <li><a href="#async-bridge">Async/Sync Bridge: <code>run_paper_ingestion_pipeline</code></a></li>
+        <li><a href="#tasks">The 6 Tasks</a></li>
+      </ul>
+    </li>
+    <li><a href="#xcom">Data Flow via XCom</a></li>
+    <li><a href="#execution">End-to-End Daily Execution</a></li>
+    <li><a href="#patterns">Key Design Patterns</a></li>
+  </ul>
+</div>
+
+<h2 id="module1">Module 1 — DAG Definition (<code>arxiv_paper_ingestion.py</code>)</h2>
+
+<h3><code>default_args</code> — task-level defaults</h3>
+
+<table>
+  <thead>
+    <tr><th>Setting</th><th>Value</th><th>Why</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>start_date</code></td><td>2025-08-08</td><td>Earliest day DAG can run</td></tr>
+    <tr><td><code>retries</code></td><td>2</td><td>Auto-retry on failure</td></tr>
+    <tr><td><code>retry_delay</code></td><td>30 minutes</td><td>Backoff between retries</td></tr>
+    <tr><td><code>depends_on_past</code></td><td>False</td><td>Each day runs independently</td></tr>
+    <tr><td><code>catchup</code></td><td>False</td><td>Don't backfill missed runs</td></tr>
+  </tbody>
+</table>
+
+<h3>DAG configuration</h3>
+
+<ul>
+  <li><strong>Schedule:</strong> <code>0 6 * * 1-5</code> — Mon-Fri at 6 AM UTC (skips weekends — arXiv has fewer submissions)</li>
+  <li><strong><code>max_active_runs=1</code></strong> — only one DAG run at a time (prevents race conditions on the DB)</li>
+  <li><strong>Tags:</strong> for filtering in the Airflow UI</li>
+</ul>
+
+<h3>Task graph (fan-out → fan-in)</h3>
+
+<pre><code>setup_environment
+       │
+       ▼
+fetch_daily_papers
+       │
+       ├──────────────┐
+       ▼              ▼
+process_failed_pdfs   create_opensearch_placeholders
+       │              │
+       └──────┬───────┘
+              ▼
+    generate_daily_report
+              │
+              ▼
+       cleanup_temp_files</code></pre>
+
+<h2 id="module2">Module 2 — Task Functions (<code>arxiv_ingestion/tasks.py</code>)</h2>
+
+<h3 id="shared">Shared Infrastructure: <code>get_cached_services()</code></h3>
+
+<pre><code>@lru_cache(maxsize=1)
+def get_cached_services():
+    arxiv_client = make_arxiv_client()
+    pdf_parser = make_pdf_parser_service()
+    database = make_database()
+    metadata_fetcher = make_metadata_fetcher(arxiv_client, pdf_parser)
+    return arxiv_client, pdf_parser, database, metadata_fetcher</code></pre>
+
+<div class="key-insight">
+  <strong>Why this matters:</strong> Without caching, every task invocation would reload Docling's PyTorch models (~seconds + GB of RAM). <code>@lru_cache(maxsize=1)</code> ensures <strong>one initialization per Airflow worker process</strong>, reused across tasks in the same DAG run.
+</div>
+
+<h3 id="async-bridge">Async/Sync Bridge: <code>run_paper_ingestion_pipeline(...)</code></h3>
+
+<p>Airflow runs synchronous Python callables, but the underlying pipeline is async. This wrapper:</p>
+<ol>
+  <li>Gets cached services</li>
+  <li>Opens a DB session via context manager</li>
+  <li><code>await</code>s <code>metadata_fetcher.fetch_and_process_papers(...)</code></li>
+</ol>
+
+<p>The synchronous Airflow task uses <code>asyncio.run(...)</code> to invoke it.</p>
+
+<h3 id="tasks">The 6 Tasks</h3>
+
+<div class="task-card">
+  <h4>Task 1: <code>setup_environment</code> — health check</h4>
+  <ul>
+    <li>Triggers service initialization (warms the lru_cache)</li>
+    <li>Runs <code>SELECT 1</code> against the DB to verify connectivity</li>
+    <li>Logs arXiv base URL + PDF parser readiness</li>
+    <li>Raises a typed exception if anything fails → blocks the rest of the DAG</li>
+  </ul>
+</div>
+
+<div class="task-card">
+  <h4>Task 2: <code>fetch_daily_papers</code> — main work</h4>
+  <p><strong>Key insight: it processes papers from <code>execution_date - 1</code> (yesterday)</strong></p>
+
+  <pre><code>execution_date = context["ds"]                    # "2025-08-08"
+target_dt = execution_dt - timedelta(days=1)      # "2025-08-07"
+target_date = target_dt.strftime("%Y%m%d")        # "20250807"</code></pre>
+
+  <p><strong>Why yesterday?</strong> arXiv papers submitted today aren't fully indexed yet — fetching with a 1-day lag gives a stable view.</p>
+
+  <p>Then:</p>
+  <ul>
+    <li>Calls <code>asyncio.run(run_paper_ingestion_pipeline(target_date=..., max_results=10, process_pdfs=True))</code></li>
+    <li><strong>Pushes results to XCom</strong> via <code>context["task_instance"].xcom_push(key="fetch_results", value=results)</code> — so downstream tasks can read them</li>
+  </ul>
+</div>
+
+<div class="task-card">
+  <h4>Task 3: <code>process_failed_pdfs</code> — retry placeholder</h4>
+  <ul>
+    <li><strong>Pulls XCom:</strong> <code>xcom_pull(task_ids="fetch_daily_papers", key="fetch_results")</code></li>
+    <li>Iterates over the errors list from the main fetch</li>
+    <li>Currently logs each error (TODO: implement actual retry)</li>
+    <li>Returns count of errors investigated</li>
+  </ul>
+</div>
+
+<div class="task-card">
+  <h4>Task 4: <code>create_opensearch_placeholders</code> — Week 2 placeholder</h4>
+  <ul>
+    <li>Reads <code>papers_stored</code> count from XCom</li>
+    <li>Logs what would be indexed (actual indexing comes in Week 3+)</li>
+    <li>Demonstrates the future plug-point for the search backend</li>
+  </ul>
+</div>
+
+<div class="task-card">
+  <h4>Task 5: <code>generate_daily_report</code> — aggregated summary</h4>
+  <p>Pulls XCom from <strong>all three previous tasks</strong>:</p>
+  <ul>
+    <li><code>fetch_daily_papers</code> → metrics</li>
+    <li><code>process_failed_pdfs</code> → retry stats</li>
+    <li><code>create_opensearch_placeholders</code> → indexing stats</li>
+  </ul>
+  <p>Builds a structured report dict and logs a human-readable summary block.</p>
+</div>
+
+<div class="task-card">
+  <h4>Task 6: <code>cleanup_temp_files</code> — <code>BashOperator</code></h4>
+  <pre><code>find /tmp -name "*.pdf" -type f -mtime +30 -delete 2&gt;/dev/null || true</code></pre>
+  <ul>
+    <li>Removes PDFs older than 30 days</li>
+    <li><code>|| true</code> keeps the task green even if no files match</li>
+  </ul>
+</div>
+
+<h2 id="xcom">Data Flow via XCom</h2>
+
+<p>XCom is Airflow's inter-task message-passing mechanism — keys/values are stored in the metadata DB.</p>
+
+<pre><code>fetch_daily_papers
+       │ xcom_push(key="fetch_results", value=results)
+       │
+       ├──► process_failed_pdfs
+       │      └─ xcom_pull(task_ids="fetch_daily_papers", key="fetch_results")
+       │      └─ returns retry stats (implicit XCom push of return value)
+       │
+       └──► create_opensearch_placeholders
+              └─ xcom_pull(task_ids="fetch_daily_papers", key="fetch_results")
+              └─ returns indexing stats
+                     │
+                     ▼
+              generate_daily_report
+                     └─ xcom_pull(task_ids="fetch_daily_papers")
+                     └─ xcom_pull(task_ids="process_failed_pdfs")
+                     └─ xcom_pull(task_ids="create_opensearch_placeholders")</code></pre>
+
+<h2 id="execution">End-to-End Daily Execution</h2>
+
+<pre><code>06:00 UTC, Monday–Friday
+       │
+       ▼
+DAG run starts (execution_date = today)
+       │
+       ▼
+[setup_environment]
+   ├─ get_cached_services() ← first call, loads Docling models
+   └─ SELECT 1 against PostgreSQL
+       │
+       ▼
+[fetch_daily_papers]
+   ├─ target_date = yesterday
+   ├─ run_paper_ingestion_pipeline (async)
+   │    ├─ ArxivClient.fetch_papers(target_date)
+   │    ├─ Concurrent download + parse (5 dl / 1 parse)
+   │    └─ PaperRepository.upsert (idempotent)
+   └─ xcom_push(fetch_results)
+       │
+       ▼
+   ┌───────────────────────┐
+   ▼                       ▼
+[process_failed_pdfs]   [create_opensearch_placeholders]
+   │                       │
+   └─────────┬─────────────┘
+             ▼
+[generate_daily_report]
+   └─ Aggregates all XCom into structured report
+             │
+             ▼
+[cleanup_temp_files]
+   └─ Delete PDFs older than 30 days
+             │
+             ▼
+   DAG run complete</code></pre>
+
+<h2 id="patterns">Key Design Patterns</h2>
+
+<ol>
+  <li><span class="pattern-tag">Separation</span><strong>DAG / task code separation</strong> — DAG file stays small and declarative; logic lives in <code>arxiv_ingestion/tasks.py</code></li>
+  <li><span class="pattern-tag">Caching</span><strong>lru_cache for service init</strong> — Docling models loaded once per worker process</li>
+  <li><span class="pattern-tag">Bridge</span><strong>Async/sync bridge</strong> — <code>asyncio.run()</code> lets sync Airflow tasks consume the async pipeline</li>
+  <li><span class="pattern-tag">Stability</span><strong>Day-lag fetching</strong> — process <code>execution_date - 1</code> for stable arXiv data</li>
+  <li><span class="pattern-tag">Messaging</span><strong>XCom for task chaining</strong> — structured data passing, not implicit globals</li>
+  <li><span class="pattern-tag">Topology</span><strong>Fan-out / fan-in graph</strong> — retry + indexing run in parallel after fetch, both feed report</li>
+  <li><span class="pattern-tag">Schedule</span><strong>Cron with weekday filter</strong> — <code>1-5</code> skips weekends without separate weekend logic</li>
+  <li><span class="pattern-tag">Concurrency</span><strong><code>max_active_runs=1</code></strong> — serializes runs to prevent DB write conflicts</li>
+</ol>
+
+<hr style="margin-top: 48px; border: none; border-top: 1px solid #d0d7de;">
+<p style="text-align: center; color: #57606a; font-size: 0.9em;">
+  Documentation for <code>airflow/dags/arxiv_ingestion/</code> and <code>airflow/dags/arxiv_paper_ingestion.py</code>
+</p>
+
+</body>
+</html>

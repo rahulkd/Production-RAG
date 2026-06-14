@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
 from src.dependencies import SessionDep
 from src.repositories.paper import PaperRepository
-from src.schemas.paper import PaperResponse
+from src.schemas.arxiv.paper import PaperResponse
 
 router = APIRouter(prefix="/papers", tags=["papers"])
 

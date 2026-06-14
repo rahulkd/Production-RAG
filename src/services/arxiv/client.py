@@ -535,6 +535,8 @@ class ArxivClient:
             return pdf_path
 
         # Download with retry
+        ## await usage here allows the event loop to run other tasks while waiting for the download to complete, 
+        ## rather than blocking the entire thread.
         if await self._download_with_retry(paper.pdf_url, pdf_path):
             return pdf_path
         else:
