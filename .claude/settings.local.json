@@ -4,7 +4,9 @@
       "Bash(python3 -m json.tool)",
       "Bash(awk '{print $2}')",
       "Bash(uv lock *)",
-      "Bash(PYTHONPATH=/home/ubuntu/production_rag python testing/data_ingestion_pipeline/arxiv_client_api_testing.py)"
+      "Bash(PYTHONPATH=/home/ubuntu/production_rag python testing/data_ingestion_pipeline/arxiv_client_api_testing.py)",
+      "Bash(/home/ubuntu/miniconda3/envs/production_rag/bin/uv lock *)",
+      "Bash(grep -nA14 '^name = \"rapidocr\"' uv.lock)"
     ]
   }
 }

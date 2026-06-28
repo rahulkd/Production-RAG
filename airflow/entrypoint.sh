@@ -26,6 +26,10 @@ airflow users create \
     --password admin || echo "Admin user already exists"
 
 # Start webserver and scheduler
+# Run the webserver in the background WITHOUT --daemon: --daemon writes a pidfile
+# and double-forks, which (combined with backgrounding and gunicorn's master)
+# trips the "webserver is already running under PID N" check and kills the UI.
+# Plain background keeps it as a child process logging to stdout, no pidfile.
 echo "Starting Airflow webserver and scheduler..."
-airflow webserver --port 8080 --daemon &
+airflow webserver --port 8080 &
 airflow scheduler

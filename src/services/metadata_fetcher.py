@@ -248,10 +248,17 @@ class MetadataFetcher:
                     return (False, None)
 
             # Step 2: Parse PDF with parse concurrency control (happens AFTER download completes)
-            # This allows other downloads to continue while this PDF is being parsed
+            # This allows other downloads to continue while this PDF is being parsed.
+            # Parsing is non-critical: a parse failure must NOT discard the successful
+            # download, so it is isolated in its own try/except and never re-raised.
             async with parse_semaphore:
                 logger.debug(f"Starting parse: {paper.arxiv_id}")
-                pdf_content = await self.pdf_parser.parse_pdf(pdf_path)
+                try:
+                    pdf_content = await self.pdf_parser.parse_pdf(pdf_path)
+                except Exception as parse_error:
+                    # PDF parsing failed (e.g. file too large) - continue with metadata only
+                    logger.warning(f"PDF parsing failed for {paper.arxiv_id}, continuing with metadata only: {parse_error}")
+                    pdf_content = None
 
                 if pdf_content:
                     # Create ArxivMetadata from the paper

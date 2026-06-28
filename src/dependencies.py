@@ -5,6 +5,17 @@ from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 from src.config import Settings
 from src.db.interfaces.base import BaseDatabase
+from src.services.arxiv.client import ArxivClient
+from src.services.opensearch.client import OpenSearchClient
+from src.services.pdf_parser.parser import PDFParserService
+
+## why does this file exist?
+## This file defines the dependencies for the application, such as database connections, clients for external services, and application
+#  settings. 
+## It provides a centralized place to manage these dependencies and makes it easy to inject them into FastAPI routes and other parts of
+#  the application using the Depends mechanism. 
+## By using dependency injection, we can keep our code modular and testable, as we can easily swap out implementations of these 
+# dependencies for testing or different environments.
 
 
 @lru_cache
@@ -29,6 +40,25 @@ def get_db_session(database: Annotated[BaseDatabase, Depends(get_database)]) -> 
         yield session
 
 
+def get_opensearch_client(request: Request) -> OpenSearchClient:
+    """Get OpenSearch client from the request state."""
+    return request.app.state.opensearch_client
+
+
+def get_arxiv_client(request: Request) -> ArxivClient:
+    """Get arXiv client from the request state."""
+    return request.app.state.arxiv_client
+
+
+def get_pdf_parser(request: Request) -> PDFParserService:
+    """Get PDF parser service from the request state."""
+    return request.app.state.pdf_parser
+
+
+# Dependency annotations
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 DatabaseDep = Annotated[BaseDatabase, Depends(get_database)]
 SessionDep = Annotated[Session, Depends(get_db_session)]
+OpenSearchDep = Annotated[OpenSearchClient, Depends(get_opensearch_client)]
+ArxivDep = Annotated[ArxivClient, Depends(get_arxiv_client)]
+PDFParserDep = Annotated[PDFParserService, Depends(get_pdf_parser)]

@@ -14,11 +14,11 @@ dependencies = [
     "opensearch-py>=3.0.0",
     "requests>=2.32.3",
     "httpx>=0.28.1",
-    "boto3>=1.37.0",
-    "python-dotenv>=1.0.0",
-    "python-dateutil>=2.8.0",
-    "docling>=2.0.0",
-    "pypdfium2>=4.30.0",
+    "docling>=2.43.0",
+    "python-dateutil>=2.9.0.post0",
+    # Headless OpenCV — provides the `cv2` import that docling/rapidocr need,
+    # without the GUI/system libs. See the [tool.uv] override below.
+    "opencv-python-headless>=4.10",
 ]
 readme = "README.md"
 
@@ -42,6 +42,15 @@ dev = [
     "types-sqlalchemy>=1.4.53.38",
 ]
 
+[tool.uv]
+# Force the headless OpenCV build. opencv-python is pulled in transitively
+# (docling -> rapidocr) and its bootstrap inserts its package dir onto sys.path,
+# which shadows the stdlib `typing` module under the uvicorn --reload spawn
+# bootstrap and crashes startup. We override the GUI opencv-python out of
+# resolution (never-matching marker) and depend on opencv-python-headless
+# instead, which still provides the `cv2` import rapidocr needs.
+override-dependencies = ["opencv-python ; sys_platform == 'never'"]
+
 [tool.ruff]
 line-length = 130
 exclude = ["notebooks/**", ".venv/**"]
@@ -55,8 +64,8 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 env_files = ".env.test"
 
-[tool.coverage.run]
-omit = [
-    "src/mock_llm_server.py",
-]
-testpaths = ["tests"] 
+[tool.mypy]
+explicit_package_bases = true
+ignore_errors = true
+
+

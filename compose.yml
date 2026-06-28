@@ -97,6 +97,7 @@ services:
       - airflow_logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
       - ./src:/opt/airflow/src
+      - ./data/arxiv_pdfs:/opt/airflow/data/arxiv_pdfs
     ports:
       - "8080:8080"
     # Command handled by entrypoint.sh

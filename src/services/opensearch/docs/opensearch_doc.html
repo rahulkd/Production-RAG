@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OpenSearch Module — Modular Workflow Documentation</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 960px;
+    margin: 40px auto;
+    padding: 0 24px;
+    color: #1f2328;
+    line-height: 1.6;
+    background: #ffffff;
+  }
+  h1 {
+    border-bottom: 2px solid #d0d7de;
+    padding-bottom: 12px;
+    color: #0969da;
+  }
+  h2 {
+    border-bottom: 1px solid #d0d7de;
+    padding-bottom: 6px;
+    margin-top: 40px;
+    color: #1f2328;
+  }
+  h3 {
+    margin-top: 28px;
+    color: #24292f;
+  }
+  h4 {
+    margin-top: 20px;
+    color: #57606a;
+  }
+  code {
+    background: #f6f8fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    font-size: 0.9em;
+    color: #cf222e;
+  }
+  pre {
+    background: #f6f8fa;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #d0d7de;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: #1f2328;
+    font-size: 0.85em;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+  }
+  th, td {
+    border: 1px solid #d0d7de;
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #f6f8fa;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background: #f9fafb;
+  }
+  .layer-box {
+    background: #f6f8fa;
+    border-left: 4px solid #0969da;
+    padding: 12px 18px;
+    margin: 18px 0;
+    border-radius: 4px;
+  }
+  .toc {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    padding: 16px 24px;
+    border-radius: 6px;
+    margin: 24px 0;
+  }
+  .toc ul {
+    margin: 8px 0;
+  }
+  .toc a {
+    color: #0969da;
+    text-decoration: none;
+  }
+  .toc a:hover {
+    text-decoration: underline;
+  }
+  .note {
+    background: #fff8c5;
+    border-left: 4px solid #d4a72c;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .pattern-tag {
+    display: inline-block;
+    background: #ddf4ff;
+    color: #0969da;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+</style>
+</head>
+<body>
+
+<h1>OpenSearch Module — Modular Workflow Documentation</h1>
+
+<p>The <code>src/services/opensearch</code> package is the <strong>keyword (lexical) search backend</strong> of the RAG system. It wraps the official <code>opensearch-py</code> driver and provides everything needed to store arXiv papers and retrieve them by <strong>BM25 relevance</strong>. It owns four responsibilities:</p>
+<ol>
+  <li>Defining the index schema (field types and text analyzers) for arXiv papers.</li>
+  <li>Building structured, boosted, highlighted search queries.</li>
+  <li>Managing the index lifecycle and executing reads/writes against the cluster.</li>
+  <li>Exposing a single cached client instance to the rest of the application.</li>
+</ol>
+
+<div class="note">
+  <strong>Where it sits:</strong> the upstream pipeline (arXiv client → PDF parser → metadata) produces paper documents. This module is the <em>sink</em> that indexes them and the <em>source</em> that later answers keyword queries. It is the BM25 half of a hybrid (lexical + vector) retrieval design.
+</div>
+
+<div class="toc">
+  <strong>Table of Contents</strong>
+  <ul>
+    <li><a href="#overview">Architectural Overview</a></li>
+    <li><a href="#layer1">Component 1 — Index Schema (<code>index_config.py</code>)</a></li>
+    <li><a href="#layer2">Component 2 — Query Builder (<code>query_builder.py</code>)</a></li>
+    <li><a href="#layer3">Component 3 — Client (<code>client.py</code>)</a></li>
+    <li><a href="#layer4">Component 4 — Factory (<code>factory.py</code>)</a></li>
+    <li><a href="#sequence">End-to-End Sequence</a></li>
+    <li><a href="#patterns">Key Design Patterns</a></li>
+  </ul>
+</div>
+
+<h2 id="overview">Architectural Overview</h2>
+
+<p>The package is split into <strong>4 single-responsibility modules</strong>. Dependencies flow in one direction — the client composes the schema and the query builder; the factory wraps the client; nothing depends on the factory except the outside world.</p>
+
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│ index_config.py — SCHEMA                                    │
+│   ARXIV_PAPERS_INDEX    — index name constant               │
+│   ARXIV_PAPERS_MAPPING  — field types + analyzers + settings│
+└─────────────────────────────────────────────────────────────┘
+                            │ used by create_index()
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│ client.py — OpenSearchClient                               │
+│   create_index / index_paper / bulk_index_papers           │
+│   search_papers ───────────────┐                           │
+│   get_index_stats / health_check / cluster + index introspect│
+└────────────────────────────────┼───────────────────────────┘
+                            ▲     │ delegates query construction to
+                            │     ▼
+                            │  ┌──────────────────────────────────┐
+                            │  │ query_builder.py — PaperQueryBuilder│
+                            │  │  multi_match + filters + highlight │
+                            │  │  + sort → OpenSearch query DSL     │
+                            │  └──────────────────────────────────┘
+                            │
+                            │ singleton-wrapped by
+┌───────────────────────────┴─────────────────────────────────┐
+│ factory.py — make_opensearch_client()                       │
+│   @lru_cache(maxsize=1) → one shared OpenSearchClient        │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+
+<p>The public surface is re-exported from <code>__init__.py</code>:</p>
+<pre><code>from .client import OpenSearchClient
+from .factory import make_opensearch_client
+from .query_builder import PaperQueryBuilder
+
+__all__ = ["OpenSearchClient", "make_opensearch_client", "PaperQueryBuilder"]</code></pre>
+
+<h2 id="layer1">Component 1 — Index Schema (<code>index_config.py</code>)</h2>
+
+<p><strong>Purpose:</strong> declare <em>how</em> OpenSearch stores and tokenizes each field. This is pure configuration — no logic — so the schema can be reviewed and version-controlled independently of the client code.</p>
+
+<h3>Index-level settings</h3>
+<table>
+  <thead>
+    <tr><th>Setting</th><th>Value</th><th>Why</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>number_of_shards</code></td><td><code>1</code></td><td>Single-node / dev-sized index; avoids cross-shard scoring skew on small corpora</td></tr>
+    <tr><td><code>number_of_replicas</code></td><td><code>0</code></td><td>No redundancy needed for a local/dev cluster — keeps health <code>green</code> on one node</td></tr>
+  </tbody>
+</table>
+
+<h3>Custom analyzers</h3>
+<table>
+  <thead>
+    <tr><th>Analyzer</th><th>Definition</th><th>Effect</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>standard_analyzer</code></td><td><code>standard</code> + <code>_english_</code> stopwords</td><td>Light normalization — used for <code>authors</code> where stemming would distort names</td></tr>
+    <tr><td><code>text_analyzer</code></td><td>custom: <code>standard</code> tokenizer + <code>lowercase</code> → <code>stop</code> → <code>snowball</code></td><td>Aggressive: lowercases, drops stopwords, and <strong>snowball-stems</strong> tokens (<code>learning</code>→<code>learn</code>) so morphological variants match. Used for <code>title</code>, <code>abstract</code>, <code>raw_text</code></td></tr>
+  </tbody>
+</table>
+
+<h3>Field mappings</h3>
+<div class="note">
+  <code>"dynamic": "strict"</code> — OpenSearch <strong>rejects</strong> any document containing a field not declared below. This is a guardrail: a typo'd field name fails loudly at index time instead of silently creating an unmapped field.
+</div>
+
+<table>
+  <thead>
+    <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>arxiv_id</code></td><td><code>keyword</code></td><td>Exact-match identifier; also used as the document <code>_id</code></td></tr>
+    <tr><td><code>title</code></td><td><code>text</code> (<code>text_analyzer</code>) + <code>.keyword</code> sub-field</td><td>Full-text searchable; <code>.keyword</code> sub-field allows exact match / sorting</td></tr>
+    <tr><td><code>authors</code></td><td><code>text</code> (<code>standard_analyzer</code>) + <code>.keyword</code></td><td>Stored as a comma-joined string (see client), name-preserving analysis</td></tr>
+    <tr><td><code>abstract</code></td><td><code>text</code> (<code>text_analyzer</code>)</td><td>Primary relevance signal alongside title</td></tr>
+    <tr><td><code>categories</code></td><td><code>keyword</code></td><td>Faceting / filtering (e.g. <code>cs.AI</code>) — exact terms, not analyzed</td></tr>
+    <tr><td><code>raw_text</code></td><td><code>text</code> (<code>text_analyzer</code>)</td><td>Full parsed PDF body; mapped for future full-document search</td></tr>
+    <tr><td><code>pdf_url</code></td><td><code>keyword</code></td><td>Stored verbatim, not searched</td></tr>
+    <tr><td><code>published_date</code></td><td><code>date</code></td><td>Sortable; drives "latest papers" ordering</td></tr>
+    <tr><td><code>created_at</code> / <code>updated_at</code></td><td><code>date</code></td><td>Index-management timestamps, auto-filled by the client</td></tr>
+  </tbody>
+</table>
+
+<h2 id="layer2">Component 2 — Query Builder (<code>query_builder.py</code>)</h2>
+
+<p><strong>Purpose:</strong> translate a few simple Python arguments into the verbose OpenSearch Query DSL. Keeping this in its own class means the client never hand-builds JSON, and the query shape can be unit-tested without a live cluster.</p>
+
+<p><code>PaperQueryBuilder.build()</code> assembles five pieces into one request body:</p>
+
+<pre><code>{
+  "query":  _build_query(),          # bool: must (text) + filter (categories)
+  "size":   <page size>,
+  "from":   <pagination offset>,
+  "track_total_hits": true,
+  "_source": _build_source_fields(), # which stored fields to return
+  "highlight": _build_highlight(),   # snippet config
+  "sort":   _build_sort()            # optional, only when added
+}</code></pre>
+
+<h3>1. Text query — <code>_build_text_query()</code></h3>
+<p>A <code>multi_match</code> across boosted fields:</p>
+<pre><code>"multi_match": {
+  "query": query,
+  "fields": ["title^3", "abstract^2", "authors^1"],
+  "type": "best_fields",
+  "operator": "or",
+  "fuzziness": "AUTO",
+  "prefix_length": 2
+}</code></pre>
+<table>
+  <thead><tr><th>Knob</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>title^3 / abstract^2 / authors^1</code></td><td><strong>Field boosting</strong>: a hit in the title is worth 3× a hit in authors</td></tr>
+    <tr><td><code>type: best_fields</code></td><td>Score = the single best-matching field (good for "which one field is most relevant")</td></tr>
+    <tr><td><code>operator: or</code></td><td>Any query term may match — favors recall</td></tr>
+    <tr><td><code>fuzziness: AUTO</code></td><td>Tolerates typos (edit distance scaled to term length)</td></tr>
+    <tr><td><code>prefix_length: 2</code></td><td>First 2 characters must match exactly — stops fuzzy matching from exploding on short prefixes</td></tr>
+  </tbody>
+</table>
+
+<h3>2. Bool assembly — <code>_build_query()</code> + <code>_build_filters()</code></h3>
+<ul>
+  <li>The text query goes in <code>must</code> (scored). If the query string is empty, it falls back to <code>{"match_all": {}}</code> so the request still returns documents.</li>
+  <li><code>categories</code> become a <code>terms</code> clause in <code>filter</code> — <strong>filters don't affect score</strong> and are cacheable, so category narrowing is cheap.</li>
+</ul>
+
+<h3>3. Source projection — <code>_build_source_fields()</code></h3>
+<p>Returns only the display fields (<code>arxiv_id, title, authors, abstract, categories, published_date, pdf_url</code>). Notably <strong><code>raw_text</code> is excluded</strong> — no need to ship the full PDF body over the wire on every search.</p>
+
+<h3>4. Highlighting — <code>_build_highlight()</code></h3>
+<table>
+  <thead><tr><th>Field</th><th>Config</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td><code>title</code></td><td><code>number_of_fragments: 0</code></td><td>Returns the entire highlighted title</td></tr>
+    <tr><td><code>abstract</code></td><td><code>fragment_size: 150</code>, up to <code>3</code> fragments, <code>&lt;mark&gt;</code> tags</td><td>Up to three 150-char snippets around matches</td></tr>
+    <tr><td><code>authors</code></td><td>whole field, <code>&lt;mark&gt;</code> tags</td><td>Full author string with matches marked</td></tr>
+  </tbody>
+</table>
+<p><code>require_field_match: false</code> lets a term matched in one field still be highlighted in others.</p>
+
+<h3>5. Sorting — <code>_build_sort()</code></h3>
+<div class="layer-box">
+  <strong>Decision logic:</strong>
+  <ul>
+    <li><code>latest_papers=True</code> → sort by <code>published_date</code> desc, then <code>_score</code> (recency-first).</li>
+    <li>Non-empty query, <code>latest_papers=False</code> → return <code>None</code> → OpenSearch sorts by <strong>BM25 relevance</strong>.</li>
+    <li>Empty query → sort by <code>published_date</code> desc (newest-first browse mode).</li>
+  </ul>
+</div>
+
+<p>A module-level helper <code>build_search_query(...)</code> is also provided as a thin functional shortcut around the class for callers that only need a query dict.</p>
+
+<h2 id="layer3">Component 3 — Client (<code>client.py</code>)</h2>
+
+<p><code>OpenSearchClient</code> is the operational core. The constructor builds an <code>opensearchpy.OpenSearch</code> connection (HTTP, compression on, SSL off for local dev) and resolves the target index name from <code>Settings</code>, falling back to the <code>ARXIV_PAPERS_INDEX</code> constant.</p>
+
+<h3>Index lifecycle</h3>
+<table>
+  <thead><tr><th>Method</th><th>Behavior</th></tr></thead>
+  <tbody>
+    <tr><td><code>create_index(force=False)</code></td><td>Creates the index from <code>ARXIV_PAPERS_MAPPING</code>. Returns <code>False</code> if it already exists; with <code>force=True</code> it deletes and recreates. <code>RequestError</code> and unexpected errors are caught and logged, returning <code>False</code>.</td></tr>
+  </tbody>
+</table>
+
+<h3>Write path</h3>
+<table>
+  <thead><tr><th>Method</th><th>Behavior</th></tr></thead>
+  <tbody>
+    <tr><td><code>index_paper(paper_data)</code></td><td>Single-document upsert. <strong>Validates</strong> <code>arxiv_id</code> is present; auto-fills <code>created_at</code>/<code>updated_at</code>; <strong>normalizes</strong> an <code>authors</code> list into a comma-joined string (matching the schema). Uses <code>id=arxiv_id</code> so re-indexing the same paper updates rather than duplicates, and <code>refresh=True</code> to make it immediately searchable.</td></tr>
+    <tr><td><code>bulk_index_papers(papers)</code></td><td>Loops <code>index_paper</code> over a list and returns <code>{"success": N, "failed": M}</code>. A failure on one paper never aborts the batch.</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>Trade-off:</strong> <code>bulk_index_papers</code> currently iterates one document at a time (each with <code>refresh=True</code>) rather than using OpenSearch's <code>_bulk</code> API. This is simple and resilient but slower for large batches — a natural future optimization.
+</div>
+
+<h3>Read path — <code>search_papers(...)</code></h3>
+<p>The headline method. It delegates <em>all</em> query construction to <code>PaperQueryBuilder</code>, executes the search, and reshapes the raw OpenSearch response into a flat, caller-friendly dict:</p>
+<pre><code>{
+  "total": <int>,                 # response.hits.total.value
+  "hits": [
+    { ...source fields,
+      "score": <float>,           # promoted from hit._score
+      "highlights": { ... } }     # present only if OpenSearch returned them
+  ]
+}</code></pre>
+<p>Parameters mirror the builder: <code>query, size, from_, fields, categories, track_total_hits, latest_papers</code>. Errors degrade gracefully — a missing index returns <code>{"total": 0, "hits": [], "error": "Index not found"}</code> rather than raising.</p>
+
+<h3>Introspection &amp; health</h3>
+<table>
+  <thead><tr><th>Method</th><th>Returns</th></tr></thead>
+  <tbody>
+    <tr><td><code>get_index_stats()</code></td><td>Index name, document count, store size in bytes, and cluster health status</td></tr>
+    <tr><td><code>health_check()</code></td><td><code>True</code> if cluster status is <code>green</code> or <code>yellow</code> — used by service health probes</td></tr>
+    <tr><td><code>get_cluster_info()</code> / <code>get_cluster_health()</code></td><td>Raw cluster <code>info()</code> / <code>health()</code> payloads (or <code>None</code> on error)</td></tr>
+    <tr><td><code>get_index_mapping()</code> / <code>get_index_settings()</code></td><td>Unwrap the nested OpenSearch response to return just this index's mapping / settings</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  Every method follows the same <strong>defensive contract</strong>: wrap the call in <code>try/except</code>, log the error, and return a safe sentinel (<code>False</code>, <code>None</code>, or an empty/error dict). Callers never have to handle raw <code>opensearchpy</code> exceptions.
+</div>
+
+<h2 id="layer4">Component 4 — Factory (<code>factory.py</code>)</h2>
+
+<p><strong>Purpose:</strong> give the rest of the app <em>one</em> shared, lazily-constructed client.</p>
+<pre><code>@lru_cache(maxsize=1)
+def make_opensearch_client() -> OpenSearchClient:
+    settings = get_settings()
+    return OpenSearchClient(host=settings.opensearch.host, settings=settings)</code></pre>
+<ul>
+  <li><code>@lru_cache(maxsize=1)</code> turns the function into a <strong>singleton</strong> — the first call constructs the client (and its underlying connection pool); every later call returns the same instance.</li>
+  <li>Host and settings are read from the central <code>get_settings()</code>, keeping configuration in one place.</li>
+  <li>This mirrors the other service factories in the codebase, so dependency wiring is uniform across modules.</li>
+</ul>
+
+<h2 id="sequence">End-to-End Sequence</h2>
+
+<h4>Indexing (write)</h4>
+<pre><code>Pipeline produces paper dicts
+  │
+  ▼
+client = make_opensearch_client()      # cached singleton
+client.create_index()                  # once; no-op if exists
+  │
+  ▼
+client.bulk_index_papers(papers)
+  └─ for each paper → index_paper(paper)
+        │ validate arxiv_id
+        │ fill created_at / updated_at
+        │ join authors list → string
+        ▼
+     OpenSearch index (id = arxiv_id, refresh=True)
+  ▼
+{"success": N, "failed": M}</code></pre>
+
+<h4>Searching (read)</h4>
+<pre><code>Caller
+  │ client.search_papers("graph neural networks",
+  │                      size=10, categories=["cs.LG"])
+  ▼
+PaperQueryBuilder(...).build()
+  │ multi_match title^3 / abstract^2 / authors^1
+  │ + terms filter on categories
+  │ + highlight + source projection + sort decision
+  ▼
+opensearch.search(index, body)
+  ▼
+reshape response
+  │ total ← hits.total.value
+  │ each hit → source + score + highlights
+  ▼
+{"total": 42, "hits": [ {arxiv_id, title, ..., score, highlights}, ... ]}</code></pre>
+
+<h2 id="patterns">Key Design Patterns</h2>
+
+<ol>
+  <li><span class="pattern-tag">SoC</span><strong>Separation of concerns</strong> — schema, query construction, operations, and instantiation each live in their own file.</li>
+  <li><span class="pattern-tag">Builder</span><strong>Query Builder</strong> — <code>PaperQueryBuilder</code> isolates verbose DSL JSON behind a small typed constructor, testable without a cluster.</li>
+  <li><span class="pattern-tag">Singleton</span><strong>Cached factory</strong> — <code>@lru_cache(maxsize=1)</code> shares one connection pool across the app.</li>
+  <li><span class="pattern-tag">DI</span><strong>Dependency injection</strong> — <code>Settings</code> is passed into the client, not imported ad hoc, easing testing and reconfiguration.</li>
+  <li><span class="pattern-tag">Defensive</span><strong>Fail-soft contract</strong> — every client method catches, logs, and returns a safe sentinel instead of leaking <code>opensearchpy</code> exceptions.</li>
+  <li><span class="pattern-tag">Resilient</span><strong>Batch resilience</strong> — one bad document never aborts a bulk index run.</li>
+  <li><span class="pattern-tag">Strict Schema</span><strong>Strict mapping</strong> — <code>dynamic: "strict"</code> rejects unmapped fields, catching producer bugs at index time.</li>
+  <li><span class="pattern-tag">Relevance</span><strong>Tuned BM25</strong> — field boosting, fuzziness with prefix guard, and a context-aware sort policy balance precision, recall, and recency.</li>
+  <li><span class="pattern-tag">Idempotent</span><strong>Upsert by ID</strong> — using <code>arxiv_id</code> as the document <code>_id</code> makes re-ingestion safe (update, not duplicate).</li>
+</ol>
+
+<hr style="margin-top: 48px; border: none; border-top: 1px solid #d0d7de;">
+<p style="text-align: center; color: #57606a; font-size: 0.9em;">
+  Documentation for <code>src/services/opensearch/</code> &mdash;
+  <code>index_config.py</code> · <code>query_builder.py</code> · <code>client.py</code> · <code>factory.py</code>
+</p>
+
+</body>
+</html>
