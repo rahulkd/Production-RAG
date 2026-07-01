@@ -13,3 +13,6 @@ venv/
 # Logs
 *.log
 logs/
+
+# Downloaded arXiv PDF cache (runtime artifact, written by Airflow as UID 50000)
+data/arxiv_pdfs/

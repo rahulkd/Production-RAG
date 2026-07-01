@@ -190,7 +190,7 @@ class OpenSearchClient:
             results = {"total": response["hits"]["total"]["value"], "hits": []}
 
             for hit in response["hits"]["hits"]:
-                paper = hit["_source"]
+                paper = hit["_source"]  ## this returns the document source as a dict (complete document)
                 paper["score"] = hit["_score"]
                 if "highlight" in hit:
                     paper["highlights"] = hit["highlight"]
