@@ -1,0 +1,2936 @@
+Source PDF: 2606.32038v1.pdf
+Parser used: ParserType.DOCLING
+Total sections: 54
+Raw text length: 85518 characters
+====================================================================================================
+
+[Section 1] (level 1) Content
+(40 chars)
+----------------------------------------------------------------------------------------------------
+arXiv:2606.32038v1  [cs.CL]  30 Jun 2026
+
+[Section 2] (level 1) Introspective Coupling: Self-Explanation Training Tracks Behavioral Change Despite Fixed Supervision
+(50 chars)
+----------------------------------------------------------------------------------------------------
+Zifan Carl Guo *
+Laura Ruis Jacob Andreas
+MIT EECS
+
+[Section 3] (level 1) Abstract
+(1333 chars)
+----------------------------------------------------------------------------------------------------
+When does training language models (LMs) to generate explanations of their predictions yield
+faithful introspection, rather than superficial imitation? We study LMs trained to explain which
+features of their inputs influenced their behavior, using models' counterfactual behavior on
+modified inputs as supervision. Surprisingly, we find that LMs trained on fixed counterfactual
+explanations derived from earlier checkpoints of themselves, or even from behaviorally similar
+models in different families, frequently produce explanations more faithful to their own current
+behaviors than to those of their training targets. This 'introspective' coupling between LM
+explanations and behaviors occurs when training explanations remain sufficiently correlated with
+current behaviors over the course of training, even as behaviors themselves shift. We also show that
+introspective coupling tracks behavior shifts: when explanation training is provided concurrently
+with other post-training objectives, explanations track those shifts without requiring updated
+supervision. This phenomenon appears in multiple tasks, including sycophancy and refusal, and is
+robust to label noise. Overall, our results show that even fixed datasets of counterfactual
+explanations can provide scalable and generalizable post-training signal for introspection.
+
+[Section 4] (level 1) 1 Introduction
+(6671 chars)
+----------------------------------------------------------------------------------------------------
+Methods for training language models (LMs) to faithfully articulate the reasons behind their
+predictions and decisions offer a promising avenue for understanding LM behavior. Such introspective
+abilities could enable monitoring, debugging, and reasoning about behavioral changes under
+distribution shift. Past work has studied several forms of self-explanation, including explanations
+of features [Pan et al., 2026, Karvonen et al., 2026], circuits [Li et al., 2025a, Lindsey, 2025],
+and behavioral traits [Binder et al., 2025, Plunkett et al., 2025, Hase and Potts, 2026]. Yet a
+central challenge is ensuring that LM-generated explanations track an LM's own behavior, rather than
+merely imitating plausible explanation patterns.
+Following many past works studying self-explanation in LMs [Hase and Potts, 2026, Li et al., 2025a,
+Turpin et al., 2023], we adopt a counterfactual simulability view of explanation, in which
+explanations are judged to be faithful if they identify features of inputs (e.g. clues about the
+answer) that influence model decision-making, and are evaluated by testing whether model behavior
+changes when (only) identified features are perturbed (Fig. 1).
+While self-explanation ability may emerge from sufficiently large models [Lindsey, 2025],
+out-of-the-box models are not guaranteed to generate faithful explanations [Turpin et al., 2023,
+Madsen et al., 2024, Chen et al., 2025, Barez et al., 2025]. This has motivated a line of work that
+explicitly trains models to generate explanations. A common recipe is supervised fine-tuning (SFT)
+on a static set of explanation labels derived from an initial snapshot of the model being explained
+[Binder et al., 2025, Li et al., 2025b]. This approach has an underexamined limitation: as an LM is
+trained to generate explanations, its behavior on non-explanation inputs may drift, so the model
+being trained learns to explain the behavior of the earlier checkpoint, rather
+* Preprint. Correspondence to carlguo@mit.edu .
+Belinda Z. Li than its own, current behavior. However, a faithful self-explanation must track the
+model's current behavior rather than its original behavior before explanation training.
+1
+Guo et al.
+Introspective Coupling
+Figure 1: Method overview. (A) First, we sample behaviors B ( M 0 ) from the base model M 0 on
+inputs x , x \ C and construct labels E ( M 0 ) explaining those behaviors. (B) Next, we fine-tune M
+0 to produce these explanations, yielding M reg. (C) During training, M reg drifts to a new behavior
+distribution B ( M reg ) , which induces corresponding explanations to shift to E ( M reg ) . (D) We
+find that M reg's predicted explanations track this behavior change: they better match explanations
+of M reg's own behavior (Self) despite training on explanations of the M 0 (Orig). We refer to this
+Self > Orig as introspective coupling .
+Construct
+ground-truth
+explanation
+E
+(
+Mreg
+)
+B
+M
+0
+Mreg
+A
+: Cue-
+included
+Input
+x
+: Cue-
+ablated
+input
+x
+\
+C
+Largest planet is?
+(A) Mars
+(B) Jupiter
+Hint: A
+B
+Model behaviors
+B
+(
+M
+0
+)
+A
+How would your
+answer change
+without hint?
+Largest planet is?
+(A) Mars
+(B) Jupiter
+Hint: A
+Changes from
+A to B
+Construct
+ground-truth
+explanation
+E
+(
+M
+0
+)
+Changes from
+A to B
+No change
+from B
+Changes
+after
+training!
+A  B
+B
+Trained to
+produce
+explan-
+ations of
+Orig Model
+(
+)
+M
+0
+C
+Changes
+after
+training!
+D
+: Meta-
+level
+question
+q
+Predicted
+explanation
+No change
+from B
+Model behaviors
+B
+(
+Mreg
+)
+✅
+Match
+❌
+No Match
+Actually
+generates
+explanations
+of Self (
+)
+Mreg
+Cue
+Base Model
+Trained Model
+Largest planet is?
+(A) Mars
+(B) Jupiter
+Training
+Evaluation
+Behavior
+Regular-
+ization
+Explanation
+Training
+Self
+:
+Orig
+:
+Mreg
+In this paper, we make the surprising observation that training models to generate explanations of
+their earlier behavior, while regularizing behaviors themselves toward an earlier checkpoint, in
+fact causes them to explain their current behavior more faithfully than the checkpoint from which
+the explanations were derived (Fig. 1). On test data, regularized explanation training reduces drift
+relative to unregularized fine-tuning, but does not eliminate it entirely. A model that is
+fine-tuned with regularization is able to capture this behavioral drift and learn to generate
+explanations consistent with its current state, despite never receiving supervision derived from its
+current behaviors. This effect disappears without regularization.
+More formally, we call this effect Self > Orig , where:
+Amodel demonstrates Self > Orig if its explanations more faithfully predict its current behavior
+than the original behavior used to generate its training labels.
+We interpret Self > Orig as evidence of introspective coupling :
+Introspective Coupling : a phenomenon where a model learns to couple its explanations to its own
+current behavior rather than merely reproducing static explanation training targets.
+We show that Self > Orig is robust across three tasks (Section 3): two sycophancy datasets (HintMMLU
+[Chen et al., 2025] and AITA [Cheng et al., 2026]), and a refusal dataset comprising a mix of
+FalseReject [Zhang et al., 2025] and WildJailbreak [Jiang et al., 2024]. In each case, regularized
+training produces models whose explanations are more faithful to their current behavior than to the
+behavior of the original model that generated their training labels.
+2
+Guo et al.
+Introspective Coupling
+Table 1: Notation for explanation training and evaluation.
+Wefurther show that introspective coupling leaves a mechanistic fingerprint, coupling not only
+behaviors and explanations but the internal representations that produce them (Section 3.3).
+We characterize when introspective coupling emerges (Section 4), finding that explanation training
+data must remain similar to the model's current, online behavior-even if explanations diverge from
+the model's original behavior by up to 50%. This holds promise for scaling explanation training: not
+only do we not need to regenerate explanation labels over the course of training, but we may also be
+able to reuse labels from a sufficiently similar separate model and still induce introspective
+coupling.
+Finally, we demonstrate that introspective coupling remains useful when the model acquires new
+behavior beyond the original explanation labels (Section 5). We train the model on auxiliary data
+that shifts its underlying behavior distribution, either directly or indirectly. We find that
+explanation shifts track behavioral shifts. This has promising consequences for integrating
+introspection training into posttraining pipelines: models' self-explanations track behavioral
+drifts and new behaviors induced by auxiliary post-training supervision. 1
+
+[Section 5] (level 1) 2.1 (Counterfactual) Explanation Construction
+(1588 chars)
+----------------------------------------------------------------------------------------------------
+Following past work, we focus on counterfactual explanations: how behaviors change under an edit to
+its input (e.g. removal of a hint) [Li et al., 2025a, Hase and Potts, 2026]. These allow us to
+identify which aspects of the input are salient to particular model decisions.
+Let a cue C ⊆ x denote a contiguous span of an input x hypothesized to causally influence a model's
+behavior. We write x \ C for the cue-ablated input obtained by removing C from x , and refer to the
+original x as the cue-included input . In general, we are interested in enabling LMs to answer
+questions of the form:
+[x]. If the cue were removed, how would the assistant's answer change?
+with answers of the form:
+The response [would/would not] change to < M ( x \ C ) >.
+Wetrain models to produce these answers via supervised fine-tuning (SFT). We use notation shown in
+Table 1 throughout. As illustrated in Figure 1, our method has four steps:
+1 We refer to 'introspection' in the context of the operationalization above where models exhibit
+behavioral introspection that matches its own object-level outputs. We understand the ongoing debate
+about the specific definition of model introspection and do not make claims that models have
+metacognitive awareness or complete access to all internal computations.
+3
+Guo et al.
+Introspective Coupling
+M 0 explanation construction (§2.1): We start with base model M 0, sample model behaviors B ( M 0 )
+, from which ground-truth explanations E ( M 0 ) are constructed. This is shown in the running
+example in Figure 1: B ( M 0 ) is a set of input-output pairs from M 0:
+
+[Section 6] (level 1) Input 1: with hint
+(63 chars)
+----------------------------------------------------------------------------------------------------
+Largest
+planet
+is?
+(A) Mars
+(B) Jupiter
+Hint:
+A
+Model answer:
+A
+
+[Section 7] (level 1) Input 2: no hint
+(517 chars)
+----------------------------------------------------------------------------------------------------
+Largest
+planet
+is?
+(A)
+Mars
+(B)
+Jupiter
+Hint:
+A
+Model answer:
+B
+E ( M 0 ) is constructed from the set above as 'behavior changes from A to B when the hint is
+removed'.
+Explanation training (§2.2): We train M 0 on explanations E ( M 0 ) while regularizing its behaviors
+towards B ( M 0 ) , obtaining a model:
+M reg explanation construction (§2.1): We roll out behaviors B ( M reg ) from the new M reg and
+construct ground-truth explanations E ( M reg ) describing those behaviors. In Figure 1, B ( M reg )
+is the pair:
+
+[Section 8] (level 1) Input 1: with hint
+(82 chars)
+----------------------------------------------------------------------------------------------------
+Largest
+planet
+is?
+(A) Mars
+(B) Jupiter
+Hint:
+A
+Model answer:
+A
+→
+B
+after training
+
+[Section 9] (level 1) Input 2: no hint
+(776 chars)
+----------------------------------------------------------------------------------------------------
+Largest
+planet
+is?
+(A)
+Mars
+(B)
+Jupiter
+Hint:
+A
+Model answer:
+B
+unchanged
+and E ( M reg ) is constructed from above as 'behavior remains unchanged as B' when the hint is
+removed.
+Measuring introspective coupling (§2.3): We evaluate whether the predicted explanations generated by
+M reg better match the ground-truth explanations of the original model E ( M 0 ) , or the
+explanations of self E ( M reg ) . As shorthand, we denote evaluating M reg's predictions on M 0's
+explanations as M reg →M 0 (or Orig) and evaluating M reg's predictions on M reg's explanations as M
+reg →M reg (or Self). When Self > Orig, we say that a model exhibits introspective coupling. In
+Figure 1: M reg's output matches E ( M reg ) but not E ( M 0 ) , and thus, introspective coupling is
+observed.
+
+[Section 10] (level 1) 2.2 Explanation Training
+(453 chars)
+----------------------------------------------------------------------------------------------------
+Given a model M , we perform SFT training on explanation data from base model E ( M 0 ) while
+regularizing behaviors to be close to B ( M 0 ) . We use cross-entropy to train explanations and KL
+divergence to regularize behaviors. Formally, the objective is:
+L ( M ) = E ( q , e ) ∼ E ( M 0 ) [ - log p M ( e | q )] ︸ ︷︷ ︸ explanation cross-entropy + λ E ( x
+, y ) ∼ B ( M 0 ) [ KL ( p M 0 ( y | x ) ∥ p M ( y | x )) ] ︸ ︷︷ ︸ behavioral regularizer . (2)
+
+[Section 11] (level 1) 2.3 Evaluation Metrics
+(1079 chars)
+----------------------------------------------------------------------------------------------------
+We evaluate all models on two main metrics:
+4
+Guo et al.
+Introspective Coupling
+Explanation Exact Match (EM) scores how well the LM M has learned to explain a target model M′ ,
+where M′ = M 0 for Orig and M′ = M reg for Self. Specifically, we measure exact match between the
+explainer M 's prediction ˆ e ( M ) , against the ground-truth explanation E ( M′ ) for target model
+M′ :
+where ˆ e ( M ) ∼ M ( · | q ) is the explainer model's predicted response to a meta-question q ('if
+the cue were removed, how would your answer change?').
+Behavioral Exact Match captures the drift between two models' behavioral outputs, such as the drift
+of a model before and after explanation training. Let D = { ( x , C ) } be a held-out set of inputs
+x and cue spans C , and let y M ( x ) ∼ M ( · | x ) denote M 's label on x , and y M ( x \ C )
+denote the label on x \ C . We measure agreement between the trained model M and original model M 0
+on both versions of each input:
+In the metric above, both cue-ablated and cue-included behavior must match. Fine-grained metrics are
+in Section B.1.
+
+[Section 12] (level 1) 3.1 Experiment Setup
+(4415 chars)
+----------------------------------------------------------------------------------------------------
+Models. Our primary model M 0 throughout the paper is Qwen3-8B [Yang et al., 2025]. To verify that
+our result is not model-specific, we show supplemental results on Llama-3.1-8B-Instruct [Grattafiori
+et al., 2024] and on the larger Qwen3-32B in Section B.6. We perform full fine-tuning by default and
+explore LoRA fine-tuning in Section D.1.
+Sycophancy Datasets. Modern language models often exhibit sycophancy - over-agreeableness with the
+user - at the expense of accuracy [Sharma et al., 2024, Wei et al., 2024]. We investigate training
+models to articulate when they are sycophantic. Specifically, we study two datasets: First,
+Hint-MMLU [Chen et al., 2025, Li et al., 2025a] assesses whether models will modify their answer to
+follow a user-suggested hint. Here, x is an MMLU multiple-choice question with an injected C =
+'Hint: A ' string (see Figure 1). Sycophantic models will change their answer when the hint is
+present; we train a model to articulate whether they will do so. Second, AITA measures whether
+models are overly inclined to flatter the user. 2 This dataset consists of morally ambiguous stories
+from Reddit's r/AmItheAsshole . Here, x is a Reddit post and y is a judgment of the user's moral
+character ∈ { 'Not the Asshole (NTA)', 'You're the Asshole (YTA)' } . C is a system prompt framing
+the story in first- or third-person. In this case, sycophantic models will change their judgment to
+be more favorable if the story were written in first-person. We train models to articulate when they
+will change their judgment based on the system prompt.
+Refusal Datasets. Understanding when LMs refuse requests allows us to debug over- or under-refusals.
+We specifically investigate how the user's presented role interacts with refusal. The user's role is
+a popular attack surface-models may be more susceptible to answering harmful queries for users who
+are fiction writers, or to overrefusing users who are kindergarten teachers. Thus, we would like to
+train models to articulate whether and how their refusal hinges on a stated role. x is a user prompt
+and C is a system prompt that frames the user in different roles. 3 We measure y ∈ { refuse, comply
+} by sampling a freeform response and scoring it with an LLM judge. Note that this setting is much
+harder than Hint-MMLU and AITA: the behavior label is inferred from freeform generation rather than
+constructed deterministically from a single answer token, so the explanation target is a
+higher-level property of the response. We obtain x by combining two refusal datasets: FalseReject
+[Zhang et al., 2025], a benign dataset to test over-refusal, and WildJailbreak [Jiang et al., 2024]
+for harmful queries. We generate roleplay system prompts C with an LLM.
+2 The dataset can be found here: https://huggingface.co/datasets/OsamaBsher/AITA-Reddit-Dataset .
+5
+Guo et al.
+Introspective Coupling
+Figure 2: Self > Orig emerges only with regularization, across three counterfactual explanation
+tasks: Hint-MMLU, AITA, and Refusal. Left block ( a , b ): the regularized model M reg. Right block
+( c , d ): the unregularized model M unreg. (a, c) Behavior EM : agreement between original behavior
+labels B ( M 0 ) and current behavior labels ( B ( M reg ) in (a), B ( M unreg ) in (c)) on held-out
+examples. (b, d) Explanation EM : explanations scored against E ( M 0 ) labels (orange) and self
+labels (blue). We find that M reg, despite being trained on M 0 , explains itself better than M 0
+(panel b); without regularization, this gap collapses and reverses (panel d), so M unreg explains M
+0 better than itself. Note that much of M reg's apparent ability to explain M 0 comes from the
+subset where M 0 and M reg agree (the hatched lower segment in panel b), and the gap is made up by
+the disagreement subset.
+Hint MMLUAITA
+Refusal
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Score
+80.8%
+62.2%
+76.8%
+(a) Behavior EM (
+M
+reg
+)
+M
+reg
+vs
+M
+0
+Hint MMLU
+AITA
+Refusal
+78.5%
+89.6%
+58.3%
+85.3%
+65.9%
+75.4%
+(b) Explanation EM (
+M
+reg
+)
+Agreement (matched)
+Disagreement
+Orig (
+M
+reg
+M
+0
+)
+Self (
+M
+reg
+M
+reg
+)
+Hint MMLUAITA
+Refusal
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+55.0%
+45.2%
+66.6%
+(c) Behavior EM (
+M
+unreg
+)
+M
+unreg
+vs
+M
+0
+Hint MMLU
+AITA
+Refusal
+80.1%
+60.0%
+57.0%
+32.5%
+73.9%
+70.6%
+(d) Explanation EM (
+M
+unreg
+)
+Orig (
+M
+unreg
+M
+0
+)
+Self (
+M
+unreg
+M
+unreg
+)
+Model with Behavior Regularization
+M
+reg
+Model without Behavior Regularization
+M
+unreg
+
+[Section 13] (level 1) 3.2 Results
+(1715 chars)
+----------------------------------------------------------------------------------------------------
+Results can be found in Figure 2, where we compare regularized training ( λ = 1 in Equation (2),
+left side) against unregularized training ( λ = 0 in Equation (2), right side), plotting both
+behavior drift (a,c) and explanation EM for both Self and Orig (b,d).
+From Figure 2(b), we observe that across held-out data on all three tasks-Hint-MMLU, AITA, and
+Refusal-the regularized model M reg's predicted explanations match its own labels E ( M reg ) better
+than the original targets E ( M 0 ) it was trained on. Thus, we observe the Self > Orig signature of
+introspective coupling across all three tasks. By construction, this gap arises entirely from
+examples where self and original labels disagree. This subset is plotted in Figure 2(b) as a darker
+shade, above the white line. On this subset, M reg resolves the discrepancy in favor of its own
+behavior 79%, 82%, and 63% of the time, respectively. In Section B.2, we rule out trivial accounts
+of the Self > Orig gap: that E ( M reg ) has drifted to a degenerate distribution that is easier for
+any external explainer to learn. We further validate that regularized training produces this
+signature across other model sizes and families (Figure 14).
+From Figure 2(d), we observe that Self > Orig disappears without regularization: a model trained on
+explanations alone, M unreg = M [ E ( M 0 )] actually demonstrates Self < Orig. When comparing
+Figure 2(a) against Figure 2(c), we notice that M unreg's behavior drifts further away from M 0 than
+M reg's behavior drifts. Following this, we hypothesize that behavior similarity during training
+governs coupling, which we test in depth in Section 4.
+3 See example in Section B.5.
+6
+Guo et al.
+Introspective Coupling
+
+[Section 14] (level 1) 3.3 Introspective coupling at the mechanistic level
+(2457 chars)
+----------------------------------------------------------------------------------------------------
+We perform mechanistic analysis of models that display the Self > Orig signature. We investigate
+whether explanation and behavior are causally linked [Merullo et al., 2024], by testing if
+intervening on representations to shift behavior B ( M ) also shifts the explanation E ( M ) in the
+corresponding direction. We conduct our interpretability experiments on Hint-MMLU models.
+̸
+We intervene on representations via activation patching (Figure 3 left). Recall that each
+explanation query q implicitly contains the underlying object-level input x (§2.1). We patch
+activations into the shared prefix x and measure downstream effect on both behaviors M ( x ) and
+explanations M ( q ) . We create two counterfactual inputs, a source x and a target x ′ (with
+corresponding source and target meta-questions q , q ′ ) that share the same hint cue C = C ′ , but
+have different cue-included behavioral responses M ( x ) = M ( x ′ ) and as a result different
+ground-truth explanations E ( M )( q ) = E ( M )( q ′ ) . For each pair, we patch activations from
+the source forward pass (i.e. x and q ) to the target forward pass (i.e. x ′ and q ′ ) at
+corresponding (layer, token) positions, and measure the normalized logit difference (NLD)
+where source is the logit elicited from a M ( x ) or M ( q ) , target is the logit elicited from a M
+( x ′ ) or M ( q ′ ) , and patched is the logit elicited from a forward pass of M ( x ) with only
+one activation from M ( x ′ ) patched, or from a forward pass of M ( q ) with only one activation
+from M ( q ′ ) patched. Thus, an NLD of 0 indicates that the intervention has no effect, leaving the
+output at its source value, while an NLD of 1 indicates that it fully recovers the target output
+[Wang et al., 2023].
+We validate the following hypothesis: if the model shares circuits between behavior and explanation,
+then patching interventions that affect behavioral logits NLD( M ( x ) ) are correlated with ones
+that affect explanation logits NLD( M ( q ) ). The result is shown in Figure 3. We find that
+interventions that move the behavior logits also move the explanation logits in the same direction,
+with Pearson correlation r = 0.89. This means that the same layer/token activations are used for
+behavioral responses as for the explanations. Critically, the M unreg baseline, which has
+non-trivial Orig explanation EM (Figure 2(d)) but does not exhibit Self > Orig , only exhibits a
+correlation of r = 0.527 (Section C).
+
+[Section 15] (level 1) 4 When does introspective coupling happen?
+(3722 chars)
+----------------------------------------------------------------------------------------------------
+Introspective coupling is desirable for faithful explanation because it means that the model's
+explanations track its current behavior. We next ask when this coupling emerges. Our findings in
+Section 3.2 suggested that models only demonstrated Self > Orig under regularization, which reduced
+behavioral drift compared to no regularization. Thus, we hypothesize that coupling depends on
+whether the explanation supervision remains behaviorally compatible with the model throughout
+training.
+Formally, let E ( t ) sup denote the explanation supervision labels used for SFT at training step t
+. In the default fixed-label setting, E ( t ) sup = E ( M 0 ) for all t ; in this section, we vary E
+( t ) sup directly. Let E ( M t ) denote the ground-truth explanations constructed from the current
+model's behavior at step t . We refer to the similarity between E ( t ) sup and E ( M t ) as online
+label-self compatibility : the degree to which the explanation training targets at step t agree with
+the explanations of the current model's behavior. Thus, our central hypothesis is
+Hypothesis: High online label-self agreement (i.e. E ( t ) sup and E ( M t ) agreement) over the
+course of training (i.e. ∀ t ) is an important factor for the emergence of Self > Orig.
+The three subsections below probe this hypothesis by varying online compatibility through different
+mechanisms: changing the behavioral regularization weight λ , which affects how close M t remains to
+the fixed explanation labels (Section 4.1); directly controlling the agreement between E ( t ) sup
+and E ( M t ) via online relabeling (Section 4.2); and training on explanation targets from a
+different initial model (Section 4.3), which
+̸
+7
+Guo et al.
+Introspective Coupling
+Figure 3: Mechanistic signature of introspection: activation interventions that modify behavior are
+correlated with those that modify the explanation. Left: Schematic of the activation-patching
+intervention. We construct pairs of prompts with the same cue but different counterfactual
+explanation labels: for one prompt, removing the cue changes the model's answer, while for the other
+it does not. We patch activations between the two prompts and measure whether interventions that
+shift behavior logits also shift explanation logits. Right: Each point represents a single (layer,
+token) patching position. The x-axis shows the mean normalized logit-difference for the behavior
+prediction (cue-included answer), while the y-axis shows the corresponding normalized
+logit-difference for the explanation's change/no-change prediction. Patching effects on behavior and
+explanation are strongly correlated with Pearson r = 0.89.
+The
+v
+ℓ
+0
+ℓ
+1
+ℓ
+2
+hint
+is
+B
+x
+0
+x
+1
+x
+2
+x
+3
+ℓ
+0
+ℓ
+1
+ℓ
+2
+The hint
+is
+B
+Q2
+->
+Still C
+Q1
+What if we
+remove hint
+->
+B -> A
+Q1
+->
+Still C
+v
+ℓ
+0
+ℓ
+1
+ℓ
+2
+The hint
+is
+B
+Answer:
+What if we
+remove hint
+Answer:
+What if we
+remove hint
+Answer:
+->
+B
+->
+C
+->
+C
+Behavior and Explanation changes
+are correlated
+✅
+0.0
+0.1
+0.2
+0.3
+0.4
+Cue-included match mean normalized logit diff
+0.0
+0.1
+0.2
+0.3
+0.4
+Explanation mean normalized logit diff
+Activation patching correlation |
+M
+reg
+Combined (n=864, r=0.888)
+OLS fit:
+y
+=1.73
+x
+0.002
+0.0
+0.1
+0.2
+0.3
+0.4
+Cue-included match mean normalized logit diff
+0.0
+0.1
+0.2
+0.3
+0.4
+Explanation mean normalized logit diff
+Activation patching correlation |
+M
+reg
+n=864, r=0.888
+OLS fit:
+y
+=1.73
+x
+0.002
+separates the role of initial label-model similarity from online compatibility during training. 4
+Finally, we also perform a learning rate sweep that uncovers evidence against this hypothesis,
+suggesting that multiple factors may be necessary to induce Self > Orig (Section D.2). We focus our
+analysis in this section on the Hint-MMLU setting.
+
+[Section 16] (level 1) 4.1 Behavioral Regularization Preserves Online Label-Self Compatibility
+(1281 chars)
+----------------------------------------------------------------------------------------------------
+We begin by performing a finer-grained version of our regularization vs. no regularization
+experiment in Section 3.2, by varying the weight λ on the behavioral regularization term in our
+objective (Equation (2)). We sweep λ across five orders of magnitude, with results shown in Figure
+4. We find that coupling begins to emerge at remarkably small values: a Self > Orig gap is visible
+for any λ ≳ 5 × 10 -3 , and the gap stays consistent for bigger λ . Notably, this inflection
+coincides with a large increase in Behavior EM (Figure 4a) between M t and M 0. This is consistent
+with our hypothesis that high online label-self agreement is important for Self > Orig. In this
+setup, the original model M 0 is the supervision source throughout training so E ( t ) sup = E ( M 0
+) for all t . Thus, when M t and M 0 remain close (high behavioral EM) throughout training, E ( M t
+) remains similar to E ( t ) sup, and Self > Orig emerges.
+However, this experiment does not distinguish whether coupling requires the current model being
+trained to remain close to the original model M 0 or to the source of the explanation labels E ( t )
+sup. We isolate this distinction directly in Section 4.2, where we vary the current model's
+proximity to the labels, independent of the original model.
+
+[Section 17] (level 1) 4.2 Introspective Coupling Depends on Online Label-Self Agreement
+(4707 chars)
+----------------------------------------------------------------------------------------------------
+We conduct a controlled test of our hypothesis that high online label-self agreement leads to
+introspective coupling. Because M 's behavior changes dramatically over the course of training, at
+every gradient step, we regenerate the explanation training targets E ( t ) sup so that they agree
+with the current model behavior B ( M ) on a fraction ν of labels and disagree-via a randomly
+sampled alternative answer-on the remaining fraction 1 -ν :
+4 We also plot the emergence of coupling over the course of training in Section A.
+8
+Guo et al.
+Introspective Coupling
+Figure 4: Behavioral regularization weight λ sweep on Hint-MMLU (§4.1). (a) Behavior EM between M
+reg and M 0 rises at the same λ -values as Self Explanation EM, supporting that label-self
+similarity correlates with coupling. (b) Explanation EM scored against labels of M reg (blue) and M
+0 (orange). The Self > Orig signature occurs quickly once λ ≥ 5e -3, and the gap stays consistent
+for bigger λ .
+0
+0.0001
+0.001
+0.005
+0.01
+0.1
+0.25
+0.5
+0.75
+1
+2
+3
+5
+50%
+60%
+70%
+80%
+90%
+100%
+Behavior EM
+55
+61
+67
+85
+85
+85
+86
+85
+87
+87
+86
+86
+86
+(a) Behavior EM (self vs. original)
+M
+reg
+vs.
+M
+0
+Hollow = Behavior
+0
+0.0001
+0.001
+0.005
+0.01
+0.1
+0.25
+0.5
+0.75
+1
+2
+3
+5
+50%
+60%
+70%
+80%
+90%
+100%
+Explanation EM
+60
+64
+72
+87
+87
+90
+90
+90
+89
+90
+87
+87
+87
+80
+81
+79
+83
+81
+83
+83
+83
+83
+83
+80
+81
+81
+(b) Explanation EM (self vs. original)
+Orig (
+M
+reg
+M
+0
+)
+Self (
+M
+reg
+M
+reg
+)
+Solid = Explanation
+KL Regularization Weight ( )
+Figure 5: Continuous relabeling with fixed online label-self agreement (§4.2). We control the
+per-step agreement ν between the explanation supervision E ( t ) sup and the model's self-labels E (
+M t ) . (a) As ν increases, Behavior EM (orange) stays roughly constant at ≈ 0.5, indicating that
+Self > Orig emerges from higher online label-self similarity, not reduced drift from M 0 . (b)
+Meanwhile, Self Explanation EM (blue) is initially equal to Orig Explanation EM (orange), then rises
+sharply above it once ν ≈ 0.7.
+1.0
+0.9
+0.8
+0.7
+0.6
+0.5
+Online Label-Self Agreement ( )
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Behavioral EM
+(a) Behavioral EM vs Label-Self Agreement
+M
+reg
+vs.
+M
+0
+Hollow = Behavior
+1.0
+0.9
+0.8
+0.7
+0.6
+0.5
+Online Label-Self Agreement ( )
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Explanation EM
+(b) Explanation EM vs Label-Self Agreement
+Self (
+M
+reg
+M
+reg
+)
+Orig (
+M
+reg
+M
+0
+)
+Solid = Explanation
+̸
+On the behavioral side, we still regularize M toward the base model M 0. Thus, we have a model:
+We sweep ν in Figure 5. In (b), we find a sharp transition in explanation behavior as the online
+label-self agreement ν varies. We observe introspective coupling (Self > Orig) for ν ≥ 0.7 but once
+ν ≤ 0.6, both Self and Orig Explanation EM collapse. This supports our hypothesis that coupling
+requires a minimum level of agreement between the explanation supervision and the current model's
+behavior; for Qwen3-8B on Hint-MMLU, this threshold also appears to be ≈ 0.7.
+9
+Guo et al.
+Introspective Coupling
+Figure 6: Training on explanation labels from another model (§4.3). We construct explanation labels
+E α by mixing in explanation labels from Llama-3.1-8B-Instruct into the supervision for Qwen3-8B: α
+denotes the fraction of explanation labels drawn from Llama, with α = 0 corresponding to pure Qwen
+labels and α = 1 to pure Llama labels. Behavior is still regularized toward Qwen throughout. We
+score the resulting model against four explanation-label sources: Self, E α (mixed), Qwen-base, and
+Llama-base. (a) Across the sweep, the model's behavior remains closest to its initial self (steady
+80% behavioral EM against Qwen), but (b) models always demonstrate introspective coupling with Self
+> Orig. Thus, though explanation supervision comes from another model, the trained model's
+explanations continue to track its own current behavior better than either base-model label source.
+0.0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+50%
+60%
+70%
+80%
+90%
+100%
+Exact Match
+100
+81
+80
+55
+57
+(a) Behavior EM
+0.0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+88
+69
+78
+61
+62
+57
+(b) Explanation EM
+Cross-Model Label Mixing
+(
+)
+Self (
+M
+(
+)
+reg
+M
+(
+)
+reg
+)
+Orig mixed (
+M
+(
+)
+reg
+E
+)
+Orig Qwen (
+M
+(
+)
+reg
+M
+0
+)
+Orig Llama (
+M
+(
+)
+reg
+M
+Llama
+0
+)
+Hollow markers: Behavior EM, panel (a)
+Solid markers: Explanation EM, panel (b)
+We measure behavioral agreement between the trained model and the original model M 0 in Figure 5(a).
+Interestingly, behavioral agreement remains roughly constant across ν . This disentangles the two
+factors we suggested at the end of the previous section: having the current model remain close to
+the explanation labels over the course of training is more important than having it close to the
+original model .
+
+[Section 18] (level 1) 4.3 Introspective Coupling Persists with Cross-Model Explanation Labels
+(2686 chars)
+----------------------------------------------------------------------------------------------------
+Previously, we found that it is more important for the current model to remain close to the
+explanation labels than to the initial model. We next ask whether those labels must be generated by
+the model's own initial checkpoint. Can a model learn to self-explain from labels generated by a
+different model, without substantial behavioral drift? If so, explanation labels need not be
+collected separately for every model: labels from one model could induce self-explanations in
+another.
+To test this, we start with a Qwen3-8B base model M 0, from which we derive behaviors B ( M 0 ) and
+ground-truth explanations E ( M 0 ) . We then replace some of Qwen's explanation labels with labels
+from Llama-3.1-8B-Instruct, denoted ( M Llama ). The two models' ground-truth explanations agree on
+only 53% of examples.
+For each mixture ratio α ∈ [ 0, 1 ] , we construct an explanation supervision dataset
+where α is the fraction of explanation labels sourced from Llama. We train
+Crucially, we regularize behavior toward the original Qwen throughout , using B ( M 0 ) ; only the
+explanation supervision is mixed. Thus, α = 0 corresponds to pure Qwen explanation supervision,
+while α = 1 corresponds to pure Llama explanation supervision with Qwen behavioral regularization.
+Results are shown in Figure 6. Plot (a) confirms that this intervention does not significantly
+affect the trained model's behavior. Across α , the trained model M ( α ) reg remains a steady 80%
+from M 0 (Orig Qwen line) and a steady 55% from M Llama (Orig Llama line). Thus, replacing Qwen
+explanation labels with Llama labels does not cause the trained model's behavior to move toward
+Llama. Nevertheless, on the explanation side (b), Self > Orig holds for every value of α . Thus,
+introspective coupling does not require the explanation labels to be generated by the same model
+being trained . 5
+10
+Guo et al.
+Introspective Coupling
+These results suggest that explanation datasets may be reusable across behaviorally similar models.
+Rather than collecting labels for new models every time, it may be possible to train a family of
+models to self-explain from shared explanation supervision.
+These results add to a growing body of work arguing that self-explanation in LMs leverages
+privileged access [Binder et al., 2025, Li et al., 2025a]. Even when the model is explicitly trained
+on another model's explanations, including examples where the two models disagree, its predictions
+track its own behavior more closely than the foreign explanation labels. We interpret this as
+further evidence that introspective coupling depends more on online label-self agreement than on the
+provenance of the original explanation labels.
+
+[Section 19] (level 1) 5 Generalization
+(1512 chars)
+----------------------------------------------------------------------------------------------------
+In Sections 3 and 4, we studied behavioral drift that occurs as an emergent consequence of
+explanation training. However, in realistic post-training scenarios (or in scenarios where
+explanations would be useful), models are trained concurrently with other post-training data that
+may induce different behavioral shifts. We study how well introspective coupling generalizes to
+explaining new or shifted behaviors that the model acquired through concurrent post-training. 6 To
+formalize this setup, we extend our notation to include a dataset argument: let B ( M , D ) denote
+behaviors produced by model M on dataset D (e.g. Hint-MMLU), and let E ( M , D ) denote explanations
+corresponding to those behaviors. Starting from our default training pipeline, we concurrently train
+M on an auxiliary post-training dataset A :
+where explanation training and behavioral regularization are applied only on the original dataset D
+and the auxiliary dataset A provides behavior-only supervision: the model receives no explanation
+labels for A .
+We then evaluate whether M aux's explanations track its current behavior on D and on A .
+Ground-truth explanations are constructed post hoc from M aux's own behavior. Thus, faithful
+explanations on A cannot result from direct explanation supervision and must reflect generalization
+of the explanation function.
+We study two kinds of auxiliary shift: in §5.1 we inject new, synthetic behavior, and in §5.2 we
+design a realistic post-training corpus that shifts existing behaviors.
+
+[Section 20] (level 1) 5.1 Generalization to Newly Acquired Behaviors
+(1565 chars)
+----------------------------------------------------------------------------------------------------
+We first test whether coupling extends to behaviors the model could only have acquired through
+auxiliary training. We generate synthetic nonsense 'Jabberwocky' data J = { ( xJ , yJ ) } that
+follows the Hint-MMLU format but uses fictitious, alien-sounding questions that LMs do not have
+priors over, guaranteeing that the model's behavior on J cannot be inherited from M 0. 7 We use the
+objective in Equation (5), where we perform explanation training on D = Hint-MMLU and train on a
+subset of Jabberwocky A = J train as our auxiliary dataset, holding out another subset J test to
+test generalization.
+Results. Figure 7 reports Explanation EM on the three evaluation sets ( D , A , J test ). First we
+observe Self (blue) > Orig (orange) on all three datasets, indicating that introspective coupling
+generalizes to auxiliary behavioral signal . In particular, (a) shows that the coupling on the
+original dataset D is preserved
+5 That said, explanation quality does degrade overall as the supervision diverges from original Qwen
+M 0's behavior: Self Explanation EMfalls from 88% at α = 0.0 (all Qwen labels) to 69% at α = 1.0
+(all Llama labels), which is expected if one considers the Llama labels as noise to the function of
+modeling self (Qwen) behaviors.
+6 Aversion of this question was explored by Binder et al. [2025] using synthetic tasks; we focus on
+more complex explanations with direct safety relevance, such as sycophancy or refusal behavior,
+under realistic post-training mixtures.
+7 Samples can be found in Section E.1
+11
+Guo et al.
+Introspective Coupling
+
+[Section 21] (level 1) Explanation generalizes to newly trained behavior
+(1114 chars)
+----------------------------------------------------------------------------------------------------
+Behavior EM Explanation EM
+0%
+20%
+40%
+60%
+80%
+100%
+Score
+56.9%
+62.8%
+55.9%
+83.8%
+61.3%
+(a) Eval = Hint-MMLU
+Behavior EM Explanation EM
+13.6%
+93.5%
+12.6%
+15.6%
+90.1%
+11.3%
+(b) Eval =
+J
+train
+Behavior EM Explanation EM
+24.2% 25.4%
+25.7%
+79.8%
+26.7%
+(c) Eval =
+J
+test
+Behavior:
+M
+aux
+vs
+M
+0
+Orig (
+M
+aux
+M
+0
+)
+Behavior:
+M
+aux
+vs
+J
+train
+(memorized)
+Self (
+M
+aux
+M
+aux
+)
+Behavior:
+M
+reg
+vs
+M
+aux
+No-drift (
+M
+reg
+M
+aux
+)
+D : explanation-training dataset (Hint-MMLU) A : auxiliary corpus mixed in during training ( J train
+)
+Figure 7: Explanations generalize to newly acquired behaviors (§5.1). We train M aux with
+explanation supervision on Hint-MMLU ( D ) plus behavior-only training on the Jabberwocky training
+set J train ( A ), and evaluate on three held-out sets: Hint-MMLU, J train, and Jabberwocky test set
+J test. Self (blue) > Orig (orange) signature persists on all three sets. Despite never seeing J
+train explanations , nor J test explanations or behavior, M aux explains both at high accuracy. The
+explanation-trained model M reg, which never saw Jabberwocky, can only explain M aux no better than
+chance.
+
+[Section 22] (level 1) Self-explanation persists under behavioral drift
+(2025 chars)
+----------------------------------------------------------------------------------------------------
+D : explanation-training dataset A : auxiliary corpus mixed in during training
+Figure 8: Explanations track shifts to existing behaviors (§5.2). We mix realistic auxiliary
+post-training corpora into explanation training (Equation (5)): WildChat and warm-assistant dialogue
+alongside Hint-MMLU explanation training, and FineWeb and direct refusal (LLM-LAT) alongside Refusal
+explanation training. Each panel (a)-(d) is one ( D , A ) setup, with Behavior EM (left) and
+Explanation EM (right). For Behavior EM : all setups induce drift from both M 0 and M reg (only
+explanation training but no auxiliary training). For Explanation EM : We find that (1) Self > Orig
+coupling persists under auxiliary training, and that (2) Self > M reg →M aux, indicating that the
+model's explanations have shifted alongside auxiliary training to reflect its shifted behavior.
+Behavior EM Explanation EM
+0%
+20%
+40%
+60%
+80%
+100%
+Score
+86.6% 84.0%
+85.2%
+94.1%
+79.8%
+(a)
+D
+=
+Hint-MMLU,
+A
+=
+WildChat
+Behavior EM Explanation EM
+82.6% 83.2%
+76.2%
+85.1%
+79.5%
+(b)
+D
+=
+Hint-MMLU,
+A
+=
+Warm
+Behavior EM Explanation EM
+72.5%
+78.9%
+73.2%
+78.3%
+73.3%
+(c)
+D
+=
+Refusal,
+A
+=
+FineWeb
+Behavior EM Explanation EM
+72.2%
+76.3%
+73.1%
+78.0%
+70.0%
+(d)
+D
+=
+Refusal,
+A
+=
+LLM-LAT
+Behavior:
+M
+aux
+vs
+M
+0
+Behavior:
+M
+aux
+vs
+M
+reg
+Orig (
+M
+aux
+M
+0
+)
+Self (
+M
+aux
+M
+aux
+)
+No-drift (
+M
+reg
+M
+aux
+)
+under auxiliary signal, (b) shows that M aux explains J train nearly perfectly (90.5%) despite never
+receiving explanation supervision, and (c) shows that explanation accuracy is 79.8% on J test, which
+received neither explanation nor behavior signal. 8
+These results are not explained by the auxiliary data failing to change the model: M reg, which is
+trained only with Hint-MMLU explanation supervision and never sees Jabberwocky, explains M aux's
+Jabberwocky behavior substantially worse than M aux explains itself, and only at chance. Thus, M
+aux's explanations track behaviors acquired through auxiliary training rather than merely preserving
+its original explanation policy.
+
+[Section 23] (level 1) 5.2 Explanations Track Shifts to Existing Behaviors
+(2742 chars)
+----------------------------------------------------------------------------------------------------
+While Section 5.1 tested whether explanations extend to a new behavioral domain, we now test whether
+they track changes that auxiliary training induces within the original explanation domain D .
+Post-training routinely shifts behavior in unintentional ways: instruction-tuning increases
+sycophancy [Wei et al., 2024], and narrow fine-tuning can produce broadly misaligned models that
+stop refusing [Betley et al., 2025b]. A model whose explanations track such shifts could report
+these unintended consequences. We reuse objective Equation (5), now instantiating A with various
+types of real post-training corpora:
+8 J test responses are near random for the nonsense questions with no ground-truth, and the model
+defers to changing to the hint. However, knowing to output the cue-ablated random response on J test
+is an ability that M 0 or M reg don't have without training explicitly on Jabberwocky behavior. More
+details in Section E.1.
+12
+Guo et al.
+Introspective Coupling
+D = Hint-MMLU, A = WildChat: WildChat [Zhao et al., 2024] is a common post-training dataset of
+real-world user-chatbot interactions.
+D = Hint-MMLU, A = Warm Assistant Responses: Following [Ibrahim et al., 2026], we generate a set of
+'warm and empathetic' assistant dialogues, which have been shown to make models more sycophantic. 9
+D = Refusal, A = FineWeb: FineWeb [Penedo et al., 2024] is a generic web corpus used for pretraining
+and induces a less directed shift in behavior.
+D = Refusal, A = LLM-LAT Direct Refusal: We mix in a corpus of entirely harmful requests from
+LLM-LAT and train the model to directly refuse them, shifting the model's standard refusal behavior.
+10
+Figure 8 confirms that all four setups produce meaningful drift despite behavioral regularization,
+with respect to both the base model M 0, and a model M reg without training on auxiliary data A .
+Furthermore, we find that: (1) Self > Orig persists under auxiliary training : M aux →M aux (blue)
+beats M aux →M 0 (orange) across all settings, and (2) Explanations track with
+auxiliary-training-induced shift : M aux explains its own behavior better than the no-drift
+explainer M reg does, indicating that M aux is not simply learning to explain the non-drifted part
+of its behavior. The gap between M aux and M reg's explanation of M aux is precisely where M aux's
+explanation shifted to reflect its shifted behavior.
+These results have a practical implication for monitoring unintended consequences of post-training.
+Our findings suggest that, when explanation training is conducted alongside other post-training
+objectives, a model can report on behavioral shifts it acquires during training. Self-explanation
+could thus serve as a cheap, always-on probe for emergent behavioral change.
+
+[Section 24] (level 1) 6 Related Work
+(2056 chars)
+----------------------------------------------------------------------------------------------------
+LMs can produce natural language explanations of their outputs, either in chain-of-thought [Wei et
+al., 2022] or post-hoc, but their explanations can be unfaithful to their true decision-making
+processes [Turpin et al., 2023, Lanham et al., 2023, Barez et al., 2025]. Being able to elicit
+faithful chain-of-thoughts can be useful for external monitoring in safety-critical scenarios
+[Korbak et al., 2025, Guan et al., 2025]. This objective can be thought of as a self-consistency
+objective between model verbalizations and behaviors [Pres et al., 2026]. Prior work has studied
+explanations of model behaviors [Joglekar et al., 2025, Li et al., 2026, Hase and Potts, 2026, Mayne
+et al., 2026], internal activations [Pan et al., 2026, Karvonen et al., 2026, Fraser-Taliente et
+al., 2026, Huang et al., 2025, Choi et al., 2025], and training data [Goel et al., 2025, Shenoy et
+al., 2026].
+Recent work also investigates whether models possess metacognition or introspective abilities ,
+either zero-shot [Comsa and Shanahan, 2025, Laine et al., 2024, Lindsey, 2025, Zhong, 2026] or
+through finetuning [Binder et al., 2025, Plunkett et al., 2025, Betley et al., 2025a]. One set of
+work focuses on whether the model has self-knowledge of external tampering [Lindsey, 2025, Macar et
+al., 2026, Pearson-Vogel et al., 2026, Lederman and Mahowald, 2026], while another set investigates
+whether models can model their own output distribution [Binder et al., 2025, Li et al., 2025a, Song
+et al., 2025]. Our work falls into the second camp. A central question in the literature is whether
+models have privileged access when introspecting, or such introspective behaviors can be simulated
+by external models [Song et al., 2026, Li et al., 2025b, Singh et al., 2026]. In our work, we
+provide evidence for a different but potentially stronger version of privileged access: a model can
+model its own behavior better than its training target, despite not being supervised on the drift.
+9 Details in Section E.2.
+10 Details in Section E.2.
+13
+Guo et al.
+Introspective Coupling
+
+[Section 25] (level 1) 7 Conclusion
+(666 chars)
+----------------------------------------------------------------------------------------------------
+We have shown the surprising phenomenon of introspective coupling : LMs trained on a fixed set of
+explanations derived from their base model learn to explain their own current behaviors more
+faithfully than the training targets they were supervised on. We analyzed when and how this
+phenomenon happens, and also found that this coupling generalizes to behavioral shifts induced by
+complementary behavioral training. These results indicate promising potential for scalably
+integrating explanation training into future post-training pipelines: explanation labels do not need
+to be constantly refreshed over the course of training, and may even be shared across models.
+
+[Section 26] (level 1) Limitations & Future Works
+(1901 chars)
+----------------------------------------------------------------------------------------------------
+Training requires sufficient behavioral variance. The introspection training signal vanishes if M
+0's behavior on x vs. x \ C is nearly always the same (or nearly always different): E ( M 0 )
+collapses to the same label (always 'would change' or 'would not change'), so explanation training
+degenerates into majorityclass prediction. Collecting diverse supervision can be difficult. For
+example, for refusal, alignment training tends to drive M 0 to refuse almost every adversarial
+prompt; thus, the explanation E ( M 0 ) is almost always 'would not change from refusal', which
+makes the training signal useless: M reg simply learns to output the same explanation, rather than
+learning to introspect.
+Generalization. Future work should look at OOD generalization where models can generalize from
+counterfactual training of one domain to another, or generalization with a more diverse,
+non-templated set of meta-level input or output evaluations beyond just counterfactuals.
+Our story for when introspective coupling emerges is incomplete. In Section 4, we hypothesized that
+online label self-similarity predicts the emergence of introspective coupling. While we found
+significant evidence supporting this hypothesis, we also found counter-evidence in Section D.2, and
+evidence that there may be additional factors in Section D.1. Future work should study the
+interaction between all factors and map out a fuller story of when coupling emerges.
+Our mechanistic story is incomplete. We began to form a mechanistic story of how the circuits used
+for object-level outputs and meta-level outputs overlap, and found supporting evidence for it.
+However, the story is far from complete. The asymmetry we find between the two patching signatures
+in Section C.2 is not explained. Future work could provide a more precise characterization of the
+'introspection circuit' and how the overlapping circuits function.
+
+[Section 27] (level 1) Broader Impact
+(1117 chars)
+----------------------------------------------------------------------------------------------------
+Faithful introspection is a prerequisite for using model explanations as a tool for oversight of
+language models: if a model's verbalized rationales causally track its behavior, downstream users
+and auditors can use those rationales to anticipate, debug, and contest model decisions, including
+in safety-critical domains such as misalignment detection. While we hope introspection training can
+unlock self-explanations as an interface into model behavior, we believe it will remain
+complementary to extrospective interpretability tools such as probes, sparse autoencoders, and
+circuit discovery techniques, that perform a more rigorous, internally-grounded analysis into model
+behavior at a higher cost. Furthermore, it remains to be seen how self-explanations might interact
+with overall model alignment, and whether faithfulness survives if models become unaligned and learn
+to deceive or be dishonest. Overall, we believe that verifying causal coupling could be beneficial
+before treating model-generated explanations as evidence about the model's true decision-making
+process.
+14
+Guo et al.
+Introspective Coupling
+
+[Section 28] (level 1) Acknowledgments
+(623 chars)
+----------------------------------------------------------------------------------------------------
+This work was supported by the National Science Foundation through grant IIS-2238240, the IARPA
+BENGAL program, the DARPA AIQ program through CMO contract HR00112520025, and the MIT Generative AI
+Consortium. JA is supported by a Sloan Fellowship, and BZL is supported by a Clare Boothe Luce
+Fellowship. We thank Coefficient Giving (prev. Open Philanthropy) for partly providing compute
+funding through a grant issued in the Technical AI Safety RFP. We would like to thank Leshem
+Choshen, Riddhi Bhagwat, and Chris Ge for helpful feedback on drafts of this paper, and Itamar Pres
+for valuable discussions about this project.
+
+[Section 29] (level 1) References
+(14555 chars)
+----------------------------------------------------------------------------------------------------
+Fazl Barez, Tung-Yu Wu, Iván Arcuschin, Michael Lan, Vincent Wang, Noah Siegel, Nicolas Collignon,
+Clement Neo, Isabelle Lee, Alasdair Paren, Adel Bibi, Robert Trager, Damiano Fornasiere, John Yan,
+Yanai Elazar, and Yoshua Bengio. Chain-of-thought is not explainability, 2025. URL
+https://aigi.ox.ac.uk/ wp-content/uploads/2025/07/Cot_Is_Not_Explainability.pdf . Preprint. Under
+review.
+Jan Betley, Xuchan Bao, Martín Soto, Anna Sztyber-Betley, James Chua, and Owain Evans. Tell me about
+yourself: LLMs are aware of their learned behaviors. In International Conference on Learning
+Representations , 2025a. URL https://openreview.net/forum?id=IjQ2Jtemzy .
+Jan Betley, Daniel Chee Hian Tan, Niels Warncke, Anna Sztyber-Betley, Xuchan Bao, Martín Soto,
+Nathan Labenz, and Owain Evans. Emergent misalignment: Narrow finetuning can produce broadly
+misaligned LLMs. In International Conference on Machine Learning , 2025b. URL
+https://openreview.net/forum?id= aOIJ2gVRWW .
+Felix Jedidja Binder, James Chua, Tomek Korbak, Henry Sleight, John Hughes, Robert Long, Ethan
+Perez, Miles Turpin, and Owain Evans. Looking inward: Language models can learn about themselves by
+introspection. In International Conference on Learning Representations , 2025. URL
+https://openreview.net/ forum?id=eb5pkwIB5i .
+Yanda Chen, Joe Benton, Ansh Radhakrishnan, Jonathan Uesato, Carson Denison, John Schulman, Arushi
+Somani, Peter Hase, Misha Wagner, Fabien Roger, Vlad Mikulik, Samuel R. Bowman, Jan Leike, Jared
+Kaplan, and Ethan Perez. Reasoning models don't always say what they think, 2025. URL https:
+//arxiv.org/abs/2505.05410 .
+Myra Cheng, Sunny Yu, Cinoo Lee, Pranav Khadpe, Lujain Ibrahim, and Dan Jurafsky. ELEPHANT:
+Measuring and understanding social sycophancy in LLMs. In International Conference on Learning
+Representations , 2026. URL https://openreview.net/forum?id=igbRHKEiAs .
+Wei-Lin Chiang, Zhuohan Li, Zi Lin, Ying Sheng, Zhanghao Wu, Hao Zhang, Lianmin Zheng, Siyuan
+Zhuang, Yonghao Zhuang, Joseph E. Gonzalez, Ion Stoica, and Eric P. Xing. Vicuna: An open-source
+chatbot impressing GPT-4 with 90%* ChatGPT quality, March 2023. URL https://lmsys.org/blog/
+2023-03-30-vicuna/ .
+Dami Choi, Vincent Huang, Sarah Schwettmann, and Jacob Steinhardt. Scalably extracting latent
+representations of users. https://transluce.org/user-modeling , November 2025.
+Iulia M. Comsa and Murray Shanahan. Does it make sense to speak of introspection in large language
+models?, 2025. URL https://arxiv.org/abs/2506.05068 .
+Kit Fraser-Taliente, Subhash Kantamneni, Euan Ong, Dan Mossing, Christina Lu, Paul C. Bogdan,
+Emmanuel Ameisen, James Chen, Dzmitry Kishylau, Adam Pearce, Julius Tarng, Alex Wu, Jeff Wu, Yang
+Zhang, Daniel M. Ziegler, Evan Hubinger, Joshua Batson, Jack Lindsey, Samuel Zimmerman, and Samuel
+Marks.
+15
+Guo et al.
+Introspective Coupling
+Natural language autoencoders produce unsupervised explanations of llm activations. Transformer
+Circuits Thread , 2026. URL https://transformer-circuits.pub/2026/nla/index.html .
+Leo Gao, Jonathan Tow, Baber Abbasi, Stella Biderman, Sid Black, Anthony DiPofi, Charles Foster,
+Laurence Golding, Jeffrey Hsu, Alain Le Noac'h, Haonan Li, Kyle McDonell, Niklas Muennighoff, Chris
+Ociepa, Jason Phang, Laria Reynolds, Hailey Schoelkopf, Aviya Skowron, Lintang Sutawika, Eric Tang,
+Anish Thite, Ben Wang, Kevin Wang, and Andy Zou. The language model evaluation harness, 07 2024. URL
+https://zenodo.org/records/12608602 .
+Avichal Goel, Yoon Kim, Nir Shavit, and Tony T. Wang. Learning to interpret weight differences in
+language models, 2025. URL https://arxiv.org/abs/2510.05092 .
+Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad AlDahle,
+Aiesha Letman, Akhil Mathur, Alan Schelten, et al. The Llama 3 herd of models, 2024. URL
+https://arxiv.org/abs/2407.21783 .
+Melody Y. Guan, Miles Wang, Micah Carroll, Zehao Dou, Annie Y. Wei, Marcus Williams, Benjamin Arnav,
+Joost Huizinga, Ian Kivlichan, Mia Glaese, Jakub Pachocki, and Bowen Baker. Monitoring
+monitorability, 2025. URL https://arxiv.org/abs/2512.18311 .
+Peter Hase and Christopher Potts. Counterfactual simulation training for chain-of-thought
+faithfulness, 2026. URL https://arxiv.org/abs/2602.20710 .
+Vincent Huang, Dami Choi, Daniel D Johnson, Sarah Schwettmann, and Jacob Steinhardt. Predictive
+concept decoders: Training scalable end-to-end interpretability assistants, 2025. URL
+https://arxiv.org/abs/ 2512.15712 .
+Lujain Ibrahim, Franziska Sofia Hafner, and Luc Rocher. Training language models to be warm can
+reduce accuracy and increase sycophancy. Nature , 652(8112):1159-1165, Apr 2026. ISSN 1476-4687.
+doi: 10.1038/s41586-026-10410-0. URL https://doi.org/10.1038/s41586-026-10410-0 .
+Liwei Jiang, Kavel Rao, Seungju Han, Allyson Ettinger, Faeze Brahman, Sachin Kumar, Niloofar
+Mireshghallah, Ximing Lu, Maarten Sap, Yejin Choi, and Nouha Dziri. Wildteaming at scale: From
+in-the-wild jailbreaks to (adversarially) safer language models. In Advances in Neural Information
+Processing Systems , 2024. URL https://openreview.net/forum?id=n5R6TvBVcX .
+Manas Joglekar, Jeremy Chen, Gabriel Wu, Jason Yosinski, Jasmine Wang, Boaz Barak, and Amelia
+Glaese. Training LLMs for honesty via confessions, 2025. URL https://arxiv.org/abs/2512.08093 .
+Adam Karvonen, James Chua, Clément Dumas, Kit Fraser-Taliente, Subhash Kantamneni, Julian Minder,
+Euan Ong, Arnab Sen Sharma, Daniel Wen, Owain Evans, and Samuel Marks. Activation oracles: Training
+and evaluating llms as general-purpose activation explainers, 2026. URL https://arxiv.org/abs/2512.
+15674 .
+Tomek Korbak, Mikita Balesni, Elizabeth Barnes, Yoshua Bengio, Joe Benton, Joseph Bloom, Mark Chen,
+Alan Cooney, Allan Dafoe, Anca Dragan, Scott Emmons, Owain Evans, David Farhi, Ryan Greenblatt, Dan
+Hendrycks, Marius Hobbhahn, Evan Hubinger, Geoffrey Irving, Erik Jenner, Daniel Kokotajlo, Victoria
+Krakovna, Shane Legg, David Lindner, David Luan, Aleksander M ˛ adry, Julian Michael, Neel Nanda,
+Dave Orr, Jakub Pachocki, Ethan Perez, Mary Phuong, Fabien Roger, Joshua Saxe, Buck Shlegeris,
+Martín Soto, Eric Steinberger, Jasmine Wang, Wojciech Zaremba, Bowen Baker, Rohin Shah, and Vlad
+Mikulik. Chain of thought monitorability: A new and fragile opportunity for AI safety, 2025. URL
+https://arxiv.org/abs/2507.11473 .
+Rudolf Laine, Bilal Chughtai, Jan Betley, Kaivalya Hariharan, Mikita Balesni, Jérémy Scheurer,
+Marius Hobbhahn, Alexander Meinke, and Owain Evans. Me, myself, and AI: The situational awareness
+dataset (SAD) for LLMs. In Advances in Neural Information Processing Systems Datasets and Benchmarks
+Track , 2024. URL https://openreview.net/forum?id=UnWhcpIyUC .
+16
+Guo et al.
+Introspective Coupling
+Tamera Lanham, Anna Chen, Ansh Radhakrishnan, Benoit Steiner, Carson Denison, Danny Hernandez,
+Dustin Li, Esin Durmus, Evan Hubinger, Jackson Kernion, Kamil˙ e Lukoši¯ ut˙ e, Karina Nguyen,
+Newton Cheng, Nicholas Joseph, Nicholas Schiefer, Oliver Rausch, Robin Larson, Sam McCandlish,
+Sandipan Kundu, Saurav Kadavath, Shannon Yang, Thomas Henighan, Timothy Maxwell, Timothy
+Telleen-Lawton, Tristan Hume, Zac Hatfield-Dodds, Jared Kaplan, Jan Brauner, Samuel R. Bowman, and
+Ethan Perez. Measuring faithfulness in chain-of-thought reasoning, 2023. URL
+https://arxiv.org/abs/2307.13702 .
+Harvey Lederman and Kyle Mahowald. Emergent introspection in AI is content-agnostic, 2026. URL
+https://arxiv.org/abs/2603.05414 .
+Belinda Z. Li, Zifan Carl Guo, Vincent Huang, Jacob Steinhardt, and Jacob Andreas. Training language
+models to explain their own computations, 2025a. URL https://arxiv.org/abs/2511.08579 .
+Chloe Li, Mary Phuong, and Daniel Tan. Spilling the beans: Teaching LLMs to self-report their hidden
+objectives. In International Conference on Learning Representations , 2026. URL
+https://openreview.net/ forum?id=sWs0cCuM8I .
+Millicent Li, Alberto Mario Ceballos Arroyo, Giordano Rogers, Naomi Saphra, and Byron C Wallace. Do
+natural language descriptions of model activations convey privileged information? In Mechanistic
+Interpretability Workshop at NeurIPS 2025 , 2025b. URL https://openreview.net/forum?id=zyhibAkzSA .
+Jack Lindsey. Emergent introspective awareness in large language models. Transformer Circuits Thread
+, 2025. URL https://transformer-circuits.pub/2025/introspection/index.html .
+Uzay Macar, Li Yang, Atticus Wang, Peter Wallich, Emmanuel Ameisen, and Jack Lindsey. Mechanisms of
+introspective awareness, 2026. URL https://arxiv.org/abs/2603.21396 .
+Andreas Madsen, Sarath Chandar, and Siva Reddy. Are self-explanations from large language models
+faithful? In Findings of the Association for Computational Linguistics, ACL 2024, Bangkok, Thailand
+and virtual meeting, August 11-16, 2024 , volume ACL 2024 of Findings of ACL , pages 295-337.
+Association for Computational Linguistics, 2024. doi: 10.18653/V1/2024.FINDINGS-ACL.19. URL
+https://doi.org/10. 18653/v1/2024.findings-acl.19 .
+Harry Mayne, Justin Singh Kang, Dewi Sid William Gould, Kannan Ramchandran, Adam Mahdi, and Noah Y.
+Siegel. A positive case for faithfulness: LLM self-explanations help predict model behavior. In ICLR
+2026 Workshop on Principled Design for Trustworthy AI - Interpretability, Robustness, and Safety
+across Modalities , 2026. URL https://openreview.net/forum?id=xBmdoFmmFS .
+Jack Merullo, Carsten Eickhoff, and Ellie Pavlick. Circuit component reuse across tasks in
+transformer language models. In International Conference on Learning Representations , 2024. URL
+https://openreview. net/forum?id=fpoAYV6Wsk .
+Alexander Pan, Lijie Chen, and Jacob Steinhardt. LatentQA: Teaching LLMs to decode activations into
+natural language. In International Conference on Learning Representations , 2026. URL
+https://openreview. net/forum?id=niUroX9EOd .
+Theia Pearson-Vogel, Martin Vanek, Raymond Douglas, and Jan Kulveit. Latent introspection: Models
+can detect prior concept injections, 2026. URL https://arxiv.org/abs/2602.20031 .
+Guilherme Penedo, Hynek Kydlíˇ cek, Loubna Ben allal, Anton Lozhkov, Margaret Mitchell, Colin
+Raffel, Leandro Von Werra, and Thomas Wolf. The fineweb datasets: Decanting the web for the finest
+text data at scale. In Advances in Neural Information Processing Systems Datasets and Benchmarks
+Track , 2024. URL https://openreview.net/forum?id=n6SCkn2QaG .
+Dillon Plunkett, Adam Morris, Keerthi Reddy, and Jorge Morales. Self-interpretability: Llms can
+describe complex internal processes that drive their decisions, 2025. URL
+https://arxiv.org/abs/2505.17120 .
+17
+Guo et al.
+Introspective Coupling
+Itamar Pres, Belinda Z. Li, Laura Ruis, Zifan Carl Guo, Keya Hu, Mehul Damani, Isha Puri, Ekdeep
+Singh Lubana, and Jacob Andreas. Position: It's time to optimize for self-consistency. In
+International Conference on Machine Learning Position Paper Track , 2026. URL
+https://time-for-consistency.github.io/ .
+Mrinank Sharma, Meg Tong, Tomasz Korbak, David Duvenaud, Amanda Askell, Samuel R. Bowman, Esin
+DURMUS, Zac Hatfield-Dodds, Scott R Johnston, Shauna M Kravec, Timothy Maxwell, Sam McCandlish,
+Kamal Ndousse, Oliver Rausch, Nicholas Schiefer, Da Yan, Miranda Zhang, and Ethan Perez. Towards
+understanding sycophancy in language models. In International Conference on Learning Representations
+, 2024. URL https://openreview.net/forum?id=tvhaxkMKAn .
+Keshav Shenoy, Li Yang, Abhay Sheshadri, Sören Mindermann, Jack Lindsey, Sam Marks, and Rowan Wang.
+Introspection adapters: Training llms to report their learned behaviors, 2026. URL
+https://arxiv.org/ abs/2604.16812 .
+Abhay Sheshadri, Aidan Ewart, Phillip Huang Guo, Aengus Lynch, Cindy Wu, Vivek Hebbar, Henry
+Sleight, Asa Cooper Stickland, Ethan Perez, Dylan Hadfield-Menell, and Stephen Casper. Latent
+adversarial training improves robustness to persistent harmful behaviors in LLMs. In International
+Conference on Learning Representations , 2025. URL https://openreview.net/forum?id=wI5uHZLeCZ .
+Shashwat Singh, Tal Linzen, and Shauli Ravfogel. Can llms introspect? a reality check, 2026. URL
+https: //arxiv.org/abs/2605.26242 .
+Siyuan Song, Jennifer Hu, and Kyle Mahowald. Language models fail to introspect about their
+knowledge of language. In Conference on Language Modeling , 2025. URL
+https://openreview.net/forum?id=AivRDOFi5H .
+Siyuan Song, Harvey Lederman, Jennifer Hu, and Kyle Mahowald. Privileged self-access matters for
+introspection in AI. In ICML 2026 Workshop: Philosophy Meets Machine Learning , 2026. URL https:
+//openreview.net/forum?id=ZcqCJHOWAA .
+Miles Turpin, Julian Michael, Ethan Perez, and Samuel R. Bowman. Language models don't always say
+what they think: Unfaithful explanations in chain-of-thought prompting. In Advances in Neural
+Information Processing Systems , 2023. URL https://openreview.net/forum?id=bzs4uPLXvi .
+Kevin Ro Wang, Alexandre Variengien, Arthur Conmy, Buck Shlegeris, and Jacob Steinhardt.
+Interpretability in the wild: a circuit for indirect object identification in GPT-2 small. In
+International Conference on Learning Representations , 2023. URL
+https://openreview.net/forum?id=NpsVSN6o4ul .
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, brian ichter, Fei Xia, Ed H. Chi, Quoc V Le,
+and Denny Zhou. Chain of thought prompting elicits reasoning in large language models. In Advances
+in Neural Information Processing Systems , 2022. URL https://openreview.net/forum?id=_VjQlMeSB_J .
+Jerry Wei, Da Huang, Yifeng Lu, Denny Zhou, and Quoc V. Le. Simple synthetic data reduces sycophancy
+in large language models, 2024. URL https://arxiv.org/abs/2308.03958 .
+AnYang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen
+Huang, Chenxu Lv, Chujie Zheng, Dayiheng Liu, Fan Zhou, Fei Huang, Feng Hu, Hao Ge, et al. Qwen3
+technical report, 2025. URL https://arxiv.org/abs/2505.09388 .
+Zhehao Zhang, Weijie Xu, Fanyou Wu, and Chandan K. Reddy. Falsereject: A resource for improving
+contextual safety and mitigating over-refusals in LLMs via structured reasoning. In Conference on
+Language Modeling , 2025. URL https://openreview.net/forum?id=1w9Hay7tvm .
+Wenting Zhao, Xiang Ren, Jack Hessel, Claire Cardie, Yejin Choi, and Yuntian Deng. Wildchat: 1m
+chatGPT interaction logs in the wild. In International Conference on Learning Representations ,
+2024. URL https: //openreview.net/forum?id=Bl8u7ZRlbM .
+18
+Guo et al.
+Introspective Coupling
+Ziqian Zhong. Spontaneous introspection in output tampering. LessWrong, April 2026. URL https://
+www.lesswrong.com/posts/yAR6uMdSaBjkbJ4u9/spontaneous-introspection-in-output-tampering . Accessed:
+2026-05-06.
+19
+Guo et al.
+Introspective Coupling
+
+[Section 30] (level 1) A Self > Orig Emergence over the Course of Training
+(1248 chars)
+----------------------------------------------------------------------------------------------------
+We track when introspective coupling emerges over the course of training and conversely, when self-
+and original-explanation may decouple in models that don't exhibit coupling. At every training
+batch, we record three quantities: (i) on behavior data, whether B ( M ) matches the training label
+B ( M 0 ) (blue lines); (ii) on the explanation task, whether M 's predicted explanation matches the
+training label E ( M 0 ) (pink line); and (iii) on the explanation task, whether M 's predicted
+explanation matches the explanation E ( M ) constructed from the model's own current behavior (dark
+red line).
+We smooth each per-batch series with a time-weighted exponential moving average 11 and report the
+resulting curves for M unreg and M reg in Figure 9(a) and (b), respectively, with panel (c) plotting
+the normalized self-minus-orig explanation delta for both models. (a) Without regularization, B ( M
+) drifts sharply from B ( M 0 ) within the first 1000 steps-almost entirely on the cue-included
+answer. On the explanation side, the self-vs-orig gap widens following the behavioral drift. (b)
+With regularization, M reg's self- and orig-explanation curves remain tightly coupled throughout
+training, with self-explanation gradually pulling ahead.
+
+[Section 31] (level 1) HINT-MMLU training dynamics (Qwen3-8B): emergence of the Self > Orig explanation gap
+(1185 chars)
+----------------------------------------------------------------------------------------------------
+Figure 9: Training dynamics of Qwen3-8B on HINT-MMLU. (a) No regularization on behavior vs. (b) with
+KL regularization. We plot time-weighted exponential moving average with α = 0.99 of the
+corresponding per-batch metric. Blue lines plot the two behavioral drift metrics, and the two
+explanation lines match explanation against the model's own behavior labels (purple) and against the
+original M 0 labels (pink). (c) the per-step ratio of explanation ( Self -Orig ) /behavior gap.
+Behavior gap measures the total per-step behavior disagreement against M 0 , and the whole metric
+measures the amount of disagreeing data that self-explanation uniquely recovers.
+0
+1000
+2000
+3000
+4000
+5000
+Training step
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Match rate
+(a) No KL regularization
+Self
+<
+Orig
+Cue-included behavior match
+Cue-removed behavior match
+Orig explanation
+Self explanation
+0
+1000
+2000
+3000
+4000
+5000
+Training step
+Time-weighted EMA of
+per-batch matches (
+=0.99
+)
+(b) With KL regularization
+Self
+>
+Orig
+0
+1000
+2000
+3000
+4000
+5000
+Training step
+0.6
+0.4
+0.2
+0.0
+0.2
+0.4
+(Self
+Orig)/
+behavior gap
+(c) Coupling:
+(Self
+Orig)/
+behavior gap
+No KL regularization
+With KL regularization
+
+[Section 32] (level 1) B.1 Fine-grained metrics
+(1047 chars)
+----------------------------------------------------------------------------------------------------
+In the main paper, we evaluate the model's explanation on one main metric, the Explanation Exact
+Match (EM). We provide more fine-grained metrics to supplement here. For each example ( x , C ) ,
+let ˆ e ∼ M ( · | q ) be the model's predicted explanation. Recall that ˆ e consists of two
+components: the is-changed status (' The response [would/would not] change... ') and the content of
+the change (' ...to < M ( x \ C ) > '). We check each component separately:
+̸
+is-changed match : We check whether ˆ e 's is-changed prediction matches the model's is-changed
+behavior under cue ablation, i.e. whether it matches 1 [ B ( M )( x ) = B ( M )( x \ C ) ] . Because
+the is-changed label count may be asymmetric, we evaluate Changed F1 and Unchanged F1 separately.
+11 Following WandB's line-plot smoothing implementation; see
+https://docs.wandb.ai/guides/app/features/panels/line-plot/ smoothing/ .
+20
+Guo et al.
+Introspective Coupling
+content match : Wecheck whether the ˆ e 's content prediction is correct, i.e. whether it matches B
+( M )( x \ C ) .
+
+[Section 33] (level 1) B.2 Do model behaviors shift to become easier to explain?
+(3885 chars)
+----------------------------------------------------------------------------------------------------
+Ruling out trivial distribution collapse. The explanation evaluation for all the metrics can be seen
+in Figure 10. Behavior panel (a; left) shows that self-behavior drifts away from the original
+distribution but does not collapse onto a single mode: each behavior category retains roughly the
+same share as under M 0. 12 The Explanation panel (a; right) shows that the explanation quality is
+better for all four metrics on self (Exact Match, Content Match, Change F1, and Unchange F1), not
+just exact match. Crucially, Change F1 and Unchange F1 are both high ( > 88%) against E ( M reg ) ,
+so the explainer is making genuine bidirectional changed-vs-unchanged predictions. This rules out
+the possibility that behavior was aligned to a lopsided distribution and that M reg verbalizes that
+one trivial label - a degenerate self-introspector that always says 'unchanged' would have one F1 at
+zero.
+HINT-MMLU: self > orig persists across iterations of explanation training
+Agreement
+Orig
+Self
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Behavior
+81.0%
+8.9%
+12.2%
+14.9%
+14.3%
+13.2%
+14.1%
+11.6%
+10.9%
+8.4%
+9.7%
+12.8%
+12.0%
+13.5%
+14.7%
+14.7%
+14.1%
+Exact Match
+Content Match
+Change F1
+Unchange F1
+Explanation
+74.4%
+78.5%
+74.4%
+14.0%
+88.4%
+75.8%
+11.2%
+87.0%
+75.8%
+15.7%
+91.5%
+85.1%
+92.4%
+81.3%
+88.9%
+Agreement subset
+Disagreement subset
+Agreement
+Behavior
+80.9%
+Exact Match
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Explanation
+74.9%
+78.5%
+74.9%
+14.7%
+89.6%
+(a)
+M
+reg
+: trained on base model
+M
+0
+'s explanations
+(b)
+M
+(2)
+reg
+: trained on
+M
+reg
+'s explanations
+unchanged
+A
+unchanged
+B
+unchanged
+C
+unchanged
+D
+change
+A
+change
+B
+change
+C
+change
+D
+Orig (
+M
+reg
+M
+0
+)
+Self (
+M
+reg
+M
+reg
+)
+Orig (
+M
+(2)
+reg
+M
+reg
+)
+Self (
+M
+(2)
+reg
+M
+(2)
+reg
+)
+Figure 10: (a) Regularized explainer M reg trained on M 0 's explanations. Behavior breakdown shows
+the distribution of 8-label breakdown for B ( M 0 ) , and that it doesn't drift into a degenerate
+case. Four explanation metrics (Exact Match, Content Match, Change F1, Unchange F1) all show the
+Self > Orig gap. (b) External explainer baseline M ( 2 ) reg : base Qwen3-8B trained on E ( M reg )
+. This graph validates that E ( M reg ) is not necessarily an easier distribution to learn than E (
+M 0 ) and that M reg models itself better than an external explainer like M ( 2 ) reg .
+Is E ( M reg ) easier for any explainer to learn? Perhaps the model M reg's behavior did not drift
+to be degenerate, but it could drift into a distribution that is easier for any external explainer
+model to learn, rather than requiring introspection. We verify that this is not the case by training
+another model on M reg's explanations and behaviors, which we call M ( 2 ) reg = M [ B ( M reg ) , E
+( M reg )] . In practice, this model is initialized from M 0. This model simulates an external model
+to learn the (potentially easier) new distribution.
+We find that:
+In Figure 10, M ( 2 ) reg explaining M reg (orange bar in (b)) is not better than M reg explaining M
+0 (orange bar in (a)) - both are 78.5% - meaning that E ( M reg ) is not an easier distribution to
+learn.
+M ( 2 ) reg explaining M reg (orange bar in (b)) is worse than M reg explaining M reg (blue bar in
+(a)), meaning that the self-explainer is better than an external explainer.
+12 The one caveat is asymmetric coverage: categories absent from the M 0 distribution remain absent
+under self as well, but no category present in the original distribution disappears under the
+self-distribution.
+21
+Guo et al.
+Introspective Coupling
+More surprisingly, for M ( 2 ) reg , Self > Orig persists, i.e. M ( 2 ) reg 's predicted
+explanations match E ( M ( 2 ) reg ) (blue bar in (b)) better than E ( M reg ) for this new model
+(orange bar in (b)).
+Thus, M reg's behavior has not shifted to become easier to learn; rather, M reg indeed appears to
+have a specific advantage at explaining its own current behavior.
+
+[Section 34] (level 1) B.3 Untrained baseline
+(461 chars)
+----------------------------------------------------------------------------------------------------
+Following [Li et al., 2025a], we evaluate an 'untrained baseline' to see how well these small models
+can do explanation out-of-the-box without any explanation training, by directly prompting the base
+model M 0 with few-shot learning. The result is shown in Figure 11. Across all three tasks the
+untrained few-shot baseline reaches only 14-18% Explanation EM, far below the trained explainer,
+establishing that self-explanation is not a native capability of M 0.
+
+[Section 35] (level 1) B.4 AITA Data and Results
+(979 chars)
+----------------------------------------------------------------------------------------------------
+We check whether the Self > Orig result generalizes to another sycophancy dataset, AITA [Cheng et
+al., 2026].
+Here, training data is derived from https://huggingface. co/datasets/OsamaBsher/AITA-Reddit-Dataset
+. This is converted into the same hint-style C -ablation format used elsewhere in the paper. The cue
+C being ablated is a single system prompt prepended to each Reddit post:
+AITA system prompt (ablated as C )
+Read the following situation in a post on Reddit and determine if the person is the asshole.
+Figure 12 shows (a) the dataset statistics and (b) the results with detailed metrics of a model
+explanationtrained in this domain. Note that the test set is balanced over the uncued-condition
+NTA/YTA verdict, rather than the change/unchange verdict. From (b), we find Self > Orig in this
+domain on all four metrics. In addition, the fine-grained metrics show that on Orig, Change F1 is
+substantially lower than Unchange F1, while on Self, both F1s are similarly high.
+
+[Section 36] (level 1) B.5 Refusal Data and Results
+(4417 chars)
+----------------------------------------------------------------------------------------------------
+We also check whether the Self > Orig result generalizes to explaining when the model will refuse,
+and specifically under which roleplaying system prompts.
+We use GPT-5 to generate roleplay system prompts in the following style, which push the assistant
+towards greater refusal or compliance:
+Refusal explanation system prompt to push towards refusal
+This user is an assistant for a children's after-school homework program.
+Refusal explanation system prompt to push towards compliance
+This user is a certified sex-ed teacher developing materials for an adult health literacy program.
+Hint MMLU
+AITA
+Refusal
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Explanation EM
+17.6%
+18.2%
+14.4%
+Untrained baseline (
+M
+M
+)
+0
+0
+Figure 11: Untrained few-shot baseline ( M 0 →M 0 ) Explanation EM on each of the three tasks. The
+few-shot prompted base model reaches only 14-18%, showing that self-explanation emerges only after
+explanation training.
+22
+Guo et al.
+Introspective Coupling
+Figure 12: AITA M reg detailed metrics. Behavior change rate (a) and four explanation-quality
+metrics (b) for the explainer trained on the original target's labels (orange) vs. on self labels
+(blue). Each explanation bar is decomposed into the agreement-subset matched baseline (gray) and the
+disagreement-subset gain (solid).
+Agreement
+Orig
+Self
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Behavior
+62.2%
+48.2%
+25.5%
+23.8%
+28.6%
+20.4%
+11.3%
+39.6%
+(a) Behavior
+unchanged
+NTA
+unchanged
+YTA
+change
+NTA
+change
+YTA
+Exact Match
+Content Match
+Change F1
+Unchange F1
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Explanation
+54.3%
+58.4%
+54.3%
+31.1%
+85.3%
+58.6%
+18.1%
+76.7%
+58.6%
+34.9%
+93.5%
+51.5%
+86.4%
+67.3%
+85.0%
+(b) Explanation
+Orig (
+M
+reg
+M
+0
+)
+Self (
+M
+reg
+M
+reg
+)
+Agreement subset
+Disagreement subset
+AITA: self > orig across all explanation metrics
+Figure 13: Refusal Explanation with Behavioral Regularization. Behavior change rate (a) and four
+explanation-quality metrics (b) for the explainer trained on orig vs self labels. Self > Orig on all
+metrics.
+Agreement
+Orig
+Self
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Behavior
+76.8%
+26.9%
+45.8%
+25.4%
+34.8%
+38.0%
+25.9%
+(a) Behavior
+unchanged
+compliance
+unchanged
+refusal
+change
+compliance
+change
+refusal
+Exact Match
+Content Match
+Change F1
+Unchange F1
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Explanation
+60.9%
+5.0%
+65.9%
+60.9%
+14.5%
+75.4%
+67.5%
+10.9%
+78.4%
+67.5%
+19.0%
+86.6%
+48.2%
+59.9%
+79.5%
+82.9%
+(b) Explanation
+Orig (
+M
+reg
+M
+0
+)
+Self (
+M
+reg
+M
+reg
+)
+Agreement subset
+Disagreement subset
+Refusal (WildJailbreak & FalseReject): self > orig across all explanation metrics
+23
+Guo et al.
+Introspective Coupling
+Figure 13 shows (a) the dataset statistics and (b) the results of a model explanation-trained in
+this domain. Because alignment post-training makes refusal behavior highly stable across system
+prompts, examples in which the system-prompt intervention flips a response to refusal are extremely
+rare in our training data. We see from (a) that the change → refusal category occupies a tiny sliver
+of the dataset, and thus the explainer never learns to output this label. Broadly, one limitation of
+our approach is that it requires counterfactual training data with sufficient behavioral
+variation.From (b), we see that Self > Orig generalizes to this domain on all four metrics.
+Figure 14: Top : Llama-3.1-8B-Instruct trained and regularized on HINT-MMLU. Self > Orig on every
+explanation metric. Bottom : Qwen3-32B trained and regularized on HINT-MMLU (LoRA r = α = 128). Self
+> Orig on every explanation metric.
+Agreement
+Is Changed
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Behavior
+66.8%
+61.5%
+67.4%
+(a) Behavior
+Exact Match
+Content Match
+Change F1
+Unchange F1
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Explanation
+68.1%
+87.7%
+75.9%
+91.1%
+84.4%
+93.6%
+71.7%
+86.8%
+(b) Explanation
+Llama-3.1-8B-Instruct HINT-MMLU: self > orig across all explanation metrics
+Orig (
+M
+Llama
+reg
+M
+Llama
+0
+)
+Self (
+M
+Llama
+reg
+M
+Llama
+reg
+)
+Agreement subset
+Disagreement subset
+Agreement
+Is Changed
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Behavior
+86.2%
+43.5%
+41.4%
+(a) Behavior
+Exact Match
+Content Match
+Change F1
+Unchange F1
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+Explanation
+83.5%
+87.7%
+92.5%
+95.4%
+85.5%
+87.8%
+87.7%
+90.0%
+(b) Explanation
+Qwen3-32B LoRA HINT-MMLU: self > orig across all explanation metrics
+Orig (
+M
+reg
+M
+0
+)
+Self (
+M
+reg
+M
+reg
+)
+Agreement subset
+Disagreement subset
+
+[Section 37] (level 1) B.6 HINT-MMLU with Other Models
+(343 chars)
+----------------------------------------------------------------------------------------------------
+To check that the Self > Orig phenomenon is not Qwen3-8B-specific and that it has potential to
+scale, we replicate the main M reg Self > Orig results on Llama-3.1-8B-Instruct [Grattafiori et al.,
+2024] and Qwen332B [Yang et al., 2025]. At 32B parameters, full fine-tuning is prohibitive, so we
+use LoRA ( r = α = 128)
+24
+Introspective Coupling
+
+[Section 38] (level 1) Guo et al.
+(206 chars)
+----------------------------------------------------------------------------------------------------
+training rather than full fine-tuning. The full metrics decomposition is shown in Figure 14; again
+we observe Self > Orig across all explanation metrics for both models.
+25
+Guo et al.
+Introspective Coupling
+
+[Section 39] (level 1) C.1 M unreg and M 0 baseline
+(1498 chars)
+----------------------------------------------------------------------------------------------------
+Figure 3 establishes that for regularized M reg, interventions that cause changes in the
+cue-included answer are correlated with those causing changes in the explanation as well.
+Figure 15a reports the same analysis on the model M unreg trained without direct behavioral
+regularization. We show that the correlation is less salient with Pearson r = 0.53. Figure 15b shows
+that the base model M 0 produces no correlation between the behavior and explanation at all, with
+Pearson r = 0.20.
+(a) M unreg baseline counterpart to Figure 3: same per-(layer, token) scatter of mean normalized logit-diffs, with both intervention directions overlaid (circles for Change → Unchange, triangles for Unchange → Change). Per-direction r = 0.48/0.58; combined r = 0.53. Removing regularization roughly halves the Pearson correlation between behavior and explanation logit-diffs.
+0.0
+0.2
+0.4
+0.6
+Cue-included match mean normalized logit diff
+0.1
+0.0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+Explanation mean normalized logit diff
+Activation patching correlation |
+M
+unreg
+n=864, r=0.527
+OLS fit:
+y
+=1.95
+x
+0.008
+(b) M 0 baseline counterpart to Figure 3: same per-(layer, token) scatter of mean normalized logit-diffs. M 0 without explanation training has no correlation at all. Per-direction r = 0.195/0.237; combined r = 0.196.
+0.2
+0.1
+0.0
+0.1
+0.2
+Cue-included match mean normalized logit diff
+0.2
+0.1
+0.0
+0.1
+0.2
+Explanation mean normalized logit diff
+Activation patching correlation |
+M
+0
+n=864, r=0.196
+OLS fit:
+y
+=0.31
+x
+0.000
+
+[Section 40] (level 1) C.2 Correlation between cue-ablated behavior and explanation
+(1979 chars)
+----------------------------------------------------------------------------------------------------
+Section 3.3 reports the correlation between the explanation logit-diff and the cue-included
+answer-letter logitdiff as the object-level behavior. Here we run the same patching analysis with
+the cue-ablated answer-letter logit-diff as the object-level behavior. For every patched run, we ask
+whether the shift in the model's answer to the cue-ablated input correlates with its explanation.
+The patching prompt pairs are identical to the main setup, but the intervention positions are no
+longer at the cue region, because the cue is no longer present in the cue-ablated inputs. Instead,
+we choose to patch in the last 10 tokens of the prompts. Note that this setup is noisier because the
+tokens we patch are not shared between the two prompts.
+Figure 16 shows that the correlation story is more complex. On the top, we notice that the patching
+results are asymmetric, so we report the two patching directions separately. (Top left) When we
+patch activations from a prompt whose explanation is 'change' into a prompt whose explanation is
+'unchange,' the resulting shift in cue-ablated answer is positively correlated with shift in
+explanations. (Top right) In the reverse direction-patching from an 'unchange' prompt into a
+'change' prompt-shifts in behaviors do not induce shifts in explanations. The reason behind this
+asymmetry remains to be explored.
+26
+Guo et al.
+Introspective Coupling
+Furthermore, the absolute normalized logit difference (NLD) for either direction is visibly smaller
+than that of the cue-included studies in Figure 3, with a maximum NLD ≈ 0.2 vs. ≈ 0.4 for the
+cue-included behavior. This is consistent with the cue-ablated setup being noisier, since the
+patched token spans are not shared across the paired prompts.
+By comparison, the M unreg baseline (bottom) has no significant correlation in either direction.
+0.05
+0.00
+0.05
+0.10
+0.15
+0.20
+Cue-ablated match mean normalized logit diff
+0.05
+0.00
+0.05
+0.10
+0.15
+0.20
+Explanation mean normalized logit diff
+
+[Section 41] (level 1) Activation patching correlation | M reg
+(255 chars)
+----------------------------------------------------------------------------------------------------
+Change
+Unchange (n=360, r=0.716)
+OLS fit:
+y
+=0.86
+x
++0.014
+(a)
+M
+reg, Change
+→
+Unchange subset. Pearson
+r
+= +
+0.72.
+0.1
+0.0
+0.1
+0.2
+Cue-ablated match mean normalized logit diff
+0.15
+0.10
+0.05
+0.00
+0.05
+0.10
+0.15
+0.20
+Explanation mean normalized logit diff
+
+[Section 42] (level 1) Activation patching correlation | M unreg
+(539 chars)
+----------------------------------------------------------------------------------------------------
+Change
+Unchange (n=360, r=0.006)
+OLS fit:
+y
+=0.01
+x
++0.004
+(c) M unreg, Change → Unchange subset. Pearson r = + 0.01.
+0.2
+0.1
+0.0
+0.1
+0.2
+0.3
+Cue-ablated match mean normalized logit diff
+0.2
+0.1
+0.0
+0.1
+0.2
+0.3
+Explanation mean normalized logit diff
+Activation patching correlation |
+M
+reg
+Unchange
+Change (n=360, r=-0.041)
+OLS fit:
+y
+=
+0.02
+x
++0.027
+(b)
+M
+reg, Unchange
+→
+Change subset. Pearson
+r
+=
+-
+0.04.
+0.2
+0.1
+0.0
+0.1
+0.2
+0.3
+Cue-ablated match mean normalized logit diff
+0.2
+0.1
+0.0
+0.1
+0.2
+0.3
+Explanation mean normalized logit diff
+
+[Section 43] (level 1) Activation patching correlation | M unreg
+(435 chars)
+----------------------------------------------------------------------------------------------------
+Unchange
+Change (n=360, r=-0.303)
+OLS fit:
+y
+=
+0.96
+x
++0.018
+(d)
+M
+unreg, Unchange
+→
+Change subset. Pearson
+r
+=
+-
+0.30.
+Figure 16: Per-direction (subset) breakdown of the correlation study between cue-ablated answer and
+explanation. Panels (a, b): regularized M reg. Panels (c, d): no-regularization baseline M unreg.
+Only the Change → Unchange subset is where M reg shows a meaningful correlation.
+27
+Guo et al.
+Introspective Coupling
+
+[Section 44] (level 1) D.1 Only Higher-Rank LoRA Recovers Self > Orig
+(1753 chars)
+----------------------------------------------------------------------------------------------------
+We defaulted to using full-finetuning (FFT) in the main paper as it induced a larger behavioral
+shift enabling us to investigate the Self > Orig gap. However, here, we investigate the effect of
+LoRA training, and specifically the effect of LoRA rank r . We focus on the HINT-MMLU task.
+We sweep along r ∈ { 32, 64, 80, 96, 128, 256 } , holding α = r , and report the (a) Behavior EM and
+(b) Explanation EM in Figure 17. From (a), we see that regardless of LoRA rank, behavioral EM always
+drifts, although to a lesser extent than full fine-tuning (Figure 2). From (b), we find that only
+sufficiently high-rank LoRA adapters can recover the Self > Orig effect. Therefore, the low-rank
+LoRA adapters' inability to elicit Self > Orig phenomenon cannot simply be attributed to the fact
+that they don't drift as much, indicating that online label-self similarity (our core hypothesized
+factor in Section 4) is not the only factor contributing to the emergence of introspective coupling;
+future work can investigate the interplay between various factors.
+Figure 17: KL-regularized LoRA rank sweep on HINT-MMLU, α = r . For each r , we plot Behavior EM
+(blue) and Explanation EM scored against orig-labels (light pink) and self-labels (dark pink). The
+self > orig gap is absent or slightly negative for r ≤ 80, opens at r = 96, and widens monotonically
+through r = 256.
+0%
+25%
+50%
+75%
+100%
+93.8%
+91.1%
+89.5%
+92.3%
+90.4%
+86.4%
+(a) Behavior EM
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+77.3%
+75.6%
+Self < Orig
+(-1.6pp)
+82.6%
+81.5%
+Self < Orig
+(-1.1pp)
+83.9%
+83.6%
+Self < Orig
+(-0.4pp)
+84.0%
+86.6%
+Self > Orig
+(+2.6pp)
+83.9%
+87.4%
+Self > Orig
+(+3.5pp)
+79.0%
+84.9%
+Self > Orig
+(+5.9pp)
+r
+=
+=32
+r
+=
+=64
+r
+=
+=80
+r
+=
+=96
+r
+=
+=128
+r
+=
+=256
+Qwen3-8B
+(b) Explanation EM
+
+[Section 45] (level 1) KL-regularized LoRA hint sweep
+(55 chars)
+----------------------------------------------------------------------------------------------------
+Behavior EM
+Explanation EM (Orig)
+Explanation EM (Self)
+
+[Section 46] (level 1) D.2 Higher Learning Rate Can Widen The Self > Orig Gap
+(2353 chars)
+----------------------------------------------------------------------------------------------------
+The main paper uses lr = 1 × 10 -5 , which we find to give the best absolute Explanation EM in
+general. Here we measure how the learning rate affects the emergence of the Self > Orig gap. We
+sweep six different learning rates ranging from 1 × 10 -4 to 5 × 10 -6 and plot the Behavioral and
+Explanation EM in Figure 18. We find that as learning rate increases (right to left), the absolute
+explanation EM drops on both Orig and Self labels, but it drops more quickly for Orig than Self and
+widens the Self > Orig gap. We find that behavior EMalso decreases with higher LR, and roughly
+matches Orig Explanation EM.
+Counter-evidence to online Label-Self similarity hypothesis. The LR sweep is the one experiment in
+this paper that presents counter-evidence to the hypothesis explored in Section 4 - that online
+Label-Self similarity governs when introspective coupling emerges. At very large learning rates the
+trained model drifts off base significantly - meaning that the current model (Self) is extremely
+dissimilar from the initial model that generated the explanation labels (Label) - and yet Self >
+Orig gap does not disappear, but in fact grows . We flag this result as an open problem: we
+hypothesize that multiple factors, including LR and label-self similarity, interact in competing
+ways to influence the emergence of introspective coupling. Potentially a large LR encourages the
+explanation circuit to re-route through the model's existing behavioral circuitry (independent of
+behavioral drift magnitude); future work can explore these factors empirically.
+28
+Guo et al.
+Introspective Coupling
+Figure 18: LR sweep on HINT-MMLU plotted with learning rate decreasing left-to-right. For each
+learning rate, we plot Behavior EM (blue) and Explanation EM scored against orig labels (light pink)
+and self labels (dark pink). Self > Orig is absent at lr = 5e -6 and continues to widen as the
+learning rate rises and the model drifts further from base.
+0%
+25%
+50%
+75%
+100%
+23.0%
+33.0%
+52.4%
+68.0%
+81.0%
+91.1%
+(a) Behavior EM
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+100%
+24.7%
+61.5%
+Self > Orig
+(+36.8pp)
+34.7%
+64.7%
+Self > Orig
+(+30.0pp)
+50.1%
+82.8%
+Self > Orig
+(+32.7pp)
+65.8%
+87.5%
+Self > Orig
+(+21.7pp)
+81.8%
+90.4%
+Self > Orig
+(+8.6pp)
+82.4%
+86.0%
+Self > Orig
+(+3.6pp)
+1×10
+4
+7.5×10
+5
+5×10
+5
+2.5×10
+5
+1×10
+5
+5×10
+6
+Qwen3-8B full FT
+(b) Explanation EM
+
+[Section 47] (level 1) Hint-task LR sweep
+(92 chars)
+----------------------------------------------------------------------------------------------------
+Behavior EM
+Explanation EM (Orig)
+Explanation EM (Self)
+29
+Guo et al.
+Introspective Coupling
+
+[Section 48] (level 1) E.1 Jabberwocky Dataset Details and Additional Results (§5.1)
+(67 chars)
+----------------------------------------------------------------------------------------------------
+We show an example of Jabberwocky 'nonsensical science' data below:
+
+[Section 49] (level 1) Jabberwocky data example
+(750 chars)
+----------------------------------------------------------------------------------------------------
+According to the Lomar schema for cataloging pseudoalloy microphases, which microphase label is
+assigned to the sorvian crystal specimen? Choices: A. Rulven-di, B. Shenqa-no, C. Tilmare-zi D.
+Zavrek-ka Correct Answer: C. Tilmare-zi
+Detailed Metrics. We now show the detailed metrics of the Jabberwocky training on held-out sets of
+HINT-MMLU and Jabberwocky J train where we train behaviors only and not explanations. In Figure 19,
+we show 6 metrics: cue-included and cue-ablated match for behavior EM, and Exact Match, Content
+Match, Change F1, and Unchange F1 for explanation. On every metric, for the HINT-MMLU evaluation,
+Self > Orig persists. On the Jabberwocky J train set, the accuracy on every metric is high,
+indicating proper generalization.
+
+[Section 50] (level 1) Detailed Metrics for training in Jabberwocky behaviors
+(3443 chars)
+----------------------------------------------------------------------------------------------------
+Figure 19: Full six-metric breakdown for Jabberwocky mixed training, a more detailed version of
+Figure 7. M aux is trained with explanation supervision on Hint-MMLU plus behavior-only training on
+J train, then evaluated on held-out HINT-MMLU and J train. Self > Orig persists on every HINT-MMLU
+evaluation, and the J train accuracy is also high.
+Cue-included match
+Exact
+Cue-ablated match
+Exact
+Explanation
+Exact
+Explanation
+Semantic Match
+Explanation
+Change F1
+Explanation
+Unchange F1
+50%
+55%
+60%
+65%
+70%
+75%
+80%
+85%
+90%
+95%
+100%
+Score
+82.6%
+69.8%
+55.9%
+69.0%
+71.5%
+66.2%
+99.6%
+99.0%
+83.8%
+88.8%
+89.1%
+84.2%
+95.5%
+98.0%
+90.5%
+98.1%
+87.4%
+92.2%
+D
+: explanation-training dataset (Hint-MMLU)
+A
+: auxiliary corpus (Jabberwocky
+J
+train
+)
+Eval = Hint-MMLU: Orig (
+M
+aux
+M
+0
+)
+Eval = Hint-MMLU: Self (
+M
+aux
+M
+aux
+)
+Eval =
+J
+train
+(
+M
+aux
+)
+Hatched = behavior; solid = explanation
+Generalization to model behaviors never seen in training. We evaluate M aux's introspection ability
+after training on J train on a held-out Jabberwocky set J test that the model has never seen in
+training. Figure 20 shows the behavioral distribution of base model M 0 and Jabberwocky-trained
+model M aux in panel (a), where M 0 has a bias to choose C and M aux is approximately uniform. In
+panel (b), despite the models deferring to the hint for J test, which is by construction nonsensical
+and has no ground truth, there is a 25% chance that the hint coincides with the original answer
+because the hint is randomly selected from the 4 options, and, thus, the 'Flipped' rate is lower at
+around 75%. In panel (c), we show that the ability to distinguish between 'Flipped' and
+'non-Flipped' is non-trivial, despite the seemingly simple behavioral distribution: M 0 is not able
+to do so under few-shot prompting, as indicated by the poor Unchange F1 score, while M aux can after
+training. Meanwhile, because the format of the Semantic Match is to output the original answer
+without hint , M 0 confuses the template and outputs the hint answer instead, causing it to have a
+23.8% Semantic Match.
+30
+Guo et al.
+Introspective Coupling
+Overall, these results show that (1) the trained model's distribution has not become degenerate
+(panel a), and (2) Change and Unchange F1 are both high, indicating that the trained model's
+prediction also has not become degenerate. Thus, we can conclude that the model has learned a
+non-trivial distribution and its high accuracy is not merely due to a learned heuristic.
+Figure 20: Jabberwocky-test J test detailed behavior and explanation metrics for M 0 and M aux. (a):
+no-hint A/B/C/D answer distribution, showing that the trained M aux behavioral distribution is near
+uniform and not degenerate. (b): distributions of the two models under hint. As the questions are
+nonsensical, the model defers to the hint. (c): detailed explanation metrics of the two models:
+semantic match, Change F1, and Unchange F1. The trained M aux is able to distinguish between the
+cases when the hint is the same as the underlying answer, requiring read-off of its own behavior.
+A
+B
+C
+D
+No-hint answer
+0%
+20%
+40%
+60%
+Frequency (%)
+3%
+27%
+63%
+7%
+28%
+21%
+25%
+26%
+(a)
+No-hint answer distribution
+uniform (25%)
+Semantic match Change F1
+Unchange F1
+0%
+20%
+40%
+60%
+80%
+100%
+Score
+23.8%
+86.2%
+0.0%
+84.2%
+88.4%
+60.1%
+(c)
+Explanation metrics
+Flipped
+Unchanged Followed hint
+0%
+25%
+50%
+75%
+100%
+Share of rows
+76.3%
+23.7%
+100.0%
+68.9%
+31.1%
+95.2%
+(b)
+Behavioral split
+
+[Section 51] (level 1) Jabberwocky-test ( Jtest ): behavior breakdown and explanation metrics
+(27 chars)
+----------------------------------------------------------------------------------------------------
+M
+0
+(base, zero-shot)
+M
+aux
+
+[Section 52] (level 1) E.2 Behavioral Drift Dataset Details (§5.2)
+(965 chars)
+----------------------------------------------------------------------------------------------------
+Warm&Empathetic Assistant Response. Following Ibrahim et al. [2026], we procure a corpus of
+ShareGPTVicuna user assistant conversations [Chiang et al., 2023] and perform rewrites by an LLM
+(GPT-4o) to make the prompt more warm and empathetic. We then mix this data in on top of HINT-MMLU
+explanation training.
+Direct Refusal Training. We procure a corpus of harmful requests and direct refusal responses from
+https: //huggingface.co/datasets/LLM-LAT/harmful-dataset [Sheshadri et al., 2025]. Notably, direct
+refusal is a different type of behavior than that of typical Qwen3-8B, as it tends to refuse
+indirectly and provides a long-winded justification. It tends to not refuse explicitly, like 'I'm
+sorry, but I cannot provide assistance with this request.' We train on this corpus of direct refusal
+training which influences the model's standard refusal behavior, and check if the model can still
+introspect on when it refuses.
+31
+Guo et al.
+Introspective Coupling
+
+[Section 53] (level 1) E.3 Are General Capabilities Still Preserved?
+(830 chars)
+----------------------------------------------------------------------------------------------------
+To check that performing explanation training alongside general post-training pipelines does not
+erode general capabilities, we evaluate M 0 against two M aux models on a general suite from
+lm-evaluation-harness [Gao et al., 2024]: the first M aux model is trained with D = Hint-MMLU, A =
+WildChat and the second is trained with D = Refusal Explanation, A = FineWeb. Table 2 reports
+absolute accuracy (%) and the delta against M 0. We see that in aggregate, degradation is mild
+(within ∼ 2 pp on most tasks); GSM8K and TruthfulQA MC2 drop more significantly, by ∼ 5 pp, for the
+second model.
+Table 2: lm-evaluation-harness accuracies (%) for M 0 and two trained variants on Qwen3-8B: one
+model with D = Hint-MMLU, A = WildChat and another with D = Refusal Explanation, A = FineWeb. Deltas
+in parentheses are computed against M 0 .
+
+[Section 54] (level 1) F Compute
+(218 chars)
+----------------------------------------------------------------------------------------------------
+We run all training on NVIDIA H100 and H200 GPUs. Training runs use at most 2 NVIDIA H200 GPUs. Most
+training takes less than 8 hours to finish, and nothing takes longer than a day, and evaluation
+takes a few hours.
+32

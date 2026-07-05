@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text Chunking Workflow</title>
+<style>
+  :root {
+    --bg: #ffffff; --panel: #f6f7f9; --panel-2: #eef0f3; --border: #e2e5ea;
+    --text: #1c2024; --muted: #5c6470; --accent: #3a6df0; --accent-soft: #e7edfd;
+    --green: #1f9d55; --green-soft: #e3f5ec; --amber: #b7791f; --amber-soft: #fdf3e0;
+    --red: #d9480f; --red-soft: #fcebe3; --purple: #7048e8; --purple-soft: #efeafe;
+    --code-bg: #f0f2f5;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  /* Locked to a light palette: white background in all themes. */
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.62; font-size: 16px; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 48px 24px 80px; }
+  header.hero { margin-bottom: 36px; }
+  .eyebrow { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  h1 { font-size: 34px; line-height: 1.2; margin: 8px 0 12px; letter-spacing: -0.02em; }
+  .lede { font-size: 18px; color: var(--muted); margin: 0; }
+  h2 { font-size: 23px; margin: 52px 0 6px; letter-spacing: -0.01em; scroll-margin-top: 20px; }
+  h2 .num { color: var(--accent); font-variant-numeric: tabular-nums; margin-right: 10px; }
+  h3 { font-size: 17px; margin: 26px 0 8px; }
+  p { margin: 12px 0; }
+  code { font-family: var(--mono); background: var(--code-bg); padding: 1px 6px; border-radius: 5px; font-size: 0.87em; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin: 18px 0; }
+  .sig { font-family: var(--mono); font-size: 13px; color: var(--muted); background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; display: inline-block; margin: 6px 0 2px; }
+
+  /* TOC */
+  .toc { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; margin: 24px 0 8px; }
+  .toc ol { margin: 6px 0 0; padding-left: 22px; columns: 2; column-gap: 32px; }
+  .toc li { padding: 3px 0; }
+  @media (max-width: 620px) { .toc ol { columns: 1; } }
+
+  .params { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 18px 0; }
+  .param { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .param .k { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+  .param .v { font-size: 26px; font-weight: 700; margin: 4px 0; }
+  .param .d { font-size: 13px; color: var(--muted); }
+
+  /* Pipeline flow */
+  .flow { display: flex; flex-direction: column; gap: 0; margin: 20px 0; }
+  .node { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 13px 18px; }
+  .node .t { font-weight: 600; }
+  .node .t code { background: transparent; padding: 0; color: var(--accent); }
+  .node .s { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .arrow { align-self: center; color: var(--muted); font-size: 18px; line-height: 1; padding: 6px 0; }
+  .arrow small { font-size: 12px; }
+  .decision { border-color: var(--accent); background: var(--accent-soft); }
+
+  /* Route cards */
+  .routes { display: grid; gap: 12px; margin: 18px 0; }
+  .route { border: 1px solid var(--border); border-left-width: 4px; border-radius: 10px; padding: 14px 18px; background: var(--panel); }
+  .route.small { border-left-color: var(--amber); }
+  .route.ideal { border-left-color: var(--green); }
+  .route.large { border-left-color: var(--red); }
+  .route .cond { font-family: var(--mono); font-size: 14px; font-weight: 600; }
+  .route.small .cond { color: var(--amber); }
+  .route.ideal .cond { color: var(--green); }
+  .route.large .cond { color: var(--red); }
+  .route .act { color: var(--muted); font-size: 14.5px; margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14.5px; }
+  .table-scroll { overflow-x: auto; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .03em; }
+  td code { font-size: 13px; }
+
+  .window { margin: 20px 0; }
+  .win-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; flex-wrap: wrap; }
+  .win-label { font-family: var(--mono); font-size: 12px; color: var(--muted); width: 70px; flex-shrink: 0; }
+  .bar { display: flex; height: 30px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); min-width: 300px; }
+  .seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-family: var(--mono); color: #fff; white-space: nowrap; }
+  .seg.body { background: var(--accent); }
+  .seg.ov { background: var(--amber); }
+  .legend { display: flex; gap: 18px; font-size: 13px; color: var(--muted); margin-top: 8px; flex-wrap: wrap; }
+  .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
+
+  ul.steps { padding-left: 0; list-style: none; counter-reset: step; margin: 14px 0; }
+  ul.steps li { position: relative; padding: 6px 0 6px 40px; counter-increment: step; }
+  ul.steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 6px; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  ul.plain { padding-left: 4px; list-style: none; }
+  ul.plain li { padding: 4px 0; }
+  ul.plain li::before { content: "\2022"; color: var(--accent); font-weight: 700; margin-right: 10px; }
+
+  .note { border-left: 3px solid var(--amber); background: var(--amber-soft); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 18px 0; font-size: 14.5px; }
+  .note strong { color: var(--amber); }
+  .tag { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 1px 7px; border-radius: 20px; background: var(--purple-soft); color: var(--purple); vertical-align: middle; margin-left: 6px; }
+  .foot { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">Indexing Service</div>
+    <h1>Text Chunking Workflow</h1>
+    <p class="lede">The complete end-to-end path a parsed arXiv paper takes through <code>TextChunker</code> to become overlapping, context-rich, embeddable chunks.</p>
+  </header>
+
+  <p>
+    All logic lives in <code>src/services/indexing/text_chunker.py</code>. The output is a list of
+    <code>TextChunk</code> objects, each pairing <code>text</code> with a <code>ChunkMetadata</code> record
+    plus <code>arxiv_id</code> and <code>paper_id</code> (<code>src/schemas/indexing/models.py</code>).
+    The design balances three pressures: chunks big enough to carry meaning, small enough to embed cleanly,
+    and overlapping enough that no idea is lost at a boundary.
+  </p>
+
+  <div class="toc">
+    <strong>Workflow stages</strong>
+    <ol>
+      <li><a href="#config">Configuration &amp; construction</a></li>
+      <li><a href="#entry">Entry point &amp; strategy choice</a></li>
+      <li><a href="#parse">Parse sections</a></li>
+      <li><a href="#filter">Filter noise</a></li>
+      <li><a href="#header">Build the header</a></li>
+      <li><a href="#route">Route each section by size</a></li>
+      <li><a href="#combine">Combine &amp; merge small sections</a></li>
+      <li><a href="#split">Split large sections</a></li>
+      <li><a href="#word">Word-based fallback</a></li>
+      <li><a href="#metadata">Metadata &amp; output</a></li>
+    </ol>
+  </div>
+
+  <h2 id="config"><span class="num">01</span>Configuration &amp; construction</h2>
+  <div class="sig">TextChunker(chunk_size=600, overlap_size=100, min_chunk_size=100)</div>
+  <div class="params">
+    <div class="param"><div class="k">chunk_size</div><div class="v">600</div><div class="d">Target words per word-based chunk</div></div>
+    <div class="param"><div class="k">overlap_size</div><div class="v">100</div><div class="d">Words shared across a boundary</div></div>
+    <div class="param"><div class="k">min_chunk_size</div><div class="v">100</div><div class="d">Floor for a standalone chunk</div></div>
+  </div>
+  <p>
+    The constructor rejects <code>overlap_size &gt;= chunk_size</code> with a <code>ValueError</code>.
+    The effective stride of the sliding window is therefore <code>chunk_size &minus; overlap_size = 500</code> words.
+    These three numbers are the only knobs; everything downstream derives from them.
+  </p>
+
+  <h2 id="entry"><span class="num">02</span>Entry point &amp; strategy choice</h2>
+  <div class="sig">chunk_paper(title, abstract, full_text, arxiv_id, paper_id, sections=None)</div>
+  <p>
+    <code>chunk_paper()</code> is the public entry point and a router. It attempts the structure-aware
+    <strong>section-based</strong> path first and falls back to plain <strong>word-based</strong> chunking
+    whenever sections are absent, unparseable, raise an exception, or yield an empty list.
+  </p>
+  <div class="flow">
+    <div class="node decision">
+      <div class="t"><code>chunk_paper( &hellip; )</code></div>
+      <div class="s">Were <code>sections</code> passed in?</div>
+    </div>
+    <div class="arrow">&darr;&nbsp; <small>yes</small></div>
+    <div class="node">
+      <div class="t"><code>_chunk_by_sections()</code> &nbsp;<span class="tag">preferred</span></div>
+      <div class="s">parse &rarr; filter &rarr; build header &rarr; route each section by word count</div>
+    </div>
+    <div class="arrow">&darr;&nbsp; <small>returns empty, or raises, or no <code>sections</code> at all</small></div>
+    <div class="node">
+      <div class="t"><code>chunk_text(full_text, &hellip;)</code> &nbsp;<span class="tag">fallback</span></div>
+      <div class="s">Word-based sliding window over the entire full text</div>
+    </div>
+  </div>
+  <p>
+    The section attempt is wrapped in <code>try/except</code>: any failure is logged as a warning and quietly
+    degrades to the word-based path, so a malformed <code>sections</code> payload can never break ingestion.
+  </p>
+
+  <h2 id="parse"><span class="num">03</span>Parse sections</h2>
+  <div class="sig">_parse_sections(sections) &rarr; Dict[str, str]</div>
+  <p>Sections can arrive in three shapes; all are normalized to a <code>{ title: content }</code> dict:</p>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>Input shape</th><th>Handling</th></tr></thead>
+    <tbody>
+      <tr><td><code>dict</code></td><td>Used as-is.</td></tr>
+      <tr><td><code>list</code></td><td>Each item's <code>title</code>/<code>heading</code> and <code>content</code>/<code>text</code> keys are read; missing titles become <code>Section&nbsp;N</code>. Non-dict items are stringified.</td></tr>
+      <tr><td><code>str</code></td><td>Parsed as JSON, then treated as a dict or list per above. Invalid JSON logs a warning and returns <code>{}</code>.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>An empty result here means the section path produces nothing, triggering the word-based fallback.</p>
+
+  <h2 id="filter"><span class="num">04</span>Filter noise</h2>
+  <div class="sig">_filter_sections(sections_dict, abstract) &rarr; Dict[str, str]</div>
+  <p>Front-matter and boilerplate are removed so they never become chunks. A section is dropped when&hellip;</p>
+  <ul class="plain">
+    <li><strong>Empty</strong> &mdash; content is blank after stripping.</li>
+    <li><strong>Metadata title</strong> &mdash; <code>_is_metadata_section()</code> matches titles like <em>authors, affiliation, email, arxiv, preprint, submitted</em>, or any title shorter than 5 characters.</li>
+    <li><strong>Abstract duplicate</strong> &mdash; <code>_is_duplicate_abstract()</code> drops it if the abstract contains or is contained by the content, or if &gt;80% of the abstract's words also appear in it (for abstracts over 10 words).</li>
+    <li><strong>Short metadata content</strong> &mdash; under 20 words <em>and</em> <code>_is_metadata_content()</code> finds two or more markers (<code>@</code>, <code>arxiv:</code>, <em>university, institute, department, gmail.com, edu&hellip;</em>).</li>
+  </ul>
+  <p>If filtering leaves nothing, a warning is logged and the section path returns empty &mdash; again falling back to word-based.</p>
+
+  <h2 id="header"><span class="num">05</span>Build the header</h2>
+  <p>
+    One header string is built once and prepended to <em>every</em> section chunk:
+  </p>
+  <div class="card" style="font-family:var(--mono);font-size:13px;color:var(--muted)">
+    {title}\n\nAbstract: {abstract}\n\n
+  </div>
+  <p>
+    This guarantees each chunk carries the paper's identity and gist even when retrieved in isolation,
+    which improves standalone relevance scoring during search.
+  </p>
+
+  <h2 id="route"><span class="num">06</span>Route each section by size</h2>
+  <p>
+    Filtered sections are iterated in order. Each is routed by its word count into one of three branches.
+    A running <code>small_sections</code> buffer carries undersized sections forward until they can be flushed.
+  </p>
+  <div class="routes">
+    <div class="route small">
+      <div class="cond">&lt; 100 words &nbsp;&mdash;&nbsp; too small &rarr; buffer</div>
+      <div class="act">Appended to the <code>small_sections</code> buffer. The buffer is flushed via <code>_create_combined_chunk()</code> when this is the last section, or when the <em>next</em> section is &ge; 100 words. See stage 07.</div>
+    </div>
+    <div class="route ideal">
+      <div class="cond">100 &ndash; 800 words &nbsp;&mdash;&nbsp; ideal &rarr; one chunk</div>
+      <div class="act">Becomes exactly one chunk built as <code>header + "Section: {title}" + content</code> via <code>_create_section_chunk()</code>. The common, happy case.</div>
+    </div>
+    <div class="route large">
+      <div class="cond">&gt; 800 words &nbsp;&mdash;&nbsp; too large &rarr; split</div>
+      <div class="act">Handed to <code>_split_large_section()</code>, which windows the content and re-prepends the header to each part. See stage 08.</div>
+    </div>
+  </div>
+
+  <h2 id="combine"><span class="num">07</span>Combine &amp; merge small sections</h2>
+  <div class="sig">_create_combined_chunk(header, small_sections, existing_chunks, &hellip;)</div>
+  <p>When the buffer flushes, the accumulated small sections are stitched into a single block:</p>
+  <ul class="steps">
+    <li>Each buffered section is rendered as <code>Section: {title}\n\n{content}</code> and joined together under the header.</li>
+    <li><strong>Merge-back check:</strong> if the combined block plus header is still under <strong>200 words</strong> and a previous chunk exists, the block is appended onto that previous chunk instead of standing alone &mdash; its metadata title gains a <code>+ Combined</code> suffix and it returns no new chunk.</li>
+    <li>Otherwise a new combined chunk is emitted. Its title concatenates up to three section titles with <code>+</code>, and any remainder is summarized as <code>+ N more</code>.</li>
+  </ul>
+  <p>This two-level strategy keeps embeddings from being dominated by the repeated header on tiny fragments.</p>
+
+  <h2 id="split"><span class="num">08</span>Split large sections</h2>
+  <div class="sig">_split_large_section(full_section_text, header, section_title, base_chunk_index, &hellip;)</div>
+  <ul class="steps">
+    <li>The header is stripped off so only the section body is windowed.</li>
+    <li>The body is passed through <code>chunk_text()</code> &mdash; the same sliding window used by the fallback (stage 09).</li>
+    <li>The header is re-prepended to every resulting part, and <code>end_char</code> / <code>word_count</code> are adjusted for the added header length.</li>
+    <li>Each part's <code>section_title</code> is labelled <code>{title} (Part n)</code>, and <code>chunk_index</code> continues from <code>base_chunk_index</code>.</li>
+  </ul>
+
+  <h2 id="word"><span class="num">09</span>Word-based fallback &amp; sliding window</h2>
+  <div class="sig">chunk_text(text, arxiv_id, paper_id) &rarr; List[TextChunk]</div>
+  <p>This is both the top-level fallback and the engine behind large-section splitting.</p>
+  <ul class="steps">
+    <li>Empty or whitespace-only text logs a warning and returns <code>[]</code>.</li>
+    <li>Text is tokenized into words with <code>re.findall(r"\S+", text)</code>.</li>
+    <li>If there are fewer than <code>min_chunk_size</code> (100) words, the whole text is returned as a single chunk.</li>
+    <li>Otherwise a window of <code>chunk_size</code> (600) words is taken, then the cursor advances by <code>chunk_size &minus; overlap_size</code> = 500 words so the next window re-includes the trailing 100.</li>
+    <li>Approximate <code>start_char</code>/<code>end_char</code> offsets are computed from joined word lengths; the loop ends once all words are consumed.</li>
+  </ul>
+
+  <div class="window card">
+    <strong>Sliding window over a ~1,600-word body</strong>
+    <div style="margin-top:14px">
+      <div class="win-row">
+        <span class="win-label">chunk 0</span>
+        <div class="bar" style="max-width:640px">
+          <div class="seg body" style="flex:5">words 0&ndash;500</div>
+          <div class="seg ov" style="flex:1">500&ndash;600</div>
+        </div>
+      </div>
+      <div class="win-row">
+        <span class="win-label">chunk 1</span>
+        <div class="bar" style="max-width:640px; margin-left:calc((100%/6)*5)">
+          <div class="seg ov" style="flex:1">500&ndash;600</div>
+          <div class="seg body" style="flex:5">600&ndash;1100</div>
+          <div class="seg ov" style="flex:1">1100&ndash;1200</div>
+        </div>
+      </div>
+      <div class="win-row">
+        <span class="win-label">chunk 2</span>
+        <div class="bar" style="max-width:520px; margin-left:auto; margin-right:auto">
+          <div class="seg ov" style="flex:1">1100&ndash;1200</div>
+          <div class="seg body" style="flex:4">1200&ndash;1600</div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--accent)"></span>unique window body (stride = 500 words)</span>
+      <span><span class="swatch" style="background:var(--amber)"></span>100-word overlap shared with a neighbour</span>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Known edge case:</strong> in the &lt; 100-word branch of <code>chunk_text()</code> (line&nbsp;114),
+    <code>_reconstruct_text</code> is called with two arguments (<code>words, text</code>) but the method only
+    accepts <code>words</code>. A paper whose text tokenizes to 1&ndash;99 words would raise a
+    <code>TypeError</code> on that path.
+  </div>
+
+  <h2 id="metadata"><span class="num">10</span>Metadata &amp; output</h2>
+  <p>Every <code>TextChunk</code> carries a <code>ChunkMetadata</code> record:</p>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>chunk_index</code></td><td>Position of the chunk within the paper</td></tr>
+      <tr><td><code>start_char</code> / <code>end_char</code></td><td>Approximate character offsets in the source text</td></tr>
+      <tr><td><code>word_count</code></td><td>Words in the chunk, including any prepended header</td></tr>
+      <tr><td><code>overlap_with_previous</code> / <code>overlap_with_next</code></td><td>Words shared with neighbours (0 for standalone section chunks)</td></tr>
+      <tr><td><code>section_title</code></td><td>Source section, combined title, or <code>Part n</code> label; <code>None</code> for pure word-based chunks</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Why the workflow is shaped this way</h3>
+  <div class="card">
+    <p style="margin-top:0"><strong>Section-first preserves meaning.</strong> A paper's own headings are natural semantic boundaries, so a well-sized section maps cleanly to one retrievable unit.</p>
+    <p><strong>Size routing avoids both failure modes.</strong> Tiny fragments are combined (or merged back) so the repeated header can't dominate their embeddings; oversized sections are windowed so no chunk overflows the embedding model's useful context.</p>
+    <p style="margin-bottom:0"><strong>Overlap and headers protect recall.</strong> The 100-word overlap keeps boundary-straddling ideas retrievable from either side, and the title+abstract header gives every chunk enough standalone context to be scored on its own. The word-based fallback guarantees an answer even when structure is missing or malformed.</p>
+  </div>
+
+  <div class="foot">
+    Source: <code>src/services/indexing/text_chunker.py</code> &middot; schemas: <code>src/schemas/indexing/models.py</code>
+  </div>
+
+</div>
+</body>
+</html>

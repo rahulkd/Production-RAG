@@ -1,5 +1,6 @@
 # Test PDF Parsing with Docling
 import asyncio
+import sys
 from pathlib import Path
 
 from src.config import get_settings
@@ -51,22 +52,46 @@ def save_sections_to_file(pdf_content: PdfContent, source_name: str) -> Path:
     return out_path
 
 
+def save_raw_text_to_file(pdf_content: PdfContent, source_name: str) -> Path:
+    """Dump the full raw text of a parsed PDF to a text file under results/.
+
+    Args:
+        pdf_content: Parsed content returned by the PDF parser.
+        source_name: Name of the source PDF (used for the output filename).
+
+    Returns:
+        Path to the written text file.
+    """
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = RESULTS_DIR / f"{Path(source_name).stem}_raw_text.txt"
+    out_path.write_text(pdf_content.raw_text, encoding="utf-8")
+    return out_path
+
+
 async def main():
-    # Test parsing with actual PDF files
-    cache_dir = SCRIPT_DIR / "data/arxiv_pdfs"
-    if not cache_dir.exists():
-        print(f"No PDF cache directory found at {cache_dir}")
-        return
+    # Allow parsing a single, user-supplied PDF: `python pdfparser_docling.py /path/to/file.pdf`
+    if len(sys.argv) > 1:
+        test_pdf = Path(sys.argv[1]).expanduser().resolve()
+        if not test_pdf.is_file():
+            print(f"No PDF file found at {test_pdf}")
+            return
+    else:
+        # Test parsing with actual PDF files from the cache directory
+        cache_dir = SCRIPT_DIR / "data/arxiv_pdfs"
+        if not cache_dir.exists():
+            print(f"No PDF cache directory found at {cache_dir}")
+            return
 
-    pdf_files = list(cache_dir.glob("*.pdf"))
-    print(f"\nFound {len(pdf_files)} PDF files to test parsing")
+        pdf_files = list(cache_dir.glob("*.pdf"))
+        print(f"\nFound {len(pdf_files)} PDF files to test parsing")
 
-    if not pdf_files:
-        print("No PDF files available for parsing test")
-        return
+        if not pdf_files:
+            print("No PDF files available for parsing test")
+            return
 
-    # Test parsing the first PDF
-    test_pdf = pdf_files[0]
+        # Test parsing the first PDF
+        test_pdf = pdf_files[0]
+
     print(f"Testing PDF parsing with: {test_pdf.name}")
 
     try:
@@ -86,6 +111,10 @@ async def main():
             # Save all parsed sections to a single text file for inspection
             out_path = save_sections_to_file(pdf_content, test_pdf.name)
             print(f"  Saved parsed sections to: {out_path}")
+
+            # Save the full raw text to its own text file
+            raw_text_path = save_raw_text_to_file(pdf_content, test_pdf.name)
+            print(f"  Saved raw text to: {raw_text_path}")
         else:
             print("✗ PDF parsing failed (Docling compatibility issue)")
             print("This is expected - not all PDFs work with Docling")

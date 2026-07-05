@@ -8,6 +8,8 @@ from src.db.interfaces.base import BaseDatabase
 from src.services.arxiv.client import ArxivClient
 from src.services.opensearch.client import OpenSearchClient
 from src.services.pdf_parser.parser import PDFParserService
+## embedding part
+#from src.services.embeddings.jina_client import JinaEmbeddingsClient
 
 ## why does this file exist?
 ## This file defines the dependencies for the application, such as database connections, clients for external services, and application
@@ -54,6 +56,11 @@ def get_pdf_parser(request: Request) -> PDFParserService:
     """Get PDF parser service from the request state."""
     return request.app.state.pdf_parser
 
+## embedding part
+#def get_embeddings_service(request: Request) -> JinaEmbeddingsClient:
+#    """Get embeddings service from the request state."""
+#    return request.app.state.embeddings_service
+
 
 # Dependency annotations
 SettingsDep = Annotated[Settings, Depends(get_settings)]
@@ -62,3 +69,11 @@ SessionDep = Annotated[Session, Depends(get_db_session)]
 OpenSearchDep = Annotated[OpenSearchClient, Depends(get_opensearch_client)]
 ArxivDep = Annotated[ArxivClient, Depends(get_arxiv_client)]
 PDFParserDep = Annotated[PDFParserService, Depends(get_pdf_parser)]
+## embedding part
+#EmbeddingsDep = Annotated[JinaEmbeddingsClient, Depends(get_embeddings_service)]
+
+
+
+
+
+

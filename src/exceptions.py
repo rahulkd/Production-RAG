@@ -69,7 +69,6 @@ class PipelineException(MetadataFetchingException):
 class LLMException(Exception):
     """Base exception for LLM-related errors."""
 
-
 # General application exceptions
 class ConfigurationError(Exception):
     """Exception raised when configuration is invalid."""
