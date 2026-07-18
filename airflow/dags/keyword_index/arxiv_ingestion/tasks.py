@@ -17,7 +17,7 @@ from src.db.factory import make_database
 from src.repositories.paper import PaperRepository
 from src.services.arxiv.factory import make_arxiv_client
 from src.services.metadata_fetcher import make_metadata_fetcher
-from src.services.opensearch.factory import make_opensearch_client
+from services.opensearch.factory import make_opensearch_client
 from src.services.pdf_parser.factory import make_pdf_parser_service
 
 logger = logging.getLogger(__name__)

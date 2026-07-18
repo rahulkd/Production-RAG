@@ -117,7 +117,7 @@ class Settings(BaseConfigSettings):
     postgres_max_overflow: int = 0
 
     # Jina AI embeddings configuration
-    #jina_api_key: str = ""
+    jina_api_key: str = ""
 
     arxiv: ArxivSettings = Field(default_factory=ArxivSettings)
     pdf_parser: PDFParserSettings = Field(default_factory=PDFParserSettings)

@@ -1,7 +1,14 @@
 # Verify Data Pipeline Results
 from opensearchpy import OpenSearch
 
-from src.services.opensearch.factory import make_opensearch_client
+import os as _os, sys as _sys
+# Ensure the repo root is importable so `src.*` resolves when run directly.
+_root = _os.path.dirname(_os.path.abspath(__file__))
+while _root != _os.path.dirname(_root) and not _os.path.exists(_os.path.join(_root, "pyproject.toml")):
+    _root = _os.path.dirname(_root)
+_sys.path.insert(0, _root)
+
+from src.services.opensearch.keyword.factory import make_opensearch_client
 
 print("VERIFYING DATA PIPELINE")
 print("=" * 40)

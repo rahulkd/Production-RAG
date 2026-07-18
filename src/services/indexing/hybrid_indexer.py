@@ -1,8 +1,8 @@
 import logging
 from typing import Dict, List, Optional
 
-from services.embeddings.client import JinaEmbeddingsClient
-from src.services.opensearch.client import OpenSearchClient
+from services.embeddings.jina_client import JinaEmbeddingsClient
+from services.opensearch.client import OpenSearchClient
 
 from .text_chunker import TextChunker
 

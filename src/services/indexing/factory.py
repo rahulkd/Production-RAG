@@ -2,7 +2,7 @@ from typing import Optional
 
 from src.config import Settings, get_settings
 from src.services.embeddings.factory import make_embeddings_client
-from src.services.opensearch.factory import make_opensearch_client_fresh
+from services.opensearch.factory import make_opensearch_client_fresh
 
 from .hybrid_indexer import HybridIndexingService
 from .text_chunker import TextChunker

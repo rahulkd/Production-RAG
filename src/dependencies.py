@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from src.config import Settings
 from src.db.interfaces.base import BaseDatabase
 from src.services.arxiv.client import ArxivClient
-from src.services.opensearch.client import OpenSearchClient
+from services.opensearch.client import OpenSearchClient
 from src.services.pdf_parser.parser import PDFParserService
 ## embedding part
 #from src.services.embeddings.jina_client import JinaEmbeddingsClient

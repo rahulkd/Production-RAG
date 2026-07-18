@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hybrid Search — OpenSearch Workflow Documentation</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 960px;
+    margin: 40px auto;
+    padding: 0 24px;
+    color: #1f2328;
+    line-height: 1.6;
+    background: #ffffff;
+  }
+  h1 {
+    border-bottom: 2px solid #d0d7de;
+    padding-bottom: 12px;
+    color: #0969da;
+  }
+  h2 {
+    border-bottom: 1px solid #d0d7de;
+    padding-bottom: 6px;
+    margin-top: 40px;
+    color: #1f2328;
+  }
+  h3 { margin-top: 28px; color: #24292f; }
+  h4 { margin-top: 20px; color: #57606a; }
+  code {
+    background: #f6f8fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    font-size: 0.9em;
+    color: #cf222e;
+  }
+  pre {
+    background: #f6f8fa;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #d0d7de;
+  }
+  pre code { background: none; padding: 0; color: #1f2328; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+    font-size: 0.92em;
+  }
+  th, td { border: 1px solid #d0d7de; padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f6f8fa; }
+  .note {
+    background: #ddf4ff;
+    border-left: 4px solid #0969da;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .warn {
+    background: #fff8c5;
+    border-left: 4px solid #d4a72c;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .flow {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    font-size: 0.85em;
+    line-height: 1.4;
+    white-space: pre;
+  }
+  .muted { color: #57606a; }
+  .tag {
+    display: inline-block;
+    background: #eaeef2;
+    border-radius: 12px;
+    padding: 1px 10px;
+    font-size: 0.8em;
+    color: #24292f;
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+  }
+  .formula {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+    font-size: 1.05em;
+    margin: 16px 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>Hybrid Search Workflow</h1>
+<p class="muted">
+  Module: <code>src/services/opensearch/</code> &nbsp;·&nbsp;
+  Client: <code>client.py</code> &nbsp;·&nbsp;
+  Index config: <code>index_config_hybrid.py</code> &nbsp;·&nbsp;
+  Query builder: <code>query_builder.py</code>
+</p>
+
+<div class="note">
+  <strong>What is hybrid search?</strong> A single search that combines <strong>BM25 keyword
+  matching</strong> (good at exact terms, names, acronyms) with <strong>dense vector similarity</strong>
+  (good at meaning / paraphrase), then fuses the two ranked lists into one final ranking using
+  <strong>Reciprocal Rank Fusion (RRF)</strong>. It runs entirely inside OpenSearch — the app sends one
+  request and gets back one fused, ranked list.
+</div>
+
+<h2>1. Why hybrid?</h2>
+<p>
+  Each retrieval method has blind spots. Keyword search misses semantic matches (a query for
+  <em>"transformer attention"</em> won't rank a chunk that says <em>"self-attention mechanism"</em> highly
+  if the exact words differ). Pure vector search can drift on rare tokens, exact identifiers, or numbers.
+  Hybrid search runs <strong>both</strong> and lets each cover the other's weakness.
+</p>
+
+<table>
+  <tr><th>Method</th><th>Strong at</th><th>Weak at</th><th>Scoring signal</th></tr>
+  <tr>
+    <td><strong>BM25</strong> (lexical)</td>
+    <td>Exact terms, names, acronyms, rare tokens</td>
+    <td>Synonyms, paraphrase, meaning</td>
+    <td>Term frequency · inverse doc frequency (unbounded, ~0–30)</td>
+  </tr>
+  <tr>
+    <td><strong>kNN vector</strong> (semantic)</td>
+    <td>Meaning, paraphrase, related concepts</td>
+    <td>Exact identifiers, out-of-vocabulary terms</td>
+    <td>Cosine similarity of embeddings (0–1)</td>
+  </tr>
+</table>
+
+<p>
+  The two signals live on completely different scales, so you can't just add them. RRF sidesteps this by
+  fusing on <strong>rank position</strong>, not raw score — see <a href="#rrf">§5</a>.
+</p>
+
+<h2>2. The index behind it all</h2>
+<p>
+  Everything is chunk-level. Papers are split into chunks; each chunk is one OpenSearch document that
+  carries <strong>both</strong> its analyzed text (for BM25) <strong>and</strong> its embedding vector (for kNN).
+  Defined in <code>index_config_hybrid.py</code> as <code>ARXIV_PAPERS_CHUNKS_MAPPING</code>.
+</p>
+
+<table>
+  <tr><th>Setting / field</th><th>Value</th><th>Purpose</th></tr>
+  <tr><td><code>index.knn</code></td><td><code>true</code></td><td>Enables approximate nearest-neighbor search on the index</td></tr>
+  <tr><td><code>chunk_text</code></td><td><code>text</code>, <code>text_analyzer</code></td><td>Lexical field for BM25 (lowercase + stopwords + snowball stemming)</td></tr>
+  <tr><td><code>embedding</code></td><td><code>knn_vector</code>, dim <strong>1024</strong></td><td>Dense vector for semantic search (Jina v3 embeddings)</td></tr>
+  <tr><td>&nbsp;&#8627; method</td><td><code>hnsw</code> · <code>cosinesimil</code> · <code>nmslib</code></td><td>HNSW graph, cosine space, NMSLIB engine</td></tr>
+  <tr><td>&nbsp;&#8627; params</td><td><code>ef_construction=512</code>, <code>m=16</code></td><td>Higher recall vs. index speed / memory trade-off</td></tr>
+  <tr><td><code>arxiv_id</code>, <code>categories</code></td><td><code>keyword</code></td><td>Exact-match filtering &amp; per-paper deletion</td></tr>
+  <tr><td><code>dynamic</code></td><td><code>strict</code></td><td>Rejects documents with unmapped fields (schema safety)</td></tr>
+</table>
+
+<div class="note">
+  Because text and vector share one document, a single hybrid query can score the same chunk on both
+  signals without any join.
+</div>
+
+<h2>3. Indexing workflow</h2>
+<p>Before search, the index and the fusion pipeline must exist, and chunks must be loaded.</p>
+
+<div class="flow">setup_indices(force=False)
+   &#9500;&#9472; _create_hybrid_index()      &#8594; PUT  /arxiv-papers-chunks   (ARXIV_PAPERS_CHUNKS_MAPPING)
+   &#9492;&#9472; _create_rrf_pipeline()      &#8594; PUT  /_search/pipeline/hybrid-rrf-pipeline   (HYBRID_RRF_PIPELINE)
+
+bulk_index_chunks([{chunk_data, embedding}, ...])
+   &#9492;&#9472; for each chunk: attach embedding &#8594; helpers.bulk(...)  &#8594; refresh</div>
+
+<table>
+  <tr><th>Method</th><th>Role</th></tr>
+  <tr><td><code>setup_indices(force)</code></td><td>One call that creates both the index and the RRF pipeline. <code>force=True</code> drops &amp; recreates.</td></tr>
+  <tr><td><code>_create_hybrid_index(force)</code></td><td>Creates the chunk index from the mapping if it doesn't exist.</td></tr>
+  <tr><td><code>_create_rrf_pipeline(force)</code></td><td>Registers the RRF search pipeline via <code>PUT /_search/pipeline/&lt;id&gt;</code>.</td></tr>
+  <tr><td><code>index_chunk(chunk_data, embedding)</code></td><td>Indexes a single chunk (embedding attached under the <code>embedding</code> field).</td></tr>
+  <tr><td><code>bulk_index_chunks(chunks)</code></td><td>Batched indexing via <code>opensearchpy.helpers.bulk</code>, returns <code>{success, failed}</code>.</td></tr>
+  <tr><td><code>delete_paper_chunks(arxiv_id)</code></td><td>Deletes all chunks of a paper (<code>delete_by_query</code> on <code>arxiv_id</code>).</td></tr>
+  <tr><td><code>get_chunks_by_paper(arxiv_id)</code></td><td>Returns a paper's chunks ordered by <code>chunk_index</code> (embedding excluded).</td></tr>
+</table>
+
+<h2>4. Query-time workflow</h2>
+<p>
+  The entry point is <code>search_unified(...)</code>. It decides the mode, then delegates. Both
+  <code>search_papers()</code> (BM25) and <code>search_chunks_hybrid()</code> are thin wrappers over the
+  same two private methods.
+</p>
+
+<div class="flow">search_unified(query, query_embedding=None, use_hybrid=True, ...)
+   &#9474;
+   &#9500;&#9472; no embedding  OR  use_hybrid=False
+   &#9474;      &#9492;&#9472; _search_bm25_only()           &#8594; lexical only
+   &#9474;
+   &#9492;&#9472; embedding present AND use_hybrid=True
+          &#9492;&#9472; _search_hybrid_native()       &#8594; BM25 + kNN fused by RRF pipeline</div>
+
+<h3>4a. The BM25 clause (built by <code>QueryBuilder</code>)</h3>
+<p>
+  With <code>search_chunks=True</code>, <code>QueryBuilder</code> builds a <code>bool</code> query whose text
+  part is a fuzzy, field-boosted <code>multi_match</code>:
+</p>
+<pre><code>{
+  "bool": {
+    "must": [{
+      "multi_match": {
+        "query": "&lt;user query&gt;",
+        "fields": ["chunk_text^3", "title^2", "abstract^1"],  // boosts
+        "type": "best_fields",
+        "operator": "or",
+        "fuzziness": "AUTO",
+        "prefix_length": 2
+      }
+    }],
+    "filter": [{ "terms": { "categories": [...] } }]   // optional
+  }
+}</code></pre>
+<p>
+  It also attaches <code>highlight</code> config (<code>&lt;mark&gt;</code> fragments on
+  <code>chunk_text</code>, <code>title</code>, <code>abstract</code>) and <code>_source</code> excludes the
+  bulky <code>embedding</code>.
+</p>
+
+<h3>4b. The hybrid query (<code>_search_hybrid_native</code>)</h3>
+<p>
+  The key step: take the BM25 <code>bool</code> query from above and place it <em>alongside</em> a
+  <code>knn</code> query inside a single <code>hybrid</code> query. OpenSearch runs both sub-queries and the
+  attached search pipeline fuses their result lists.
+</p>
+<pre><code>search_body = {
+  "size": size,
+  "query": {
+    "hybrid": {
+      "queries": [
+        bm25_query,                                              // sub-query 1: lexical
+        { "knn": { "embedding": { "vector": query_embedding,     // sub-query 2: semantic
+                                  "k": size * 2 } } }
+      ]
+    }
+  },
+  "_source": {...}, "highlight": {...}
+}
+
+# executed WITH the pipeline attached:
+client.search(index=..., body=search_body,
+              params={"search_pipeline": "hybrid-rrf-pipeline"})</code></pre>
+
+<div class="warn">
+  <strong>Over-fetch, then trim.</strong> Both sub-queries fetch <code>size * 2</code> candidates so RRF has
+  enough overlap to fuse well, then results are truncated to <code>size</code>. The
+  <code>hybrid</code> query <em>only</em> fuses correctly when the <code>search_pipeline</code> param is
+  present — without it, OpenSearch will not combine the two lists as intended.
+</div>
+
+<h2 id="rrf">5. Fusion: Reciprocal Rank Fusion (RRF)</h2>
+<p>
+  Defined as <code>HYBRID_RRF_PIPELINE</code> in <code>index_config_hybrid.py</code>
+  (id <span class="tag">hybrid-rrf-pipeline</span>), using the
+  <code>score-ranker-processor</code> with technique <code>rrf</code> and <code>rank_constant = 60</code>.
+</p>
+
+<div class="formula">
+  score(doc) &nbsp;=&nbsp; &Sigma;<sub>&nbsp;lists&nbsp;i</sub> &nbsp; 1 / ( k + rank<sub>i</sub>(doc) ) &nbsp;&nbsp;&nbsp; with &nbsp; k = 60
+</div>
+
+<p>
+  For every result list a document appears in, add <code>1 / (60 + its rank in that list)</code>, then sum
+  across lists. Two properties make this work well:
+</p>
+<ul>
+  <li><strong>Rank-based, not score-based.</strong> The incompatible BM25 (~0–30) and cosine (0–1) scales
+  never get compared directly — only positions matter. No normalization or manual weight tuning needed.</li>
+  <li><strong>Consensus wins.</strong> A chunk ranked high by <em>both</em> methods beats one ranked #1 by
+  only a single method. The constant <code>k=60</code> dampens the pull of the very top ranks so a broad
+  agreement outranks a single strong-but-narrow hit.</li>
+</ul>
+
+<h4>Worked example</h4>
+<table>
+  <tr><th>Chunk</th><th>BM25 rank</th><th>Vector rank</th><th>RRF score</th><th>Final</th></tr>
+  <tr><td>A</td><td>1</td><td>3</td><td>1/61 + 1/63 = <strong>0.0323</strong></td><td>1</td></tr>
+  <tr><td>B</td><td>2</td><td>2</td><td>1/62 + 1/62 = <strong>0.0323</strong></td><td>2</td></tr>
+  <tr><td>C</td><td>1</td><td>—</td><td>1/61 = <strong>0.0164</strong></td><td>3</td></tr>
+  <tr><td>D</td><td>—</td><td>1</td><td>1/61 = <strong>0.0164</strong></td><td>4</td></tr>
+</table>
+<p class="muted">
+  A &amp; B appear in both lists and dominate C &amp; D, each of which is #1 in only one list. That is RRF
+  rewarding cross-method consensus.
+</p>
+
+<h3>Alternative (not used): weighted normalization</h3>
+<p>
+  <code>index_config_hybrid.py</code> also keeps a commented-out <code>HYBRID_SEARCH_PIPELINE</code> that
+  L2-normalizes scores and combines them with an explicit weighted harmonic mean (e.g. 30% BM25 / 70%
+  vector). RRF is preferred because it "generally provides better results without manual weight tuning" —
+  the trade-off being you give up explicit control over the BM25-vs-vector balance.
+</p>
+
+<h2>6. Result post-processing</h2>
+<p>After OpenSearch returns fused hits, <code>_search_hybrid_native</code> shapes them for the caller:</p>
+<ul>
+  <li>Drops any hit with <code>_score &lt; min_score</code> (client-side threshold).</li>
+  <li>Copies <code>_score &#8594; score</code> and <code>_id &#8594; chunk_id</code> onto each chunk.</li>
+  <li>Attaches <code>highlights</code> if present.</li>
+  <li>Recomputes <code>total</code> as the count of surviving hits (post-threshold).</li>
+</ul>
+<pre><code>{
+  "total": 7,
+  "hits": [
+    { "chunk_id": "...", "arxiv_id": "2401.12345",
+      "chunk_text": "...", "score": 0.032,
+      "highlights": { "chunk_text": ["...&lt;mark&gt;attention&lt;/mark&gt;..."] } },
+    ...
+  ]
+}</code></pre>
+
+<h2>7. End-to-end summary</h2>
+<div class="flow">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472; INDEX TIME &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+&#9474; paper &#8594; chunks &#8594; embeddings                                       &#9474;
+&#9474;   setup_indices()  &#8594; chunk index + RRF pipeline                   &#9474;
+&#9474;   bulk_index_chunks()  &#8594; each chunk stores text + 1024-d vector   &#9474;
+&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+                              &#9474;
+&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472; QUERY TIME &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+&#9474; search_unified(query, query_embedding)                            &#9474;
+&#9474;      &#9474;                                                            &#9474;
+&#9474;      &#9660;                                                            &#9474;
+&#9474;  QueryBuilder &#8594; BM25 bool/multi_match  &#9488;                          &#9474;
+&#9474;                                        &#9500;&#9472;&#9658;  hybrid query          &#9474;
+&#9474;  embed(query) &#8594; knn vector query       &#9496;         &#9474;                &#9474;
+&#9474;                                                  &#9660;                &#9474;
+&#9474;                       search_pipeline = hybrid-rrf-pipeline       &#9474;
+&#9474;                                                  &#9474;                &#9474;
+&#9474;                                RRF: &Sigma; 1/(60+rank)                  &#9474;
+&#9474;                                                  &#9660;                &#9474;
+&#9474;                     fused, ranked, min_score-filtered chunks      &#9474;
+&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</div>
+
+<h2>8. Public API quick reference</h2>
+<table>
+  <tr><th>Method</th><th>Mode</th><th>Notes</th></tr>
+  <tr><td><code>search_unified(...)</code></td><td>auto</td><td>Primary entry point; picks BM25 vs hybrid from <code>query_embedding</code> + <code>use_hybrid</code>.</td></tr>
+  <tr><td><code>search_papers(...)</code></td><td>BM25</td><td>Lexical-only convenience wrapper.</td></tr>
+  <tr><td><code>search_chunks_vector(...)</code></td><td>vector</td><td>Pure kNN, no lexical signal.</td></tr>
+  <tr><td><code>search_chunks_hybrid(...)</code></td><td>hybrid</td><td>Explicit BM25 + vector + RRF.</td></tr>
+</table>
+
+<hr style="margin-top:40px; border:none; border-top:1px solid #d0d7de;">
+<p class="muted" style="font-size:0.85em;">
+  Generated for the <code>arxiv-papers-chunks</code> hybrid index · reflects <code>client.py</code>,
+  <code>index_config_hybrid.py</code>, and <code>query_builder.py</code> as implemented.
+</p>
+
+</body>
+</html>

@@ -9,7 +9,7 @@ from src.db.factory import make_database
 from src.routers import hybrid_search, papers, ping
 from src.services.arxiv.factory import make_arxiv_client
 from src.services.embeddings.factory import make_embeddings_service
-from src.services.opensearch.factory import make_opensearch_client
+from services.opensearch.factory import make_opensearch_client
 from src.services.pdf_parser.factory import make_pdf_parser_service
 
 # Setup logging
