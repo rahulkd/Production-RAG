@@ -105,6 +105,29 @@ class OpenSearchSettings(BaseConfigSettings):
     hybrid_search_size_multiplier: int = 2  # Get k*multiplier for better recall
 
 
+class BedrockSettings(BaseConfigSettings):
+    model_config = SettingsConfigDict(
+        env_file=[".env", str(ENV_FILE_PATH)],
+        env_prefix="BEDROCK__",
+        extra="ignore",
+        frozen=True,
+        case_sensitive=False,
+    )
+
+    region_name: str = "us-west-2"
+    model_id: str = "meta.llama3-70b-instruct-v1:0"
+
+    # Generation defaults (mapped onto the Converse API inferenceConfig)
+    max_tokens: int = 1024
+    temperature: float = 0.5
+    top_p: float = 0.9
+
+    # Transport
+    connect_timeout: int = 10
+    read_timeout: int = 300
+    max_retries: int = 3
+
+
 class Settings(BaseConfigSettings):
     app_version: str = "0.1.0"
     debug: bool = True
@@ -116,6 +139,15 @@ class Settings(BaseConfigSettings):
     postgres_pool_size: int = 20
     postgres_max_overflow: int = 0
 
+    ## ollama
+    #ollama_host: str = "http://localhost:11434"
+    #ollama_model: str = "llama3.2:1b"
+    #ollama_timeout: int = 300
+
+    # AWS Bedrock API key. botocore reads this from the process environment, so
+    # BedrockClient exports it back to os.environ when it is only present in .env.
+    aws_bearer_token_bedrock: str = ""
+
     # Jina AI embeddings configuration
     jina_api_key: str = ""
 
@@ -123,6 +155,7 @@ class Settings(BaseConfigSettings):
     pdf_parser: PDFParserSettings = Field(default_factory=PDFParserSettings)
     chunking: ChunkingSettings = Field(default_factory=ChunkingSettings)
     opensearch: OpenSearchSettings = Field(default_factory=OpenSearchSettings)
+    bedrock: BedrockSettings = Field(default_factory=BedrockSettings)
 
     @field_validator("postgres_database_url")
     @classmethod

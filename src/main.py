@@ -6,11 +6,15 @@ import uvicorn
 from fastapi import FastAPI
 from src.config import get_settings
 from src.db.factory import make_database
-from src.routers import hybrid_search, papers, ping
+from src.routers import hybrid_search, ping
+from src.routers.ask import ask_router, stream_router
 from src.services.arxiv.factory import make_arxiv_client
 from src.services.embeddings.factory import make_embeddings_service
-from services.opensearch.factory import make_opensearch_client
+from src.services.LLM.factory import make_bedrock_client
+from src.services.opensearch.factory import make_opensearch_client
 from src.services.pdf_parser.factory import make_pdf_parser_service
+
+#from src.services.LLM.factory import make_ollama_client  ## ollama
 
 # Setup logging
 logging.basicConfig(
@@ -62,7 +66,9 @@ async def lifespan(app: FastAPI):
     app.state.arxiv_client = make_arxiv_client()
     app.state.pdf_parser = make_pdf_parser_service()
     app.state.embeddings_service = make_embeddings_service()
-    logger.info("Services initialized: arXiv API client, PDF parser, OpenSearch, Embeddings")
+    app.state.bedrock_client = make_bedrock_client()
+    #app.state.ollama_client = make_ollama_client()  ## ollama
+    logger.info("Services initialized: arXiv API client, PDF parser, OpenSearch, Embeddings, Bedrock LLM")
 
     logger.info("API ready")
     yield
@@ -80,9 +86,10 @@ app = FastAPI(
 )
 
 # Include routers
-app.include_router(ping.router, prefix="/api/v1")
-app.include_router(papers.router, prefix="/api/v1")
-app.include_router(hybrid_search.router, prefix="/api/v1")  # Hybrid search supporting all modes
+app.include_router(ping.router, prefix="/api/v1")  # Health check endpoint
+app.include_router(hybrid_search.router, prefix="/api/v1")  # Search chunks with BM25/hybrid
+app.include_router(ask_router, prefix="/api/v1")  # RAG question answering with LLM
+app.include_router(stream_router, prefix="/api/v1")  # Streaming RAG responses
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from src.config import Settings
 from src.db.interfaces.base import BaseDatabase
 from src.services.arxiv.client import ArxivClient
-from services.opensearch.client import OpenSearchClient
+from src.services.opensearch.client import OpenSearchClient
 from src.services.pdf_parser.parser import PDFParserService
 ## embedding part
 #from src.services.embeddings.jina_client import JinaEmbeddingsClient
@@ -18,6 +18,21 @@ from src.services.pdf_parser.parser import PDFParserService
 #  the application using the Depends mechanism. 
 ## By using dependency injection, we can keep our code modular and testable, as we can easily swap out implementations of these 
 # dependencies for testing or different environments.
+
+
+from functools import lru_cache
+from typing import Annotated, Generator
+
+from fastapi import Depends, Request
+from sqlalchemy.orm import Session
+from src.config import Settings
+from src.db.interfaces.base import BaseDatabase
+from src.services.arxiv.client import ArxivClient
+from src.services.embeddings.jina_client import JinaEmbeddingsClient
+from src.services.opensearch.client import OpenSearchClient
+from src.services.pdf_parser.parser import PDFParserService
+from src.services.LLM.client import BedrockClient
+## from src.services.LLM.client_ollama import OllamaClient ## ollama
 
 
 @lru_cache
@@ -56,10 +71,21 @@ def get_pdf_parser(request: Request) -> PDFParserService:
     """Get PDF parser service from the request state."""
     return request.app.state.pdf_parser
 
-## embedding part
-#def get_embeddings_service(request: Request) -> JinaEmbeddingsClient:
-#    """Get embeddings service from the request state."""
-#    return request.app.state.embeddings_service
+
+def get_embeddings_service(request: Request) -> JinaEmbeddingsClient:
+    """Get embeddings service from the request state."""
+    return request.app.state.embeddings_service
+
+
+def get_bedrock_client(request: Request) -> BedrockClient:
+    """Get Bedrock LLM client from the request state."""
+    return request.app.state.bedrock_client
+
+
+## ollama
+#def get_ollama_client(request: Request) -> OllamaClient:
+#    """Get Ollama client from the request state."""
+#    return request.app.state.ollama_client
 
 
 # Dependency annotations
@@ -69,11 +95,6 @@ SessionDep = Annotated[Session, Depends(get_db_session)]
 OpenSearchDep = Annotated[OpenSearchClient, Depends(get_opensearch_client)]
 ArxivDep = Annotated[ArxivClient, Depends(get_arxiv_client)]
 PDFParserDep = Annotated[PDFParserService, Depends(get_pdf_parser)]
-## embedding part
-#EmbeddingsDep = Annotated[JinaEmbeddingsClient, Depends(get_embeddings_service)]
-
-
-
-
-
-
+EmbeddingsDep = Annotated[JinaEmbeddingsClient, Depends(get_embeddings_service)]
+BedrockDep = Annotated[BedrockClient, Depends(get_bedrock_client)]
+#OllamaDep = Annotated[OllamaClient, Depends(get_ollama_client)]  ## ollama

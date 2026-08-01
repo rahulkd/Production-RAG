@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from sqlalchemy import text
 
-from ..dependencies import DatabaseDep, SettingsDep
+from ..dependencies import BedrockDep, DatabaseDep, SettingsDep
 from ..schemas.api.health import HealthResponse, ServiceStatus
 
 router = APIRouter()
@@ -21,7 +21,7 @@ async def ping():
     response_description="Service health information",
     tags=["Health"],
 )
-async def health_check(settings: SettingsDep, database: DatabaseDep) -> HealthResponse:
+async def health_check(settings: SettingsDep, database: DatabaseDep, llm_client: BedrockDep) -> HealthResponse:
     """
     Comprehensive health check endpoint for monitoring and load balancer probes.
 
@@ -60,10 +60,12 @@ async def health_check(settings: SettingsDep, database: DatabaseDep) -> HealthRe
 
     # Test bedrock service connectivity
     try:
-        ## TODO (check bedrock LLM connectivity here instead of Ollama since we are not using Ollama anymore)
-        pass
+        bedrock_health = await llm_client.health_check()
+        services["bedrock"] = ServiceStatus(status="healthy", message=bedrock_health.get("message", "Connected successfully"))
     except Exception as e:
-        pass
+        services["bedrock"] = ServiceStatus(status="unhealthy", message=f"Connection failed: {str(e)}")
+        overall_status = "degraded"
+
     return HealthResponse(
         status=overall_status,
         version=settings.app_version,

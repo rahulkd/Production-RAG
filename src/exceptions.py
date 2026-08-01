@@ -69,6 +69,41 @@ class PipelineException(MetadataFetchingException):
 class LLMException(Exception):
     """Base exception for LLM-related errors."""
 
+## ollama
+#class OllamaException(LLMException):
+#    """Exception raised for Ollama service errors."""
+
+
+#class OllamaConnectionError(OllamaException):
+#    """Exception raised when cannot connect to Ollama service."""
+
+
+#class OllamaTimeoutError(OllamaException):
+#    """Exception raised when Ollama service times out."""
+
+
+# Week 5: AWS Bedrock exceptions (replaces the Ollama ones above)
+class BedrockException(LLMException):
+    """Exception raised for AWS Bedrock service errors."""
+
+
+class BedrockConnectionError(BedrockException):
+    """Exception raised when the Bedrock endpoint cannot be reached."""
+
+
+class BedrockTimeoutError(BedrockException):
+    """Exception raised when a Bedrock request times out."""
+
+
+class BedrockAuthenticationError(BedrockException):
+    """Exception raised when the Bedrock API key is missing, invalid or expired."""
+
+
+class BedrockThrottlingError(BedrockException):
+    """Exception raised when Bedrock throttles the request."""
+
+
+
 # General application exceptions
 class ConfigurationError(Exception):
     """Exception raised when configuration is invalid."""

@@ -5,16 +5,18 @@ import os
 from dotenv import load_dotenv
 from botocore.exceptions import ClientError
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+load_dotenv(dotenv_path=os.path.join(PROJECT_ROOT, ".env"))
 
 bearer_token = os.getenv("AWS_BEARER_TOKEN_BEDROCK")
 if not bearer_token:
     raise EnvironmentError("AWS_BEARER_TOKEN_BEDROCK not set in .env")
 
+# botocore reads AWS_BEARER_TOKEN_BEDROCK from the environment and uses bearer
+# auth for bedrock/bedrock-runtime; it is not a SigV4 session token.
 client = boto3.client(
     "bedrock-runtime",
     region_name="us-west-2",
-    aws_session_token=bearer_token,
 )
 
 model_id = "meta.llama3-70b-instruct-v1:0"
