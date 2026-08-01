@@ -29,10 +29,7 @@ QUESTION = "explain poisoning of pretrained data using external web sources  "
 
 # (label, top_k, use_hybrid)
 SCENARIOS = [
-    ("top_k=1, hybrid", 1, True),
     ("top_k=3, hybrid", 3, True),
-    ("top_k=5, hybrid", 5, True),
-    ("top_k=3, bm25", 3, False),
 ]
 
 report_lines = []
@@ -125,7 +122,7 @@ except Exception as e:
 
 
 
-'''
+
 # --- Part 2: time profile -------------------------------------------------
 emit()
 emit("PART 2: TIME PROFILE")
@@ -218,4 +215,3 @@ with open(report_path, "w") as f:
 
 emit()
 emit(f"Report saved: {report_path}")
-'''
