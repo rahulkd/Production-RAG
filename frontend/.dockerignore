@@ -1,0 +1,16 @@
+node_modules
+.next
+e2e
+out
+build
+npm-debug.log*
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+Dockerfile
+.dockerignore
+README.md
+*.tsbuildinfo
+next-env.d.ts

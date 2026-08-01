@@ -9,6 +9,7 @@ __pycache__/
 *.pyo
 .venv/
 venv/
+.ruff_cache/
 
 # Logs
 *.log
@@ -16,3 +17,22 @@ logs/
 
 # Downloaded arXiv PDF cache (runtime artifact, written by Airflow as UID 50000)
 data/arxiv_pdfs/
+
+# Node / Next.js frontend
+node_modules/
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+.vercel/
+.turbo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local reference clone of the assistant-ui monorepo (~180 MB, not part of this
+# project). Anchored to the repo root so it does not also match the vendored
+# frontend/components/assistant-ui/ directory.
+/assistant-ui/
