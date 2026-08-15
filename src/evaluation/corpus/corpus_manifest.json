@@ -1,0 +1,843 @@
+{
+  "manifest_version": 1,
+  "created_at": "2026-08-09T03:27:24+00:00",
+  "built_at": "2026-08-15T05:21:41+00:00",
+  "date_window": {
+    "from": "20240101",
+    "to": "20260809"
+  },
+  "index_name": "arxiv_evaluation_index",
+  "embedding_model": "jina-embeddings-v3",
+  "embedding_dim": 1024,
+  "chunking": {
+    "chunk_size": 600,
+    "overlap_size": 100,
+    "min_chunk_size": 100
+  },
+  "papers": [
+    {
+      "arxiv_id": "2410.14961v1",
+      "base_id": "2410.14961",
+      "title": "LangGFM: A Large Language Model Alone Can be a Powerful Graph Foundation Model",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.SI"
+      ],
+      "published_date": "2024-10-19T03:27:19Z",
+      "topic_key": "llm_general",
+      "via_backfill": false,
+      "raw_text_sha256": "aef817019cd48ea0fbfefa56cd426d2b7060932989f44f9ad32fe05fabc532c9",
+      "raw_text_chars": 71271,
+      "n_chunks": 28
+    },
+    {
+      "arxiv_id": "2401.06831v1",
+      "base_id": "2401.06831",
+      "title": "A Survey on the Applications of Frontier AI, Foundation Models, and Large Language Models to Intelligent Transportation Systems",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published_date": "2024-01-12T10:29:48Z",
+      "topic_key": "llm_general",
+      "via_backfill": false,
+      "raw_text_sha256": "6a4889fa2df7115bc0b0daaacd46e07e45ecab0bc1ac07efd5b5052c71ece13a",
+      "raw_text_chars": 45771,
+      "n_chunks": 25
+    },
+    {
+      "arxiv_id": "2503.02104v2",
+      "base_id": "2503.02104",
+      "title": "Foundation Model in Biomedicine",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published_date": "2025-03-03T22:42:00Z",
+      "topic_key": "llm_general",
+      "via_backfill": false,
+      "raw_text_sha256": null,
+      "raw_text_chars": null,
+      "n_chunks": null
+    },
+    {
+      "arxiv_id": "2505.20355v2",
+      "base_id": "2505.20355",
+      "title": "GraLoRA: Granular Low-Rank Adaptation for Parameter-Efficient Fine-Tuning",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published_date": "2025-05-26T06:48:20Z",
+      "topic_key": "lora_peft",
+      "via_backfill": false,
+      "raw_text_sha256": "c9cf01650bc853efa035a8f28570eb4f4a7d61ae1c5445806e8b1d592ec21604",
+      "raw_text_chars": 75530,
+      "n_chunks": 41
+    },
+    {
+      "arxiv_id": "2501.08008v1",
+      "base_id": "2501.08008",
+      "title": "TriAdaptLoRA: Brain-Inspired Triangular Adaptive Low-Rank Adaptation for Parameter-Efficient Fine-Tuning",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published_date": "2025-01-14T10:51:31Z",
+      "topic_key": "lora_peft",
+      "via_backfill": false,
+      "raw_text_sha256": "527df742dc941aa948e597a7b1d78030ec91859c11b326a94d66c9369e6152ec",
+      "raw_text_chars": 66752,
+      "n_chunks": 23
+    },
+    {
+      "arxiv_id": "2403.13269v3",
+      "base_id": "2403.13269",
+      "title": "AFLoRA: Adaptive Freezing of Low Rank Adaptation in Parameter Efficient Fine-Tuning of Large Models",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published_date": "2024-03-20T03:07:50Z",
+      "topic_key": "lora_peft",
+      "via_backfill": false,
+      "raw_text_sha256": "54a12b3c398dbc988e20baa5502e5e5b38a543df639fa12fb261e501aa689d8e",
+      "raw_text_chars": 30536,
+      "n_chunks": 12
+    },
+    {
+      "arxiv_id": "2503.13988v1",
+      "base_id": "2503.13988",
+      "title": "Empowering Smaller Models: Tuning LLaMA and Gemma with Chain-of-Thought for Ukrainian Exam Tasks",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published_date": "2025-03-18T07:44:49Z",
+      "topic_key": "open_weight_models",
+      "via_backfill": false,
+      "raw_text_sha256": "96347b079bbeef5891e9d18d3f0ca8fdbfd5935f62a323f544fbf78f663d44f6",
+      "raw_text_chars": 107433,
+      "n_chunks": 19
+    },
+    {
+      "arxiv_id": "2604.14171v1",
+      "base_id": "2604.14171",
+      "title": "Benchmarking Linguistic Adaptation in Comparable-Sized LLMs: A Study of Llama-3.1-8B, Mistral-7B-v0.1, and Qwen3-8B on Romanized Nepali",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published_date": "2026-03-25T07:02:51Z",
+      "topic_key": "open_weight_models",
+      "via_backfill": false,
+      "raw_text_sha256": "474396efd1c226dd7e513747fc3e6a24090739891f3f40ad89aafca8a345cfd5",
+      "raw_text_chars": 101261,
+      "n_chunks": 30
+    },
+    {
+      "arxiv_id": "2511.04500v3",
+      "base_id": "2511.04500",
+      "title": "Large language models replicate and predict human cooperation across experiments in game theory",
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.GT",
+        "cs.MA"
+      ],
+      "published_date": "2025-11-06T16:21:27Z",
+      "topic_key": "open_weight_models",
+      "via_backfill": false,
+      "raw_text_sha256": null,
+      "raw_text_chars": null,
+      "n_chunks": null
+    },
+    {
+      "arxiv_id": "2503.15758v2",
+      "base_id": "2503.15758",
+      "title": "ATTENTION2D: Communication Efficient Distributed Self-Attention Mechanism",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.DC"
+      ],
+      "published_date": "2025-03-20T00:25:44Z",
+      "topic_key": "transformer_architecture",
+      "via_backfill": false,
+      "raw_text_sha256": "411c56d1bc1c2f8e3a24027e688a06af289eeaeb340257d0600adcc9e3705e3c",
+      "raw_text_chars": 79073,
+      "n_chunks": 33
+    },
+    {
+      "arxiv_id": "2507.17245v1",
+      "base_id": "2507.17245",
+      "title": "DistrAttention: An Efficient and Flexible Self-Attention Mechanism on Modern GPUs",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published_date": "2025-07-23T06:29:38Z",
+      "topic_key": "transformer_architecture",
+      "via_backfill": false,
+      "raw_text_sha256": "20759a723e2a61c837b2048e20b6afddc784efb7347da1081cf3e995055b1be3",
+      "raw_text_chars": 64306,
+      "n_chunks": 26
+    },
+    {
+      "arxiv_id": "2501.02040v2",
+      "base_id": "2501.02040",
+      "title": "A Separable Self-attention Inspired by the State Space Model for Computer Vision",
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published_date": "2025-01-03T15:23:36Z",
+      "topic_key": "transformer_architecture",
+      "via_backfill": false,
+      "raw_text_sha256": "be64dea84781ab2c56ade84a95dfd4d140b2a4d3122b99d515725efb29d4852f",
+      "raw_text_chars": 44084,
+      "n_chunks": 19
+    },
+    {
+      "arxiv_id": "2606.19781v2",
+      "base_id": "2606.19781",
+      "title": "Towards Engineering Scaling Laws with Pretraining Data Composition",
+      "primary_category": "hep-ex",
+      "categories": [
+        "hep-ex",
+        "cs.AI"
+      ],
+      "published_date": "2026-06-18T04:32:06Z",
+      "topic_key": "pretraining_scaling",
+      "via_backfill": false,
+      "raw_text_sha256": "93bda18fff6d3e7ca5a813a0ed2327ac4f9d23f9ffbb5f90545904f85c4f7a73",
+      "raw_text_chars": 37158,
+      "n_chunks": 15
+    },
+    {
+      "arxiv_id": "2406.14969v2",
+      "base_id": "2406.14969",
+      "title": "Uni-Mol2: Exploring Molecular Pretraining Model at Scale",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published_date": "2024-06-21T08:28:54Z",
+      "topic_key": "pretraining_scaling",
+      "via_backfill": false,
+      "raw_text_sha256": "37152df9f73d67a0d60886d1daadc34f7f2ac4ffea39d178df178bcc1bb576ba",
+      "raw_text_chars": 50960,
+      "n_chunks": 20
+    },
+    {
+      "arxiv_id": "2508.06617v3",
+      "base_id": "2508.06617",
+      "title": "Generalizing Scaling Laws for Dense and Sparse Large Language Models",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.PF"
+      ],
+      "published_date": "2025-08-08T18:07:11Z",
+      "topic_key": "pretraining_scaling",
+      "via_backfill": false,
+      "raw_text_sha256": "fc9b174031691ba6970a361194753d06ce794012aa09e01e2879a2f2f6e6aa8d",
+      "raw_text_chars": 44914,
+      "n_chunks": 17
+    },
+    {
+      "arxiv_id": "2607.25297v1",
+      "base_id": "2607.25297",
+      "title": "Hybrid Analysis for Secure MCP Tool Use in LLM Agents",
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published_date": "2026-07-28T05:17:34Z",
+      "topic_key": "agentic_ai",
+      "via_backfill": false,
+      "raw_text_sha256": "9cee0a09223e6756fd513598394630ffb99acf6d72bfdc938861774670abd0c7",
+      "raw_text_chars": 73556,
+      "n_chunks": 28
+    },
+    {
+      "arxiv_id": "2604.05432v1",
+      "base_id": "2604.05432",
+      "title": "Your LLM Agent Can Leak Your Data: Data Exfiltration via Backdoored Tool Use",
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published_date": "2026-04-07T04:58:01Z",
+      "topic_key": "agentic_ai",
+      "via_backfill": false,
+      "raw_text_sha256": "ddbe673a109b7aff7fc71373060dfd963033a6201140b1c24e67d59c49dbbdf1",
+      "raw_text_chars": 95464,
+      "n_chunks": 50
+    },
+    {
+      "arxiv_id": "2406.12276v1",
+      "base_id": "2406.12276",
+      "title": "CodeNav: Beyond tool-use to using real-world codebases with LLM agents",
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.SE"
+      ],
+      "published_date": "2024-06-18T05:10:38Z",
+      "topic_key": "agentic_ai",
+      "via_backfill": false,
+      "raw_text_sha256": "89e1539aa0adbd0cab192acb63bfececc24a7a60ef6dce690a388ec1786d0173",
+      "raw_text_chars": 73209,
+      "n_chunks": 49
+    },
+    {
+      "arxiv_id": "2510.00261v1",
+      "base_id": "2510.00261",
+      "title": "Retrieval-Augmented Generation for Electrocardiogram-Language Models",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.MM"
+      ],
+      "published_date": "2025-09-30T20:32:34Z",
+      "topic_key": "rag",
+      "via_backfill": false,
+      "raw_text_sha256": "53d68563e4fe37e38a0dd6ee33ba39ab9a2b67cecc106467be77900b91b284a3",
+      "raw_text_chars": 23912,
+      "n_chunks": 11
+    },
+    {
+      "arxiv_id": "2506.21931v2",
+      "base_id": "2506.21931",
+      "title": "ARAG: Agentic Retrieval Augmented Generation for Personalized Recommendation",
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR",
+        "cs.AI",
+        "cs.CL",
+        "cs.MA"
+      ],
+      "published_date": "2025-06-27T05:45:59Z",
+      "topic_key": "rag",
+      "via_backfill": false,
+      "raw_text_sha256": "6a68b9ed6b9197af583290491663c5a966b1f6be60b31424177c0b3c6f68e6a7",
+      "raw_text_chars": 31076,
+      "n_chunks": 12
+    },
+    {
+      "arxiv_id": "2502.14727v1",
+      "base_id": "2502.14727",
+      "title": "WavRAG: Audio-Integrated Retrieval Augmented Generation for Spoken Dialogue Models",
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD",
+        "cs.AI",
+        "eess.AS"
+      ],
+      "published_date": "2025-02-20T16:54:07Z",
+      "topic_key": "rag",
+      "via_backfill": false,
+      "raw_text_sha256": "b5a497ca4ed0c66db37748b84dd86c1bc1e994f778ca35ae52e91cbb18eb76c7",
+      "raw_text_chars": 125044,
+      "n_chunks": 21
+    },
+    {
+      "arxiv_id": "2404.13846v4",
+      "base_id": "2404.13846",
+      "title": "Filtered Direct Preference Optimization",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published_date": "2024-04-22T03:05:19Z",
+      "topic_key": "rlhf_preference",
+      "via_backfill": false,
+      "raw_text_sha256": null,
+      "raw_text_chars": null,
+      "n_chunks": null
+    },
+    {
+      "arxiv_id": "2401.16635v3",
+      "base_id": "2401.16635",
+      "title": "Improving Reinforcement Learning from Human Feedback with Efficient Reward Model Ensemble",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published_date": "2024-01-30T00:17:37Z",
+      "topic_key": "rlhf_preference",
+      "via_backfill": false,
+      "raw_text_sha256": "021cdd3bf569e02e12405b0bf114e99ac74e83168e20890eb96e7ca1c2b6384e",
+      "raw_text_chars": 30807,
+      "n_chunks": 14
+    },
+    {
+      "arxiv_id": "2403.10704v2",
+      "base_id": "2403.10704",
+      "title": "Parameter Efficient Reinforcement Learning from Human Feedback",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published_date": "2024-03-15T21:43:46Z",
+      "topic_key": "rlhf_preference",
+      "via_backfill": false,
+      "raw_text_sha256": "b036afe3663e4611a74e8bb9756e5517733be9ee1960230ca4519c57c216b5df",
+      "raw_text_chars": 91452,
+      "n_chunks": 42
+    },
+    {
+      "arxiv_id": "2502.01116v1",
+      "base_id": "2502.01116",
+      "title": "Picky LLMs and Unreliable RMs: An Empirical Study on Safety Alignment after Instruction Tuning",
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published_date": "2025-02-03T07:09:09Z",
+      "topic_key": "instruction_alignment",
+      "via_backfill": false,
+      "raw_text_sha256": null,
+      "raw_text_chars": null,
+      "n_chunks": null
+    },
+    {
+      "arxiv_id": "2410.10862v3",
+      "base_id": "2410.10862",
+      "title": "Superficial Safety Alignment Hypothesis",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.CR",
+        "cs.CY",
+        "cs.LG"
+      ],
+      "published_date": "2024-10-07T19:53:35Z",
+      "topic_key": "instruction_alignment",
+      "via_backfill": false,
+      "raw_text_sha256": "74ee347e2adc3602b2026cdf52667001088b44ed8c0bc4172e3fa3d0c2cdfae7",
+      "raw_text_chars": 132492,
+      "n_chunks": 42
+    },
+    {
+      "arxiv_id": "2501.09368v4",
+      "base_id": "2501.09368",
+      "title": "Aligning Instruction Tuning with Pre-training",
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published_date": "2025-01-16T08:27:40Z",
+      "topic_key": "instruction_alignment",
+      "via_backfill": false,
+      "raw_text_sha256": "67962d89e436e6944bd1db54dede0c1c674cb6d9396ed2e3dabe20cc999767b6",
+      "raw_text_chars": 97788,
+      "n_chunks": 49
+    },
+    {
+      "arxiv_id": "2410.17635v2",
+      "base_id": "2410.17635",
+      "title": "Markov Chain of Thought for Efficient Mathematical Reasoning",
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published_date": "2024-10-23T07:53:29Z",
+      "topic_key": "reasoning",
+      "via_backfill": false,
+      "raw_text_sha256": "2e115f1f0ead12d9a559427ad3f0c0ad61957153dd58e3a242a4c3fb250628dd",
+      "raw_text_chars": 87392,
+      "n_chunks": 38
+    },
+    {
+      "arxiv_id": "2401.11864v5",
+      "base_id": "2401.11864",
+      "title": "Distilling Mathematical Reasoning Capabilities into Small Language Models",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published_date": "2024-01-22T11:37:18Z",
+      "topic_key": "reasoning",
+      "via_backfill": false,
+      "raw_text_sha256": "f64ee2287bd508412f32e3b63670624af37a534400cef6c8f7e66a218ead157e",
+      "raw_text_chars": 61082,
+      "n_chunks": 24
+    },
+    {
+      "arxiv_id": "2502.07154v4",
+      "base_id": "2502.07154",
+      "title": "Rethinking Fine-Tuning when Scaling Test-Time Compute: Limiting Confidence Improves Mathematical Reasoning",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published_date": "2025-02-11T00:33:31Z",
+      "topic_key": "reasoning",
+      "via_backfill": false,
+      "raw_text_sha256": "12eff97402318d55e198cb29fdb8cf87fdeb7ad497c736beadd3b943ca7908ac",
+      "raw_text_chars": 90110,
+      "n_chunks": 41
+    },
+    {
+      "arxiv_id": "2404.15817v1",
+      "base_id": "2404.15817",
+      "title": "Vision Transformer-based Adversarial Domain Adaptation",
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published_date": "2024-04-24T11:41:28Z",
+      "topic_key": "computer_vision",
+      "via_backfill": false,
+      "raw_text_sha256": "a88c0a09a08f4f431b9e948519cdfe5ced75d45d9ace615ada56fce0069bf9df",
+      "raw_text_chars": 26413,
+      "n_chunks": 14
+    },
+    {
+      "arxiv_id": "2606.25318v1",
+      "base_id": "2606.25318",
+      "title": "REViT: Roto-reflection Equivariant Convolutional Vision Transformer",
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published_date": "2026-06-24T02:32:11Z",
+      "topic_key": "computer_vision",
+      "via_backfill": false,
+      "raw_text_sha256": "f4fca2594623d8eaffd47cb737ae31a285f4f5fa5dfdb6c809d4b75b0a770a66",
+      "raw_text_chars": 66761,
+      "n_chunks": 32
+    },
+    {
+      "arxiv_id": "2505.07884v1",
+      "base_id": "2505.07884",
+      "title": "Development of a WAZOBIA-Named Entity Recognition System",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.HC",
+        "cs.IR",
+        "cs.LG"
+      ],
+      "published_date": "2025-05-10T22:59:24Z",
+      "topic_key": "nlp",
+      "via_backfill": false,
+      "raw_text_sha256": "39dc19206347083b44b02097767eb1ef71f399d8182870cf543dab12b6b1abd2",
+      "raw_text_chars": 26936,
+      "n_chunks": 11
+    },
+    {
+      "arxiv_id": "2504.21016v2",
+      "base_id": "2504.21016",
+      "title": "Nested Named-Entity Recognition on Vietnamese COVID-19: Dataset and Experiments",
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published_date": "2025-04-21T05:21:34Z",
+      "topic_key": "nlp",
+      "via_backfill": false,
+      "raw_text_sha256": "bf159cbc96bdde6669851fe7026a6cc5dfa4536476e316970565756e8b4d1e46",
+      "raw_text_chars": 35857,
+      "n_chunks": 11
+    },
+    {
+      "arxiv_id": "2607.13328v1",
+      "base_id": "2607.13328",
+      "title": "Privacy Preserving Recommender Systems Balancing Personalization with Privacy",
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published_date": "2026-07-14T23:21:21Z",
+      "topic_key": "recommendation",
+      "via_backfill": false,
+      "raw_text_sha256": "4c999cb509b645e615abc167965c24cfba6f88b44191651f67484a25037805aa",
+      "raw_text_chars": 37557,
+      "n_chunks": 20
+    },
+    {
+      "arxiv_id": "2607.10910v1",
+      "base_id": "2607.10910",
+      "title": "ZoRRO: A Zero-Weight Personalized Recommender System for Scalable News Recommendation",
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR",
+        "cs.LG"
+      ],
+      "published_date": "2026-07-12T20:30:24Z",
+      "topic_key": "recommendation",
+      "via_backfill": false,
+      "raw_text_sha256": "959c5c328fb40199e9af8c9e28cea13118e66fed059ed7f3b5803bb5a7c16e88",
+      "raw_text_chars": 41056,
+      "n_chunks": 11
+    },
+    {
+      "arxiv_id": "2504.11623v1",
+      "base_id": "2504.11623",
+      "title": "Possibility for Proactive Anomaly Detection",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published_date": "2025-04-15T21:25:02Z",
+      "topic_key": "time_series",
+      "via_backfill": false,
+      "raw_text_sha256": "88435969437d44ebcd3b80ba56feb97c7dddb5a4cb28b9ffe6671b881aed7c69",
+      "raw_text_chars": 95733,
+      "n_chunks": 27
+    },
+    {
+      "arxiv_id": "2504.00070v1",
+      "base_id": "2504.00070",
+      "title": "Enhancing Time Series Forecasting with Fuzzy Attention-Integrated Transformers",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published_date": "2025-03-31T17:33:50Z",
+      "topic_key": "time_series",
+      "via_backfill": false,
+      "raw_text_sha256": "eb650ccd091100a833d4db1d87ecbd3d10bd86d22124be5b2c34b6285674b99d",
+      "raw_text_chars": 45457,
+      "n_chunks": 14
+    },
+    {
+      "arxiv_id": "2402.17073v3",
+      "base_id": "2402.17073",
+      "title": "Hyperdimensional Representation Learning for Node Classification and Link Prediction",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.SI"
+      ],
+      "published_date": "2024-02-26T23:15:01Z",
+      "topic_key": "graph_learning",
+      "via_backfill": false,
+      "raw_text_sha256": "9ab3282c52dfcce932a3087e4a039bc3364ab8852debb4fc6e19897ebd8dc26a",
+      "raw_text_chars": 62555,
+      "n_chunks": 30
+    },
+    {
+      "arxiv_id": "2402.14802v3",
+      "base_id": "2402.14802",
+      "title": "Link Prediction with Physics-Inspired Graph Neural Networks",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.IR",
+        "cs.SI"
+      ],
+      "published_date": "2024-02-22T18:56:31Z",
+      "topic_key": "graph_learning",
+      "via_backfill": false,
+      "raw_text_sha256": "05f6b1a9d11b0cfb3b1152bee1cb780c39ef088d3a2daa621951cc3aefb57827",
+      "raw_text_chars": 79746,
+      "n_chunks": 34
+    },
+    {
+      "arxiv_id": "2601.07440v1",
+      "base_id": "2601.07440",
+      "title": "Variational Autoencoder with Normalizing flow for X-ray spectral fitting",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published_date": "2026-01-12T11:28:40Z",
+      "topic_key": "generative_models",
+      "via_backfill": false,
+      "raw_text_sha256": "8aa880a72faf2f9283e5d366c8b50cf970d7aa9674dc4471ce16a0ab82d26dba",
+      "raw_text_chars": 20394,
+      "n_chunks": 9
+    },
+    {
+      "arxiv_id": "2404.12267v1",
+      "base_id": "2404.12267",
+      "title": "Physics-integrated generative modeling using attentive planar normalizing flow based variational autoencoder",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "stat.ML"
+      ],
+      "published_date": "2024-04-18T15:38:14Z",
+      "topic_key": "generative_models",
+      "via_backfill": false,
+      "raw_text_sha256": "2f76076d587e69fba95584f9caceca7a51f75988f272a1ee661ac1be99f816f9",
+      "raw_text_chars": 65381,
+      "n_chunks": 33
+    },
+    {
+      "arxiv_id": "2407.21078v1",
+      "base_id": "2407.21078",
+      "title": "Convergence rates for the Adam optimizer",
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC",
+        "cs.LG",
+        "math.PR",
+        "stat.ML"
+      ],
+      "published_date": "2024-07-29T22:49:04Z",
+      "topic_key": "optimization",
+      "via_backfill": false,
+      "raw_text_sha256": null,
+      "raw_text_chars": null,
+      "n_chunks": null
+    },
+    {
+      "arxiv_id": "2505.21651v1",
+      "base_id": "2505.21651",
+      "title": "AutoSGD: Automatic Learning Rate Selection for Stochastic Gradient Descent",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "math.OC",
+        "stat.CO",
+        "stat.ML"
+      ],
+      "published_date": "2025-05-27T18:25:21Z",
+      "topic_key": "optimization",
+      "via_backfill": false,
+      "raw_text_sha256": null,
+      "raw_text_chars": null,
+      "n_chunks": null
+    },
+    {
+      "arxiv_id": "2406.15962v1",
+      "base_id": "2406.15962",
+      "title": "Privacy Preserving Machine Learning for Electronic Health Records using Federated Learning and Differential Privacy",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CR",
+        "cs.ET"
+      ],
+      "published_date": "2024-06-23T00:01:03Z",
+      "topic_key": "federated_privacy",
+      "via_backfill": false,
+      "raw_text_sha256": "fa2b4ae6ce00d605b7ab9ce2aaf1af1b282e6af9506e4c161319316e62651a3d",
+      "raw_text_chars": 19488,
+      "n_chunks": 8
+    },
+    {
+      "arxiv_id": "2412.00687v1",
+      "base_id": "2412.00687",
+      "title": "Towards Privacy-Preserving Medical Imaging: Federated Learning with Differential Privacy and Secure Aggregation Using a Modified ResNet Architecture",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CR"
+      ],
+      "published_date": "2024-12-01T05:52:29Z",
+      "topic_key": "federated_privacy",
+      "via_backfill": false,
+      "raw_text_sha256": "1caa3d4ab13dcb1a41a1eec9317401a1ae43d44b95d379ad56e824b9f8b4daf5",
+      "raw_text_chars": 20460,
+      "n_chunks": 8
+    },
+    {
+      "arxiv_id": "2409.08062v1",
+      "base_id": "2409.08062",
+      "title": "Q-value Regularized Decision ConvFormer for Offline Reinforcement Learning",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.RO"
+      ],
+      "published_date": "2024-09-12T14:10:22Z",
+      "topic_key": "reinforcement_learning",
+      "via_backfill": false,
+      "raw_text_sha256": "f088c644d7e7d9a3c9e349d11f461bca173d65a21e6db0f841fb8ec67882df37",
+      "raw_text_chars": 33855,
+      "n_chunks": 14
+    },
+    {
+      "arxiv_id": "2410.14069v1",
+      "base_id": "2410.14069",
+      "title": "Rethinking Optimal Transport in Offline Reinforcement Learning",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published_date": "2024-10-17T22:36:43Z",
+      "topic_key": "reinforcement_learning",
+      "via_backfill": false,
+      "raw_text_sha256": "32879fb40c0e03e4f8c05082f0aa42e9ddfee80f0d5b42d476df6176dde0a1c7",
+      "raw_text_chars": 54209,
+      "n_chunks": 20
+    },
+    {
+      "arxiv_id": "2402.17345v1",
+      "base_id": "2402.17345",
+      "title": "LocalGCL: Local-aware Contrastive Learning for Graphs",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published_date": "2024-02-27T09:23:54Z",
+      "topic_key": "representation_learning",
+      "via_backfill": false,
+      "raw_text_sha256": "50ec8064fb6e728072b20fc48d211382669dd039dc0658940ba35db281d425bb",
+      "raw_text_chars": 23679,
+      "n_chunks": 11
+    },
+    {
+      "arxiv_id": "2601.20154v2",
+      "base_id": "2601.20154",
+      "title": "Spectral Ghost in Representation Learning: from Component Analysis to Self-Supervised Learning",
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published_date": "2026-01-28T01:08:24Z",
+      "topic_key": "representation_learning",
+      "via_backfill": false,
+      "raw_text_sha256": null,
+      "raw_text_chars": null,
+      "n_chunks": null
+    }
+  ]
+}

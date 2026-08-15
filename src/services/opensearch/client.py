@@ -15,10 +15,19 @@ logger = logging.getLogger(__name__)
 class OpenSearchClient:
     """OpenSearch client supporting BM25 and hybrid search with native RRF."""
 
-    def __init__(self, host: str, settings: Settings):
+    def __init__(self, host: str, settings: Settings, index_name: Optional[str] = None):
+        """Initialize the client.
+
+        :param host: OpenSearch host URL.
+        :param settings: Application settings.
+        :param index_name: Explicit index to operate on. Defaults to the
+            settings-derived production index. Supplying this lets a caller
+            (e.g. the evaluation harness) target an isolated index without
+            mutating global settings.
+        """
         self.host = host
         self.settings = settings
-        self.index_name = f"{settings.opensearch.index_name}-{settings.opensearch.chunk_index_suffix}"
+        self.index_name = index_name or f"{settings.opensearch.index_name}-{settings.opensearch.chunk_index_suffix}"
 
         self.client = OpenSearch(
             hosts=[host],

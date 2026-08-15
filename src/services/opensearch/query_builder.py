@@ -4,8 +4,6 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 
-
-
 class QueryBuilder:
     """
     Unified query builder for OpenSearch supporting both paper-level and chunk-level search.

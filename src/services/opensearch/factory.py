@@ -23,7 +23,11 @@ def make_opensearch_client(settings: Optional[Settings] = None) -> OpenSearchCli
     return OpenSearchClient(host=settings.opensearch.host, settings=settings)
 
 
-def make_opensearch_client_fresh(settings: Optional[Settings] = None, host: Optional[str] = None) -> OpenSearchClient:
+def make_opensearch_client_fresh(
+    settings: Optional[Settings] = None,
+    host: Optional[str] = None,
+    index_name: Optional[str] = None,
+) -> OpenSearchClient:
     """Factory function to create a fresh OpenSearch client (not cached).
 
     Use this when you need a new client instance (e.g., for testing
@@ -31,6 +35,8 @@ def make_opensearch_client_fresh(settings: Optional[Settings] = None, host: Opti
 
     :param settings: Optional settings instance
     :param host: Optional host override
+    :param index_name: Optional index override, for targeting an isolated
+        index such as the evaluation corpus index
     :returns: New OpenSearchClient instance
     """
     if settings is None:
@@ -39,4 +45,4 @@ def make_opensearch_client_fresh(settings: Optional[Settings] = None, host: Opti
     # Use provided host or settings host
     opensearch_host = host or settings.opensearch.host
 
-    return OpenSearchClient(host=opensearch_host, settings=settings)
+    return OpenSearchClient(host=opensearch_host, settings=settings, index_name=index_name)

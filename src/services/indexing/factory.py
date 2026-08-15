@@ -9,7 +9,9 @@ from .text_chunker import TextChunker
 
 
 def make_hybrid_indexing_service(
-    settings: Optional[Settings] = None, opensearch_host: Optional[str] = None
+    settings: Optional[Settings] = None,
+    opensearch_host: Optional[str] = None,
+    index_name: Optional[str] = None,
 ) -> HybridIndexingService:
     """Factory function to create hybrid indexing service.
 
@@ -17,6 +19,8 @@ def make_hybrid_indexing_service(
 
     :param settings: Optional settings instance
     :param opensearch_host: Optional OpenSearch host override
+    :param index_name: Optional index override, for indexing into an isolated
+        index such as the evaluation corpus index
     :returns: HybridIndexingService instance
     """
     if settings is None:
@@ -29,7 +33,7 @@ def make_hybrid_indexing_service(
         min_chunk_size=settings.chunking.min_chunk_size,
     )
     embeddings_client = make_embeddings_client(settings)
-    opensearch_client = make_opensearch_client_fresh(settings, host=opensearch_host)
+    opensearch_client = make_opensearch_client_fresh(settings, host=opensearch_host, index_name=index_name)
 
     # Create indexing service
     return HybridIndexingService(chunker=chunker, embeddings_client=embeddings_client, opensearch_client=opensearch_client)

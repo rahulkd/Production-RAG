@@ -2,6 +2,12 @@
 .env
 .env.*
 !.env.example
+!.env.test.example
+
+# Evaluation harness run artifacts. The corpus manifest IS committed (it is the
+# frozen corpus definition); logs and per-run results are not.
+src/evaluation/logs/
+src/evaluation/results/
 
 # Python
 __pycache__/
@@ -17,6 +23,13 @@ logs/
 
 # Downloaded arXiv PDF cache (runtime artifact, written by Airflow as UID 50000)
 data/arxiv_pdfs/
+# Evaluation corpus PDF cache (host-owned, written by src/evaluation/corpus/build.py)
+data/eval_pdfs/
+# Safety net: ARXIV__PDF_CACHE_DIR is a relative path, so a run from the wrong
+# working directory drops PDFs into a nested data/arxiv_pdfs/ that the anchored
+# rules above do not cover. Unanchored so it matches at any depth.
+**/arxiv_pdfs/
+**/eval_pdfs/
 
 # Node / Next.js frontend
 node_modules/

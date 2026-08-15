@@ -59,9 +59,23 @@ class MetadataFetcher:
         process_pdfs: bool = True,
         store_to_db: bool = True,
         db_session: Optional[Session] = None,
+        search_query: Optional[str] = None,
+        arxiv_ids: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Fetch papers from arXiv, process PDFs, and store to database.
+
+        The paper set is selected by exactly one of three strategies, checked
+        in this order:
+
+        1. ``arxiv_ids`` — fetch these specific papers by ID. Used to rebuild a
+           frozen corpus reproducibly.
+        2. ``search_query`` — a raw arXiv query string, which supports
+           multi-category and topic filters (e.g.
+           ``cat:cs.AI AND abs:"retrieval-augmented generation"``).
+        3. Neither — the default category-scoped fetch driven by
+           ``ARXIV__SEARCH_CATEGORY``. This is the path the daily DAG uses and
+           its behaviour is unchanged.
 
         Args:
             max_results: Maximum papers to fetch
@@ -70,9 +84,13 @@ class MetadataFetcher:
             process_pdfs: Whether to download and parse PDFs
             store_to_db: Whether to store results in database
             db_session: Database session (required if store_to_db=True)
+            search_query: Raw arXiv query string (strategy 2)
+            arxiv_ids: Explicit list of arXiv IDs to fetch (strategy 1)
 
         Returns:
-            Dictionary with processing results and statistics
+            Dictionary with processing results and statistics. ``download_failures``
+            and ``parse_failures`` hold the arXiv IDs that failed at each stage,
+            so callers can report them without re-parsing the ``errors`` strings.
         """
 
         results = {
@@ -81,6 +99,9 @@ class MetadataFetcher:
             "pdfs_parsed": 0,
             "papers_stored": 0,
             "errors": [],
+            "download_failures": [],
+            "parse_failures": [],
+            "not_found": [],
             "processing_time": 0,
         }
 
@@ -88,9 +109,48 @@ class MetadataFetcher:
 
         try:
             # Step 1: Fetch paper metadata from arXiv
-            papers = await self.arxiv_client.fetch_papers(
-                max_results=max_results, from_date=from_date, to_date=to_date, sort_by="submittedDate", sort_order="descending"
-            )
+            if arxiv_ids:
+                papers = []
+                # fetch_paper_by_id has no rate-limit gate of its own (unlike
+                # fetch_papers / fetch_papers_with_query), so pacing is applied
+                # here. Without it a 50-ID corpus rebuild issues 50 rapid
+                # requests and arXiv starts returning 403s.
+                delay = self.arxiv_client.rate_limit_delay
+                for position, arxiv_id in enumerate(arxiv_ids):
+                    if position > 0 and delay > 0:
+                        await asyncio.sleep(delay)
+
+                    try:
+                        paper = await self.arxiv_client.fetch_paper_by_id(arxiv_id)
+                    except Exception as exc:
+                        # One unreachable ID must not abandon the rest of the batch.
+                        logger.error(f"Failed to fetch {arxiv_id}: {exc}")
+                        results["not_found"].append(arxiv_id)
+                        results["errors"].append(f"Failed to fetch {arxiv_id}: {exc}")
+                        continue
+
+                    if paper:
+                        papers.append(paper)
+                        logger.debug(f"Fetched {arxiv_id} ({position + 1}/{len(arxiv_ids)})")
+                    else:
+                        logger.warning(f"arXiv ID not found, skipping: {arxiv_id}")
+                        results["not_found"].append(arxiv_id)
+                        results["errors"].append(f"arXiv ID not found: {arxiv_id}")
+            elif search_query:
+                papers = await self.arxiv_client.fetch_papers_with_query(
+                    search_query=search_query,
+                    max_results=max_results,
+                    sort_by="submittedDate",
+                    sort_order="descending",
+                )
+            else:
+                papers = await self.arxiv_client.fetch_papers(
+                    max_results=max_results,
+                    from_date=from_date,
+                    to_date=to_date,
+                    sort_by="submittedDate",
+                    sort_order="descending",
+                )
 
             results["papers_fetched"] = len(papers)
 
@@ -105,6 +165,10 @@ class MetadataFetcher:
                 results["pdfs_downloaded"] = pdf_results["downloaded"]
                 results["pdfs_parsed"] = pdf_results["parsed"]
                 results["errors"].extend(pdf_results["errors"])
+                # Surface the per-stage failure IDs so callers can report them
+                # directly instead of string-matching the errors list.
+                results["download_failures"].extend(pdf_results["download_failures"])
+                results["parse_failures"].extend(pdf_results["parse_failures"])
 
             # Step 3: Store to database if requested
             if store_to_db and db_session:
