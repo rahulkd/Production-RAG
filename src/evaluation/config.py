@@ -20,6 +20,60 @@ from src.evaluation._bootstrap import REPO_ROOT
 EVAL_INDEX_NAME = "arxiv_evaluation_index"
 
 # --------------------------------------------------------------------------
+# Models
+# --------------------------------------------------------------------------
+
+# Generates the golden question set (Phase 2) and judges answers (Phase 4).
+#
+# Qwen3 235B rather than Claude because Anthropic models are not enabled on this
+# Bedrock account. Verified to speak the Converse API, so `BedrockClient` is
+# reused unchanged, and to emit fence-free JSON deterministically at
+# temperature 0 — both are load-bearing for a reproducible dataset.
+GENERATOR_MODEL = "qwen.qwen3-vl-235b-a22b"
+
+# The RAG pipeline's own generator. The judge must never be this model: a model
+# scoring its own output is not a measurement.
+SYSTEM_UNDER_TEST_MODEL = "meta.llama3-70b-instruct-v1:0"
+
+# Pinned so a regenerated dataset is byte-identical to the previous one.
+GENERATION_PARAMS = {"temperature": 0.0, "top_p": 1.0}
+# 900 truncated a single-hop reply mid-object on a full run, losing that
+# question outright — the reference answer plus must_mention plus a verbatim
+# answer_snippet adds up. Headroom is cheap; a lost question is not.
+GENERATION_MAX_TOKENS = 1500
+
+# Bumped whenever a prompt file changes, so rows record which wording produced
+# them and stale rows are identifiable after a prompt edit.
+PROMPT_VERSION = "v1"
+
+# --------------------------------------------------------------------------
+# Golden dataset targets (120 questions)
+# --------------------------------------------------------------------------
+
+# Rebalanced against what this corpus can actually produce, measured over three
+# full runs. Comparative questions need two papers in the same topic that share
+# a comparable dimension; with 43 papers across 20 topics there are only 30
+# same-topic pairings in total, and roughly a quarter of those yield a usable
+# question. Chasing 15 meant generating cross-topic pairs that were always
+# going to be declined, so the target is set to what the corpus supports and
+# the shortfall moved to single-hop, which is not supply-constrained.
+TARGET_SINGLE_HOP = 60
+TARGET_MULTI_HOP = 20
+TARGET_COMPARATIVE = 10
+TARGET_UNANSWERABLE = 20
+TARGET_PARAPHRASE = 10
+TARGET_QUESTIONS = TARGET_SINGLE_HOP + TARGET_MULTI_HOP + TARGET_COMPARATIVE + TARGET_UNANSWERABLE + TARGET_PARAPHRASE
+
+# Chunk eligibility for question generation. Measured against the corpus: these
+# leave 696 of 1036 chunks usable, with every paper retaining at least 5.
+MIN_CHUNK_BODY_CHARS = 800
+
+# Reject a question when more than this fraction of its content-word trigrams
+# also appear in the source chunk. Without it, questions inherit the chunk's
+# rare terms and BM25 wins by lexical echo rather than retrieval quality.
+MAX_TRIGRAM_LEAKAGE = 0.15
+
+# --------------------------------------------------------------------------
 # Corpus targets
 # --------------------------------------------------------------------------
 
@@ -46,6 +100,11 @@ CORPUS_DIR = EVAL_ROOT / "corpus"
 CORPUS_MANIFEST = CORPUS_DIR / "corpus_manifest.json"
 LOGS_DIR = EVAL_ROOT / "logs"
 RESULTS_DIR = EVAL_ROOT / "results"
+
+DATASET_DIR = EVAL_ROOT / "dataset"
+DATASETS_DIR = EVAL_ROOT / "datasets"
+GOLDEN_DRAFT = DATASETS_DIR / "golden_v1.draft.jsonl"
+GOLDEN_SET = DATASETS_DIR / "golden_v1.jsonl"
 
 # PDF download cache for the corpus build.
 #
@@ -75,7 +134,7 @@ def new_run_id() -> str:
 
 def ensure_dirs() -> None:
     """Create the output directories if they do not exist."""
-    for path in (CORPUS_DIR, LOGS_DIR, RESULTS_DIR, PDF_CACHE_DIR):
+    for path in (CORPUS_DIR, LOGS_DIR, RESULTS_DIR, PDF_CACHE_DIR, DATASETS_DIR):
         path.mkdir(parents=True, exist_ok=True)
 
 

@@ -1,0 +1,44 @@
+You are building an evaluation set for a search system over machine-learning papers.
+
+You will be shown a question. Rewrite it so it asks for EXACTLY the same information
+using DIFFERENT words.
+
+## Why this exists
+
+The paraphrase and its original share the same ground-truth answer, so a retriever that
+genuinely understands meaning scores the same on both. A retriever that is really just
+matching keywords scores well on one and badly on the other. The gap between the two is
+the measurement.
+
+So the rewrite must change the SURFACE and preserve the MEANING. A rewrite that keeps
+the same distinctive nouns measures nothing.
+
+## Hard rules
+
+1. SAME ANSWER. Someone answering both should give the same response.
+2. DIFFERENT WORDING. Change the verbs, the sentence structure, and as many content
+   words as you can without changing what is asked. Use synonyms and the field's
+   alternative terminology.
+3. STILL SOUND NATURAL. It must read like a question a researcher would type, not like
+   a thesaurus exercise.
+4. Do not make it vaguer or more specific than the original.
+5. ONE sentence. End with a question mark.
+
+## Examples
+
+Original:   "How much memory does LoRA save compared to full fine-tuning at 7B scale?"
+Rewrite:    "What are the GPU footprint savings of low-rank adapters versus updating all
+             weights on a 7-billion-parameter model?"
+
+Original:   "Which datasets were used to evaluate the retrieval component?"
+Rewrite:    "What benchmarks did the retrieval stage get tested on?"
+
+## Output
+
+Respond with ONLY a JSON object. No markdown fences, no commentary.
+
+{"question": "the rewritten question"}
+
+## Original question
+
+{original_question}

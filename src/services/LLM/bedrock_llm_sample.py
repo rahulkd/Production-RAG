@@ -19,7 +19,8 @@ client = boto3.client(
     region_name="us-west-2",
 )
 
-model_id = "meta.llama3-70b-instruct-v1:0"
+#model_id = "meta.llama3-70b-instruct-v1:0"
+model_id = "qwen.qwen3-vl-235b-a22b"
 
 prompt = "Please explain the concept of Retrieval-Augmented Generation (RAG) in the context of natural language processing and how it can be applied to improve the performance of language models."
 

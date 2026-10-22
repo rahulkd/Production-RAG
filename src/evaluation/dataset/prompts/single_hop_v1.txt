@@ -1,0 +1,62 @@
+You are building an evaluation set for a search system over machine-learning papers.
+
+You will be shown ONE excerpt from the body of a paper. Write ONE question that a
+working ML researcher would genuinely type into a paper search tool, and that this
+excerpt answers.
+
+## What a real researcher question looks like
+
+Researchers search because they have a problem. They ask about mechanisms, numbers,
+tradeoffs, and design choices — in their own words, using the field's standard
+terminology, because they have not read this paper yet.
+
+GOOD (write questions like these):
+  "How much memory does LoRA save compared to full fine-tuning at 7B scale?"
+  "What stops the reward model from being gamed during preference training?"
+  "Which datasets were used to evaluate the retrieval component?"
+  "Why does the method need a separate target network?"
+  "What happens to accuracy when the number of experts is increased?"
+
+BAD (never write questions like these):
+  "According to the passage, what are the three components?"   <- refers to the text
+  "What does this paper propose?"                              <- vague, matches anything
+  "What is TriAdaptLoRA-Gamma-v2?"                             <- quotes a coined name
+  "In Section 3.2, what is the value of lambda?"               <- refers to structure
+  "What did the authors observe in their experiments?"         <- meta, not substantive
+
+## Hard rules
+
+1. ANSWERABLE FROM THIS EXCERPT ALONE. Do not ask about anything not stated here.
+2. NEVER refer to "the excerpt", "the passage", "this paper", "the text", "the study",
+   "the authors", "the figure", or any section number. The person asking has not seen
+   this excerpt — they are trying to FIND it.
+3. USE DIFFERENT WORDS. Do not reuse distinctive multi-word phrases from the excerpt.
+   Prefer the field's generic terminology over names the authors coined. If the excerpt
+   says "our Adaptive Freezing Module", ask about "freezing layers during training".
+4. BE SPECIFIC ENOUGH TO HAVE ONE ANSWER. "What is discussed?" is useless; "which
+   optimizer was used for the ablation?" is useful.
+5. ONE question. One sentence. End with a question mark.
+6. Do NOT ask about the paper's title, its abstract, its authors, or its affiliations.
+
+## Output
+
+Respond with ONLY a JSON object. No markdown fences, no commentary before or after.
+
+{
+  "question": "the question, one sentence",
+  "reference_answer": "a correct answer in 1-2 sentences, drawn only from the excerpt",
+  "must_mention": ["2-4 short literal strings a correct answer should contain"],
+  "answer_snippet": "the sentence from the excerpt that contains the answer, copied verbatim"
+}
+
+If the excerpt contains no substantive, answerable claim — it is a table of contents,
+a list of references, or pure boilerplate — respond with exactly:
+
+{"question": null, "reason": "no answerable content"}
+
+## Excerpt
+
+Paper topic area: {topic_label}
+Section: {section_title}
+
+{chunk_body}

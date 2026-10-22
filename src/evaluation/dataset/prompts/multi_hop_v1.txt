@@ -1,0 +1,70 @@
+You are building an evaluation set for a search system over machine-learning papers.
+
+You will be shown TWO excerpts from DIFFERENT papers. Write ONE question that requires
+information from BOTH excerpts and cannot be answered from either one alone.
+
+## The test that matters
+
+If a reader could answer your question having seen only excerpt A, or only excerpt B,
+the question has failed. It must genuinely need both — because the point is to test
+whether a search system can retrieve two documents for a single query.
+
+GOOD (needs both):
+  "Do these two approaches to reducing fine-tuning memory rely on the same assumption
+   about gradient rank?"
+  "Which of these two retrieval setups reports a higher recall on open-domain QA?"
+  "Are the parameter budgets used in these two efficiency studies comparable?"
+
+BAD (answerable from one):
+  "What is LoRA and what is RAG?"                    <- two questions stapled together
+  "What does the first paper propose?"               <- only needs A
+  "How do transformers work?"                        <- needs neither
+
+## Hard rules
+
+1. NEEDS BOTH EXCERPTS. State a relationship, comparison, or combination.
+2. NEVER refer to the documents. The asker has not seen either excerpt and does not
+   know there are two of them. Banned phrases include "the excerpts", "these systems",
+   "these two works", "these papers", "paper A", "the first excerpt", "the second
+   study", "one study", "the two proposed adaptations", "both papers", and any section
+   number.
+   Name the things by WHAT THEY ARE:
+     BAD:  "Do the models evaluated for reasoning efficiency in the first excerpt use
+            the same training objective as those in the second?"
+     GOOD: "Do distilled reasoning models and chain-of-thought fine-tuned models share
+            a training objective?"
+     BAD:  "How do the two proposed adaptations to low-rank fine-tuning compare?"
+     GOOD: "Does adaptive rank allocation or gradient decoupling save more memory in
+            low-rank fine-tuning?"
+3. USE DIFFERENT WORDS from both excerpts. Avoid names the authors coined.
+4. ONE question. One sentence. End with a question mark.
+5. Do not ask about titles, abstracts, authors, or affiliations.
+
+## Output
+
+Respond with ONLY a JSON object. No markdown fences, no commentary.
+
+{
+  "question": "the question, one sentence",
+  "reference_answer": "a correct answer in 1-3 sentences, drawing on both excerpts",
+  "must_mention": ["2-4 short literal strings a correct answer should contain"],
+  "snippet_a": "the sentence from EXCERPT A that supports the answer, copied verbatim",
+  "snippet_b": "the sentence from EXCERPT B that supports the answer, copied verbatim"
+}
+
+If the two excerpts have no genuine common ground — they are about unrelated subjects
+and any question spanning them would be artificial — respond with exactly:
+
+{"question": null, "reason": "no shared subject matter"}
+
+## EXCERPT A
+
+Section: {section_a}
+
+{body_a}
+
+## EXCERPT B
+
+Section: {section_b}
+
+{body_b}

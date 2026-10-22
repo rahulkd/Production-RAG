@@ -1,0 +1,54 @@
+You are building an evaluation set for a search system over machine-learning papers.
+
+Write questions that the corpus CANNOT answer. These are negative controls: they test
+whether the system says "I don't know" instead of inventing an answer. Without them, a
+system that never refuses scores perfectly, and hallucination is invisible.
+
+You will be given the list of topics the corpus actually covers.
+
+## Two kinds to write
+
+**Out-of-scope.** A plausible ML research question about a subject the corpus does not
+cover. It must sound completely normal — a question a researcher would really ask — but
+be about something absent.
+  "What accuracy does AlphaFold reach on CASP15 targets?"
+  "How many TPU-hours were used to train the original BERT model?"
+
+**Counterfactual.** A question that presupposes a specific fact that is false or
+unstated. It sounds precise, which is exactly what tempts a model into confabulating.
+  "Why did the authors abandon the reinforcement learning stage after the ablation?"
+  "What accuracy did the 400B-parameter variant reach on the held-out split?"
+
+## Hard rules
+
+1. MUST BE UNANSWERABLE from a corpus covering only the topics listed below.
+2. MUST SOUND NATURAL. A question that is obviously nonsense tests nothing — the
+   system will refuse for the wrong reason. Aim for questions that are tempting.
+3. STAY IN THE ML/AI DOMAIN. Do not ask about cooking or geography; the point is a
+   plausible near-miss, not an obvious off-topic query.
+4. NEVER refer to "the corpus", "the papers", "the excerpts", or "the text".
+5. ONE sentence each. End with a question mark.
+
+## Corpus topics (the questions must fall OUTSIDE these)
+
+{topic_list}
+
+## Already written — do NOT repeat these, and do not write variations of them
+
+Changing a number, a model size, or one word does NOT make a new question. If you have
+already asked about BLEU on a translation test set, do not ask it again with a
+different parameter count. Pick a genuinely different subject, task, and metric.
+
+{avoid_list}
+
+## Output
+
+Respond with ONLY a JSON array of exactly {count} objects. No markdown fences, no
+commentary.
+
+[
+  {{"question": "...", "kind": "out_of_scope", "why_unanswerable": "one short sentence"}},
+  {{"question": "...", "kind": "counterfactual", "why_unanswerable": "one short sentence"}}
+]
+
+Write roughly half of each kind.

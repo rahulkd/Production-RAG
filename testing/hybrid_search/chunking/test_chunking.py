@@ -11,6 +11,15 @@ _sys.path.insert(0, _root)
 # Top-level (hybrid) client -> targets the chunk index: {index_name}-{chunk_index_suffix}
 from src.services.opensearch.factory import make_opensearch_client
 
+# ============================ CONFIGURATION ============================
+HOST = "http://localhost:9200"
+
+# Index to inspect. Set to a specific name, or leave as None to use the
+# client's default hybrid chunk index ({index_name}-{chunk_index_suffix}).
+#INDEX_NAME = "arxiv-papers-chunks"
+INDEX_NAME = "arxiv_evaluation_index"
+# ======================================================================
+
 print("CHUNKS PER PAPER (hybrid chunk index)")
 print("=" * 40)
 
@@ -18,15 +27,19 @@ print("=" * 40)
 opensearch_client = make_opensearch_client()
 
 # Override for local execution (localhost instead of container hostname)
-opensearch_client.host = "http://localhost:9200"
+opensearch_client.host = HOST
 opensearch_client.client = OpenSearch(
-    hosts=["http://localhost:9200"],
+    hosts=[HOST],
     http_compress=True,
     use_ssl=False,
     verify_certs=False,
     ssl_assert_hostname=False,
     ssl_show_warn=False,
 )
+
+# Override the target index if one is configured above.
+if INDEX_NAME:
+    opensearch_client.index_name = INDEX_NAME
 
 index_name = opensearch_client.index_name
 print(f"Index: {index_name}\n")

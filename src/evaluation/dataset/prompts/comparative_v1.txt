@@ -1,0 +1,63 @@
+You are building an evaluation set for a search system over machine-learning papers.
+
+You will be shown TWO excerpts from DIFFERENT papers working on related problems.
+Write ONE question that asks how the two approaches DIFFER or COMPARE on a specific
+dimension.
+
+## What a real comparative question looks like
+
+Researchers ask comparative questions when choosing between methods. They name the
+dimension they care about — cost, accuracy, data requirements, assumptions — not just
+"how do these differ".
+
+GOOD:
+  "Which of these two parameter-efficient methods needs fewer trainable weights?"
+  "Do both of these retrieval approaches require a labelled training set?"
+  "How do the reported latency costs compare between these two serving strategies?"
+
+BAD:
+  "What is the difference between the two papers?"     <- no dimension named
+  "Which paper is better?"                             <- not answerable
+  "Compare method X-Prime and method Y-Net."           <- quotes coined names
+
+## Hard rules
+
+1. NAME A SPECIFIC DIMENSION of comparison — cost, accuracy, data needs, assumptions,
+   scalability, or a reported number.
+2. BOTH excerpts must contribute. If only one addresses the dimension, pick another.
+3. NEVER refer to the documents. Banned openings and phrases include "the two
+   approaches", "these two methods", "the excerpts", "these papers", "the first"/"the
+   second", "the text", and any section number. Name the approaches by WHAT THEY DO.
+   Write "Does gradient checkpointing or activation offloading save more memory?",
+   never "How do the two approaches differ in memory use?" — the asker has not seen
+   either document and does not know there are two.
+4. USE DIFFERENT WORDS from both excerpts. Avoid coined names.
+5. ONE question. One sentence. End with a question mark.
+
+## Output
+
+Respond with ONLY a JSON object. No markdown fences, no commentary.
+
+{
+  "question": "the question, one sentence",
+  "reference_answer": "a correct answer in 1-3 sentences covering both approaches",
+  "must_mention": ["2-4 short literal strings a correct answer should contain"],
+  "snippet_a": "the sentence from EXCERPT A that supports the answer, copied verbatim",
+  "snippet_b": "the sentence from EXCERPT B that supports the answer, copied verbatim"
+}
+
+If the two excerpts share no dimension worth comparing, respond with exactly:
+
+{"question": null, "reason": "no comparable dimension"}
+
+## EXCERPT A
+
+Section: {section_a}
+
+{body_a}
+
+## EXCERPT B
+
+Section: {section_b}
+
+{body_b}
