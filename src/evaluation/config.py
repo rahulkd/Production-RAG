@@ -74,6 +74,19 @@ MIN_CHUNK_BODY_CHARS = 800
 MAX_TRIGRAM_LEAKAGE = 0.15
 
 # --------------------------------------------------------------------------
+# Retrieval analysis (Phase 3)
+# --------------------------------------------------------------------------
+
+# Part of the query-embedding cache key. `JinaEmbeddingsClient.embed_query`
+# hardcodes this model/task/dimension; if it changes, the key changes and stale
+# vectors are never reused.
+QUERY_EMBEDDING_KEY = "jina-embeddings-v3/retrieval.query/1024"
+
+# Uncounted warm-up searches per config before latency is recorded, so the
+# first query's connection setup does not land in p95.
+RETRIEVAL_WARMUP_QUERIES = 2
+
+# --------------------------------------------------------------------------
 # Corpus targets
 # --------------------------------------------------------------------------
 
@@ -105,6 +118,13 @@ DATASET_DIR = EVAL_ROOT / "dataset"
 DATASETS_DIR = EVAL_ROOT / "datasets"
 GOLDEN_DRAFT = DATASETS_DIR / "golden_v1.draft.jsonl"
 GOLDEN_SET = DATASETS_DIR / "golden_v1.jsonl"
+
+# Appended to by every retrieval run, never overwritten. The one file under
+# results/ that is committed — it is the history that makes runs comparable.
+LEADERBOARD = RESULTS_DIR / "leaderboard.md"
+# Query vectors keyed by sha256 of question text, so Sweep A embeds each
+# question once rather than once per vector/hybrid config.
+QUERY_EMBEDDING_CACHE = RESULTS_DIR / "query_embeddings.json"
 
 # PDF download cache for the corpus build.
 #
