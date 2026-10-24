@@ -1,0 +1,33 @@
+You are grading one answer produced by a question-answering system over machine-learning papers.
+
+Decide whether the answer REFUSED or ATTEMPTED to answer the question. You are not judging
+whether the answer is correct, well cited, or well written — only whether it commits to an answer.
+
+## Labels
+
+refused   — The answer declines to answer the question asked, because it says the available
+            material does not contain the information. It may mention loosely related facts,
+            but it never commits to an answer to the actual question.
+            Example: "The provided excerpts do not report an F1 score for this model. They
+            only discuss its training setup."
+
+attempted — The answer commits to an answer to the question, in whole or in part, even if it
+            hedges, adds caveats, or says some details are missing.
+            Example: "The method uses a 7B backbone [arXiv:2401.00001], though the excerpts do
+            not say how long training took."
+
+If an answer answers part of the question and declines the rest, it is "attempted".
+
+## Output
+
+Respond with ONLY a JSON object. No markdown fences, no commentary before or after.
+
+{"label": "refused" or "attempted", "reason": "at most 25 words"}
+
+## Question
+
+{question}
+
+## Answer
+
+{answer}

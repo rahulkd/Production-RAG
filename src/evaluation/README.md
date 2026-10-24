@@ -3,7 +3,7 @@
 Measures the RAG pipeline over a frozen cs.AI + cs.LG corpus. See
 [docs/evaluation_plan.md](docs/evaluation_plan.md) for the full analysis plan.
 
-**Status: Phase 1 (corpus) implemented. Phases 2-5 not started.**
+**Status: Phases 1-5 implemented (corpus, golden set, retrieval, generation, end-to-end).**
 
 ---
 
@@ -50,6 +50,126 @@ OPENSEARCH__HOST=http://localhost:9200 python -m src.evaluation.corpus.build --l
 | `--skip-fetch` | (build) re-index from Postgres without re-downloading |
 | `--force-index` | (build) delete and recreate the index first |
 | `--verbose` | DEBUG on the console |
+
+---
+
+## The evaluation index is frozen
+
+The golden set labels chunks as `(arxiv_id, chunk_index)`, so any write to `arxiv_evaluation_index`
+can silently move a label. Once built it is write-blocked (`index.blocks.write`): the cluster refuses
+indexing, updates and deletes of documents from any client, including Airflow. Reads and search
+are unaffected.
+
+```bash
+python -m src.evaluation.corpus.freeze --status   # FROZEN or writable
+python -m src.evaluation.corpus.freeze            # verify against the manifest, then freeze
+python -m src.evaluation.corpus.freeze --lift     # unfreeze
+```
+
+Freezing first checks the index holds exactly the manifest's chunk and paper counts, so a
+half-built corpus cannot be frozen. A write block does not stop an index being *deleted*, so
+`corpus.build` refuses a frozen index unless given `--unfreeze`. To rebuild deliberately:
+`build --unfreeze ...`, verify, then run `freeze` again.
+
+Ingestion is separate: Airflow's indexer always writes to the production index, whatever
+`OPENSEARCH__ACTIVE_INDEX` says. That setting only changes what the API *searches*.
+
+---
+
+## Phase 4 — generation analysis
+
+```bash
+OPENSEARCH__HOST=http://localhost:9200 python -m src.evaluation.generation.runner --limit 5        # smoke test
+OPENSEARCH__HOST=http://localhost:9200 python -m src.evaluation.generation.runner                  # full run, k=10
+OPENSEARCH__HOST=http://localhost:9200 python -m src.evaluation.generation.runner --top-k 3 5 10    # compare cutoffs
+```
+
+Answers every accepted row of `datasets/golden_v1.reviewed.jsonl` (answerable and
+unanswerable; rejected rows are skipped) through the `/ask` path — hybrid search at
+each requested k (default 10) → `create_bedrock_structured_prompt` → Llama 3.3 70B
+at temperature 0 — and scores each answer:
+
+| | Metric | How |
+|---|---|---|
+| (a) | Faithfulness, contradictions (Q7) | Judge extracts claims, then labels each against the retrieved context only |
+| (b) | Relevance 0-3 | Judge, against question + reference answer |
+| (c) | Citation precision / recall / presence (Q8) | Regex, no LLM |
+| (d) | Refusal recall, false refusal rate (Q9) | Judge classifies refused / attempted |
+
+Plus a retrieval-hit × answered cross-tab for Q10. Outputs go to
+`results/generation_<run>/<mode>_k<k>/` (`generation_raw.jsonl`, `generation_summary.json`,
+`report.md`), and one row per cutoff is appended to `results/generation_leaderboard.md`.
+Rubrics are in `generation/prompts/*_v1.txt`; bump `JUDGE_PROMPT_VERSION` in
+`config.py` when one changes.
+
+**Judge model.** `JUDGE_MODEL` in `config.py`: DeepSeek V3.2 (`deepseek.v3.2`) at
+temperature 0 — a different model family from both the generator (Llama) and the
+reference-answer writer (Qwen). Its labels repeat across identical calls; only the
+`reason` wording varies. It replaced Kimi K3 (`us.moonshotai.kimi-k3`), which cannot be
+pinned to temperature 0 on Converse but was stricter on one hard claim — if calibration
+shows DeepSeek is lenient on contradictions, Kimi K3 is the alternative
+(`--judge-model us.moonshotai.kimi-k3`, with `JUDGE_PARAMS` both `None`). Claude, the
+original choice, is blocked on this account.
+
+| Flag | Effect |
+|---|---|
+| `--judge-model ID` | Override the judge (must not be the generator) |
+| `--top-k N [N ...]` / `--mode` | Cutoffs to evaluate, one leaderboard row each (default 10; k=10 prompts are ~10-14K tokens) |
+| `--no-judge-cache` | Ignore cached verdicts and re-judge (measures judge run-to-run variance) |
+| `--regenerate` | Ignore cached Llama answers |
+| `--concurrency N` | Questions in flight (default 4) |
+
+Judge verdicts and Llama answers are cached in `results/judge_cache.jsonl` and
+`results/answer_cache.jsonl`, so an interrupted or repeated run pays only for
+what changed. A run where more than 5% of questions hit an error is not
+appended to the leaderboard.
+
+**Calibration (do once per rubric version).** κ < 0.6 means the rubric is broken:
+
+```bash
+python -m src.evaluation.generation.calibrate sample --run <run_id> --cutoff hybrid_k10   # 40 blind items
+# set human_label in results/generation_<run_id>/hybrid_k10/calibration_items.jsonl
+python -m src.evaluation.generation.calibrate score --run <run_id> --cutoff hybrid_k10    # writes results/judge_calibration.md
+```
+
+---
+
+## Phase 5 — end-to-end over HTTP
+
+Sends the golden set through the real `/api/v1/ask` and `/api/v1/stream` routes
+(Q11: does the deployed API behave like the harness?).
+
+**The API must be serving the evaluation index.** `OPENSEARCH__ACTIVE_INDEX` selects what
+the API searches: `production` (`arxiv-papers-chunks`, empty until papers are ingested) or
+`evaluation` (the frozen `arxiv_evaluation_index`). The runner's preflight stops if the API
+answers from an empty index.
+
+The runner targets the compose `rag-api` on :8000 by default:
+
+```bash
+# .env: OPENSEARCH__ACTIVE_INDEX=evaluation, then recreate the container (restart does not re-read .env)
+docker compose up -d api
+
+OPENSEARCH__HOST=http://localhost:9200 python -m src.evaluation.e2e.runner               # both routes, k=3 and k=10
+OPENSEARCH__HOST=http://localhost:9200 python -m src.evaluation.e2e.runner --limit 5     # smoke test
+```
+
+Run from the repo root with `-m`. The `OPENSEARCH__HOST` prefix matters because the runner also
+queries OpenSearch directly for its reference retrieval, and `.env`'s `opensearch:9200` only
+resolves inside Docker. To test uncommitted code without touching the container, start the
+current code on another port (`OPENSEARCH__ACTIVE_INDEX=evaluation .venv/bin/uvicorn src.main:app
+--port 8001`, plus the same host overrides) and pass `--base-url http://localhost:8001`.
+
+Per route and k it reports:
+- **agreement**: the API's `sources` against the in-process harness retrieval for the same query;
+- **search_mode**: catches the silent BM25 fallback in `ask.py`;
+- **latency**: p50/p95, plus time to first token on `/stream`;
+- **answer quality**: the Phase 4 judge and citation checks on the served answer. Faithfulness
+  is scored only where the API's papers match the harness, since the API doesn't return chunk text.
+
+The routes hardcode temperature 0.7, so each answer is one sample, not pinned. Outputs go to
+`results/e2e_<run>/` (per-config raw and summary files, plus a side-by-side `report.md`), with
+one row per config appended to `results/e2e_leaderboard.md`.
 
 ---
 

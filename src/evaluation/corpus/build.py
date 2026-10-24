@@ -35,6 +35,7 @@ import src.evaluation._bootstrap  # noqa: F401  (must precede src.services impor
 from src.config import get_settings
 from src.database import get_db_session
 from src.evaluation import config as eval_config
+from src.evaluation.corpus.freeze import is_frozen, lift
 from src.evaluation.corpus.manifest import CorpusManifest, text_sha256, verify_text_hashes
 from src.evaluation.logging_setup import FailureRecorder, setup_logging
 from src.models.paper import Paper
@@ -275,12 +276,35 @@ async def index_papers(
     return stats
 
 
+def ensure_not_frozen(index_name: str, unfreeze: bool) -> None:
+    """Refuse to build into a frozen index unless the caller asked to lift the freeze.
+
+    Runs before any fetching so a refused build costs nothing.
+
+    :param index_name: Evaluation index about to be written.
+    :param unfreeze: Whether ``--unfreeze`` was given.
+    :raises RuntimeError: If the index is frozen and ``unfreeze`` is False.
+    """
+    opensearch = make_opensearch_client_fresh(get_settings(), index_name=index_name)
+    if not is_frozen(opensearch.client, index_name):
+        return
+    if not unfreeze:
+        raise RuntimeError(
+            f"Index {index_name!r} is frozen: the golden set's chunk labels depend on it. "
+            "Pass --unfreeze to lift the freeze for this build, then run "
+            "`python -m src.evaluation.corpus.freeze` to freeze it again."
+        )
+    lift(opensearch.client, index_name)
+    logger.warning(f"Lifted the freeze on {index_name!r}; re-freeze it after verifying the rebuild")
+
+
 async def build(
     manifest_path: Path,
     force_index: bool,
     skip_fetch: bool,
     limit: int | None,
     run_id: str,
+    unfreeze: bool = False,
 ) -> int:
     """Run the corpus build end to end.
 
@@ -289,9 +313,11 @@ async def build(
     :param skip_fetch: Skip arXiv fetching and index whatever is in Postgres.
     :param limit: Process only the first N papers.
     :param run_id: Identifier used to name the log files.
+    :param unfreeze: Lift the evaluation index's write block for this build.
     :returns: Process exit code.
     """
     manifest = CorpusManifest.load(manifest_path)
+    ensure_not_frozen(manifest.index_name or eval_config.EVAL_INDEX_NAME, unfreeze)
     logger.info(f"Manifest: {len(manifest.papers)} papers, window {manifest.date_window}")
     logger.info(f"  primary categories: {manifest.category_counts()}")
     if manifest.is_built:
@@ -351,6 +377,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--manifest", type=Path, default=eval_config.CORPUS_MANIFEST, help="Manifest to build from")
     parser.add_argument("--force-index", action="store_true", help="Delete and recreate the evaluation index first")
     parser.add_argument("--skip-fetch", action="store_true", help="Index from Postgres without calling arXiv")
+    parser.add_argument("--unfreeze", action="store_true", help="Lift the evaluation index's write block for this build (re-freeze afterwards)")
     # positive_int rather than plain int: `--limit 0` is falsy, so it would slip
     # through the `if limit` guards below and silently process the whole corpus.
     parser.add_argument("--limit", type=positive_int, default=None, help="Process only the first N papers (smoke test)")
@@ -378,12 +405,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                 skip_fetch=args.skip_fetch,
                 limit=args.limit,
                 run_id=run_id,
+                unfreeze=args.unfreeze,
             )
         )
     except KeyboardInterrupt:
         logger.warning("Interrupted — partial progress is in Postgres and the index")
         return 130
-    except FileNotFoundError as exc:
+    except (FileNotFoundError, RuntimeError) as exc:
         logger.error(str(exc))
         return 2
     except Exception as exc:

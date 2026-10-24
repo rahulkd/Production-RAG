@@ -23,6 +23,23 @@ def make_opensearch_client(settings: Optional[Settings] = None) -> OpenSearchCli
     return OpenSearchClient(host=settings.opensearch.host, settings=settings)
 
 
+@lru_cache(maxsize=1)
+def make_search_client() -> OpenSearchClient:
+    """Factory function to create the cached client the API searches with.
+
+    Reads the index chosen by ``OPENSEARCH__ACTIVE_INDEX``: the production
+    chunk index, or the frozen evaluation index. Only the API's search path uses
+    this. Ingestion goes through :func:`make_opensearch_client_fresh`, which
+    always defaults to the production index, so switching to the evaluation
+    index never routes new papers into it.
+
+    :returns: Cached OpenSearchClient bound to the active search index
+    """
+    settings = get_settings()
+
+    return OpenSearchClient(host=settings.opensearch.host, settings=settings, index_name=settings.opensearch.search_index_name)
+
+
 def make_opensearch_client_fresh(
     settings: Optional[Settings] = None,
     host: Optional[str] = None,

@@ -11,8 +11,8 @@ export type RagModel = {
  */
 export const RAG_MODELS: readonly RagModel[] = [
   {
-    id: "meta.llama3-70b-instruct-v1:0",
-    label: "Llama 3 70B Instruct",
+    id: "us.meta.llama3-3-70b-instruct-v1:0",
+    label: "Llama 3.3 70B Instruct",
     provider: "AWS Bedrock",
   },
 ];

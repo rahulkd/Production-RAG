@@ -10,7 +10,7 @@ class AskRequest(BaseModel):
     top_k: int = Field(3, description="Number of top chunks to retrieve", ge=1, le=10)
     use_hybrid: bool = Field(True, description="Use hybrid search (BM25 + vector)")
     #model: str = Field("llama3.2:1b", description="Ollama model to use for generation")  ## ollama
-    model: str = Field("meta.llama3-70b-instruct-v1:0", description="Bedrock model id to use for generation")
+    model: str = Field("us.meta.llama3-3-70b-instruct-v1:0", description="Bedrock model id to use for generation")
     categories: Optional[List[str]] = Field(None, description="Filter by arXiv categories")
 
     class Config:
@@ -19,7 +19,7 @@ class AskRequest(BaseModel):
                 "query": "What are transformers in machine learning?",
                 "top_k": 3,
                 "use_hybrid": True,
-                "model": "meta.llama3-70b-instruct-v1:0",
+                "model": "us.meta.llama3-3-70b-instruct-v1:0",
                 "categories": ["cs.AI", "cs.LG"],
             }
         }

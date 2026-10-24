@@ -8,7 +8,7 @@ import requests
 API_BASE = os.getenv("RAG_API_BASE", "http://localhost:8000/api/v1")
 
 # Bedrock model id (was "llama3.2:1b" when this ran on local Ollama).
-MODEL = os.getenv("BEDROCK_MODEL", "meta.llama3-70b-instruct-v1:0")
+MODEL = os.getenv("BEDROCK_MODEL", "us.meta.llama3-3-70b-instruct-v1:0")
 
 print("COMPLETE RAG PIPELINE TEST (STREAMING)")
 print("=" * 40)

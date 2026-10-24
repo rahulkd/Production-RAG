@@ -96,6 +96,24 @@ class OpenSearchSettings(BaseConfigSettings):
     chunk_index_suffix: str = "chunks"  # Creates single hybrid index: {index_name}-{suffix}
     max_text_size: int = 1000000
 
+    # Frozen evaluation corpus (src/evaluation). A complete index name, not
+    # suffixed. It is write-blocked once built, so nothing ingests into it.
+    evaluation_index_name: str = "arxiv_evaluation_index"
+    # Which index the API *searches*: "production" or "evaluation". Ingestion
+    # always writes to the production index regardless, so switching this never
+    # sends new papers into the frozen corpus.
+    active_index: Literal["production", "evaluation"] = "production"
+
+    @property
+    def production_chunk_index(self) -> str:
+        """Name of the production hybrid chunk index, ``{index_name}-{suffix}``."""
+        return f"{self.index_name}-{self.chunk_index_suffix}"
+
+    @property
+    def search_index_name(self) -> str:
+        """Index the API's search reads, per ``active_index``."""
+        return self.evaluation_index_name if self.active_index == "evaluation" else self.production_chunk_index
+
     # Vector search settings
     vector_dimension: int = 1024  # Jina embeddings dimension
     vector_space_type: str = "cosinesimil"  # cosinesimil, l2, innerproduct
@@ -115,7 +133,9 @@ class BedrockSettings(BaseConfigSettings):
     )
 
     region_name: str = "us-west-2"
-    model_id: str = "meta.llama3-70b-instruct-v1:0"
+    # Llama 3.3 70B Instruct, 128K context. Only invokable through the US
+    # cross-region inference profile; the bare "meta.llama3-3-..." id is rejected.
+    model_id: str = "us.meta.llama3-3-70b-instruct-v1:0"
 
     # Generation defaults (mapped onto the Converse API inferenceConfig)
     max_tokens: int = 1024

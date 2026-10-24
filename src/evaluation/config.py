@@ -7,6 +7,7 @@ comparable lives here rather than being passed around as literals.
 from datetime import datetime, timezone
 from pathlib import Path
 
+from src.config import get_settings
 from src.evaluation._bootstrap import REPO_ROOT
 
 # --------------------------------------------------------------------------
@@ -16,8 +17,11 @@ from src.evaluation._bootstrap import REPO_ROOT
 # Isolated index for the evaluation corpus. Deliberately NOT the production
 # `arxiv-papers-chunks` index, so building or wiping the eval corpus can never
 # disturb the live one. It uses the same mapping (ARXIV_PAPERS_CHUNKS_MAPPING),
-# so retrieval behaves identically to production.
-EVAL_INDEX_NAME = "arxiv_evaluation_index"
+# so retrieval behaves identically to production. The name lives in
+# OpenSearchSettings.evaluation_index_name so the API's OPENSEARCH__ACTIVE_INDEX
+# switch and this harness cannot disagree. Once built it is write-blocked:
+# see corpus/freeze.py.
+EVAL_INDEX_NAME = get_settings().opensearch.evaluation_index_name
 
 # --------------------------------------------------------------------------
 # Models
@@ -33,7 +37,7 @@ GENERATOR_MODEL = "qwen.qwen3-vl-235b-a22b"
 
 # The RAG pipeline's own generator. The judge must never be this model: a model
 # scoring its own output is not a measurement.
-SYSTEM_UNDER_TEST_MODEL = "meta.llama3-70b-instruct-v1:0"
+SYSTEM_UNDER_TEST_MODEL = "us.meta.llama3-3-70b-instruct-v1:0"
 
 # Pinned so a regenerated dataset is byte-identical to the previous one.
 GENERATION_PARAMS = {"temperature": 0.0, "top_p": 1.0}
@@ -87,6 +91,59 @@ QUERY_EMBEDDING_KEY = "jina-embeddings-v3/retrieval.query/1024"
 RETRIEVAL_WARMUP_QUERIES = 2
 
 # --------------------------------------------------------------------------
+# Generation analysis (Phase 4)
+# --------------------------------------------------------------------------
+
+# Scores the RAG answers. Distinct from SYSTEM_UNDER_TEST_MODEL (no self-grading)
+# and from GENERATOR_MODEL (Qwen wrote the reference answers, so it would favour
+# answers phrased like its own). DeepSeek is a third model family, unrelated to both.
+#
+# DeepSeek V3.2: non-reasoning, on-demand (bare id, no inference-profile prefix).
+# Chosen over Kimi K3 because it accepts temperature 0 and its labels repeat:
+# 3 identical faithfulness calls gave identical labels (only the reason wording
+# varied). Kimi K3 rejects temperature on Converse and varied run to run. Watch
+# for leniency: on one hard claim (q0100, AFLoRA credited with AdaLoRA's rank
+# adaptation) DeepSeek said "supported" where Kimi correctly said "contradicted".
+# Calibration κ decides whether that is a pattern.
+#
+# Claude was the original choice but is blocked on this account (Claude 5.x:
+# "not available"; 4.x: Marketplace billing error).
+JUDGE_MODEL = "deepseek.v3.2"
+# DeepSeek accepts temperature and top_p together; top_p is left out so only
+# temperature pins sampling.
+JUDGE_PARAMS = {"temperature": 0.0, "top_p": None}
+# Non-reasoning: a verdict is a few hundred tokens even for a 14-claim answer.
+JUDGE_MAX_TOKENS = 4000
+# Bumped whenever a file under generation/prompts/ changes. Part of the judge
+# cache key, so an edited rubric is never served a stale verdict.
+JUDGE_PROMPT_VERSION = "v1"
+
+# Retrieval feeding the generator: hybrid, as /ask runs it. Sweep A favours
+# k=10 on recall (0.88 vs 0.69 at the production default k=3). The old Llama 3
+# 70B (8K context) could not take it — its largest k=5 prompt was ~7.9K tokens,
+# inflated by the title+abstract header repeated in every chunk (C1). Llama 3.3
+# has 128K, so k=10 (~13.5K tokens at most) fits. Pass several values to
+# `--top-k` (e.g. 3 5 10) to compare cutoffs in one run.
+GENERATION_RETRIEVAL_MODE = "hybrid"
+GENERATION_TOP_KS = (10,)
+# Same pinning as /ask's generate_rag_answer, minus its temperature=0.7 (C5).
+SUT_PARAMS = {"temperature": 0.0, "top_p": 1.0}
+
+# Requests in flight at once against Bedrock, generator and judge combined.
+GENERATION_CONCURRENCY = 4
+
+# --------------------------------------------------------------------------
+# End-to-end analysis (Phase 5)
+# --------------------------------------------------------------------------
+
+# The compose `rag-api`. It must be serving the evaluation corpus
+# (OPENSEARCH__ACTIVE_INDEX=evaluation in .env, then `docker compose up -d api`);
+# on "production" it searches an empty index and the runner's preflight stops.
+E2E_BASE_URL = "http://localhost:8000"
+# 3 is what the UI sends (frontend DEFAULT_TOP_K); 10 matches the Phase 4 run.
+E2E_TOP_KS = (3, 10)
+
+# --------------------------------------------------------------------------
 # Corpus targets
 # --------------------------------------------------------------------------
 
@@ -118,6 +175,9 @@ DATASET_DIR = EVAL_ROOT / "dataset"
 DATASETS_DIR = EVAL_ROOT / "datasets"
 GOLDEN_DRAFT = DATASETS_DIR / "golden_v1.draft.jsonl"
 GOLDEN_SET = DATASETS_DIR / "golden_v1.jsonl"
+# The reviewed file keeps rejected rows (with reasons) for provenance; loaders
+# filter to accepted/edited. Phase 4 scores against it.
+GOLDEN_REVIEWED = DATASETS_DIR / "golden_v1.reviewed.jsonl"
 
 # Appended to by every retrieval run, never overwritten. The one file under
 # results/ that is committed — it is the history that makes runs comparable.
@@ -125,6 +185,14 @@ LEADERBOARD = RESULTS_DIR / "leaderboard.md"
 # Query vectors keyed by sha256 of question text, so Sweep A embeds each
 # question once rather than once per vector/hybrid config.
 QUERY_EMBEDDING_CACHE = RESULTS_DIR / "query_embeddings.json"
+# Generation leaderboard: like LEADERBOARD, appended and committed.
+GENERATION_LEADERBOARD = RESULTS_DIR / "generation_leaderboard.md"
+# Judge verdicts and SUT answers keyed by sha256(model + version + prompt), so
+# a re-run after a retrieval-only change pays only for prompts that changed.
+JUDGE_CACHE = RESULTS_DIR / "judge_cache.jsonl"
+ANSWER_CACHE = RESULTS_DIR / "answer_cache.jsonl"
+JUDGE_CALIBRATION = RESULTS_DIR / "judge_calibration.md"
+E2E_LEADERBOARD = RESULTS_DIR / "e2e_leaderboard.md"
 
 # PDF download cache for the corpus build.
 #

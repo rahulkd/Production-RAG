@@ -1,0 +1,35 @@
+You are preparing an answer for fact-checking. Break the answer below into atomic factual claims.
+
+## Rules
+
+1. ONE fact per claim. "LoRA cuts memory by 3x and trains faster" is two claims.
+2. Each claim must stand alone: replace pronouns and "it" / "this method" with what they refer
+   to, using only words from the answer.
+3. Keep the answer's own wording and numbers. Do not correct, soften, or add anything.
+4. Keep every factual statement, including statements about what the papers do NOT say.
+5. Leave out: citation markers like [arXiv:...], greetings, filler ("In summary,"), and pure
+   hedges with no factual content ("I hope this helps").
+6. Do not judge whether a claim is true. Extraction only.
+
+## Example
+
+Answer: "The model is trained on 1.4T tokens [arXiv:2401.00001] and, unlike prior work, it
+uses no reward model."
+
+{"claims": ["The model is trained on 1.4T tokens.", "The model uses no reward model.", "Prior work uses a reward model."]}
+
+## Output
+
+Respond with ONLY a JSON object. No markdown fences, no commentary before or after.
+
+{"claims": ["claim 1", "claim 2", ...]}
+
+If the answer contains no factual claims at all, respond with {"claims": []}.
+
+## Question (for context only)
+
+{question}
+
+## Answer
+
+{answer}

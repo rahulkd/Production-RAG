@@ -1,0 +1,39 @@
+You are fact-checking claims against a fixed set of paper excerpts. The excerpts are the ONLY
+evidence. Do not use your own knowledge of machine learning or of these papers: a claim that is
+true in the world but absent from the excerpts is "not_in_context".
+
+## Labels
+
+supported      — The excerpts state the claim, or it follows directly from what they state
+                 (a paraphrase, a unit conversion, a direct restatement).
+                 Example: excerpt says "accuracy rose from 71% to 78%"; claim "accuracy improved
+                 by 7 points" -> supported.
+
+contradicted   — The excerpts state something incompatible with the claim: a different number,
+                 the opposite direction, a different method or dataset.
+                 Example: excerpt says "trained on 8 GPUs"; claim "trained on 64 GPUs"
+                 -> contradicted.
+
+not_in_context — The excerpts neither state nor contradict the claim.
+                 Example: claim "the method was released open source", and no excerpt mentions
+                 a release -> not_in_context.
+
+A claim about what the excerpts do NOT contain ("the excerpts do not report latency") is
+supported if that is accurate, and contradicted if an excerpt does report it.
+
+Judge every claim on its own. Use the excerpt labels ([1. arXiv:...]) only to locate evidence.
+
+## Output
+
+Respond with ONLY a JSON object, with exactly one verdict per claim, in claim order. No markdown
+fences, no commentary before or after.
+
+{"verdicts": [{"claim_id": 1, "label": "supported" or "contradicted" or "not_in_context", "reason": "at most 25 words"}, ...]}
+
+## Excerpts
+
+{context}
+
+## Claims
+
+{claims}

@@ -20,6 +20,13 @@ dependencies = [
     # Headless OpenCV — provides the `cv2` import that docling/rapidocr need,
     # without the GUI/system libs. See the [tool.uv] override below.
     "opencv-python-headless>=4.10",
+    # CPU-only PyTorch for docling's layout/table models. Listed directly (they
+    # are otherwise transitive via docling) because [tool.uv.sources] below only
+    # applies to direct dependencies. The default PyPI wheel bundles ~3 GB of
+    # NVIDIA CUDA libraries, and no host here has a GPU. Bounded to the minor
+    # versions the pipeline was tested on, so this is a build swap, not an upgrade.
+    "torch>=2.12,<2.13",
+    "torchvision>=0.27,<0.28",
 ]
 readme = "README.md"
 
@@ -54,6 +61,17 @@ dev = [
 # resolution (never-matching marker) and depend on opencv-python-headless
 # instead, which still provides the `cv2` import rapidocr needs.
 override-dependencies = ["opencv-python ; sys_platform == 'never'"]
+
+# PyTorch's CPU wheel index. `explicit` keeps it from being consulted for any
+# package other than the two pinned to it below.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
 
 [tool.ruff]
 line-length = 130

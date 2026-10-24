@@ -44,6 +44,12 @@ Q10 is the headline. Recall@k upper-bounds faithfulness — the generator cannot
 
 **Judge model: `us.anthropic.claude-sonnet-4-6`**, distinct from the generator (`meta.llama3-70b-instruct-v1:0`) to avoid self-preference bias — a model scoring its own output is not a measurement. Two prerequisites to confirm before Phase 4: Anthropic models on Bedrock need the `us.` cross-region inference-profile prefix, and the account needs the Anthropic use-case form submitted in the Bedrock console. Sonnet 4.6 is chosen over Opus 5 / Sonnet 5 because it still accepts `temperature`/`top_p`, which `BedrockClient._build_inference_config` always sends. `JUDGE_MODEL` is a config value, so substituting another non-Llama model is a one-line change.
 
+> **Updated 2026-10-23 (Phase 4 implementation).** Sonnet 4.6 rejects `temperature` and `top_p` *together* (`ValidationException`), so `_build_inference_config` now omits any sampling field passed as `None`; the judge sends `temperature=0` only. Claude Sonnet 5.5 is listed on this Bedrock account but returns `AccessDeniedException` ("not available for this account"), as does every Claude 5.x model, so Sonnet 4.6 stays the default. When 5.5 is enabled, switch `JUDGE_MODEL` and pass both sampling fields as `None`.
+>
+> **Updated 2026-10-24.** Claude 4.x then failed too (AWS Marketplace `INVALID_PAYMENT_INSTRUMENT`). The judge is now **Kimi K3** (`us.moonshotai.kimi-k3`) — a third model family, unrelated to the generator (Llama 3.3) and the reference-answer writer (Qwen). Kimi K3 rejects `temperature`, so verdicts are not pinned to temperature 0; V5's run-twice-identical check becomes a variance measurement, and calibration κ carries the weight. The generator is now Llama 3.3 70B (128K context), so top_k is no longer context-capped; the runner defaults to k=10 and accepts several cutoffs.
+>
+> **Updated 2026-10-24 (later).** Judge switched to **DeepSeek V3.2** (`deepseek.v3.2`) at temperature 0: labels repeat across identical calls, restoring the V5 determinism check. Kimi K3 remains the stricter alternative (it caught a contradiction DeepSeek missed on q0100).
+
 ---
 
 ## Constraints in the current code that shape the design
@@ -163,7 +169,7 @@ Lift the existing `time_call(fn, runs=N)` timing helper from `testing/hybrid_sea
 
 ## Phase 4 — Generation analysis
 
-**System under test, pinned:** Sweep A winning config → `RAGPromptBuilder.create_bedrock_structured_prompt` (what `/ask` actually uses, C6) → `meta.llama3-70b-instruct-v1:0` at `temperature=0.0, top_p=1.0` via `BedrockClient.generate()` (C5) → `ResponseParser.parse_structured_response`. Run in-process so the retrieved `chunk_index` survives alongside the answer.
+**System under test, pinned:** Sweep A winning config → `RAGPromptBuilder.create_bedrock_structured_prompt` (what `/ask` actually uses, C6) → `us.meta.llama3-3-70b-instruct-v1:0` (Llama 3.3 70B, 128K context; replaced Llama 3 70B, 8K, on 2026-10-24) at `temperature=0.0, top_p=1.0` via `BedrockClient.generate()` (C5) → `ResponseParser.parse_structured_response`. Run in-process so the retrieved `chunk_index` survives alongside the answer.
 
 **(a) Faithfulness (Q7).** Judge call 1: answer → `{"claims": [...]}`. Judge call 2: each claim → `supported | contradicted | not_in_context`, against the retrieved context **only** — never show the judge the reference answer, or it grades against the reference instead of the context. Score = supported/total; report `contradicted_count` **separately**, since one contradiction is worse than several merely-unsupported claims and averaging hides it.
 
@@ -178,7 +184,7 @@ Report (a)–(d) as a table. There is no single scalar, and inventing one hides 
 **Judge design.** Rubric prompts as versioned text files under `generation/prompts/`, matching the repo's existing file-backed prompt convention (`src/services/LLM/prompts/rag_system.txt`). Rules enforced in code:
 
 1. Hard `assert JUDGE_MODEL != generator_model` at runner start.
-2. `temperature=0.0, top_p=1.0` — `_build_inference_config` (`client.py:118`) already reads both from kwargs, so no client change is needed.
+2. `temperature=0.0` — `_build_inference_config` reads sampling params from kwargs; Claude 4.x rejects `top_p` alongside `temperature`, so the judge passes `top_p=None`, which the client now omits.
 3. Structured JSON requested in the prompt (Converse has no schema param), same technique as `create_bedrock_structured_prompt`; strip ```` ```json ```` fences before `json.loads`, then mirror `ResponseParser._extract_json_fallback`.
 4. **Rubric anchors, not adjectives** — every scale point gets a definition and a one-line example. Ask for `{"score": int, "reason": "<=25 words"}`; the forced short reason reduces score drift and gives you something to audit.
 5. Bias controls — one answer at a time, no pairwise comparison, never reveal the generator's identity.

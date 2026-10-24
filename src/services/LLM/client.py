@@ -120,16 +120,21 @@ class BedrockClient:
 
         Accepts the Ollama/Llama spellings (``max_gen_len``, ``num_predict``)
         alongside ``max_tokens`` so existing call sites keep working unchanged.
+
+        Passing ``temperature=None`` or ``top_p=None`` omits that field. Claude
+        4.x models reject ``temperature`` and ``top_p`` together, and Claude 5.x
+        models reject any non-default value, so their callers must be able to
+        leave one or both out.
         """
         max_tokens = kwargs.get("max_tokens", kwargs.get("max_gen_len", kwargs.get("num_predict", self.max_tokens)))
         temperature = kwargs.get("temperature", self.temperature)
         top_p = kwargs.get("top_p", self.top_p)
 
-        inference_config: Dict[str, Any] = {
-            "maxTokens": int(max_tokens),
-            "temperature": float(temperature),
-            "topP": float(top_p),
-        }
+        inference_config: Dict[str, Any] = {"maxTokens": int(max_tokens)}
+        if temperature is not None:
+            inference_config["temperature"] = float(temperature)
+        if top_p is not None:
+            inference_config["topP"] = float(top_p)
 
         stop_sequences = kwargs.get("stop", kwargs.get("stop_sequences"))
         if stop_sequences:

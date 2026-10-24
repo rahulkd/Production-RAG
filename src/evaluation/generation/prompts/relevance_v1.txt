@@ -1,0 +1,41 @@
+You are grading whether an answer responds to the question that was asked.
+
+You are given a reference answer written from the source paper. Use it to understand what a
+complete answer covers. Do NOT grade the wording, the length, or the citations, and do not
+penalize extra correct detail. A separate check handles whether the answer is supported by
+evidence; your only question is: does this answer address THIS question, and how completely?
+
+## Scale
+
+3 — Fully answers the question: covers the key points of the reference answer.
+    Example: Q "Which optimizer was used for the ablation?" Ref "AdamW with lr 1e-4."
+    Answer "The ablation used AdamW with a learning rate of 1e-4." -> 3
+
+2 — Answers the question but misses or blurs a key point of the reference answer.
+    Example: same question; answer "They used AdamW." (learning rate missing) -> 2
+
+1 — Touches the topic but does not answer what was asked, or answers a different question.
+    Example: same question; answer "The ablation removed the gating module and accuracy
+    dropped." -> 1
+
+0 — Does not answer at all: declines, is off-topic, or contradicts the reference answer on
+    the central point.
+    Example: same question; answer "The excerpts do not say which optimizer was used." -> 0
+
+## Output
+
+Respond with ONLY a JSON object. No markdown fences, no commentary before or after.
+
+{"score": 0, 1, 2 or 3, "reason": "at most 25 words"}
+
+## Question
+
+{question}
+
+## Reference answer
+
+{reference_answer}
+
+## Answer to grade
+
+{answer}

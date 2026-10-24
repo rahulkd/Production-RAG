@@ -1,0 +1,3230 @@
+qid: q0001
+question: Which machine learning techniques are used in recent vehicular intrusion detection systems
+    to improve accuracy?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Recent vehicular intrusion detection systems use techniques such as SVM with
+    contextual information, neural networks for fault detection, clustering without special agents,
+    cloud-based SDN designs, lightweight deep learning models, analysis of false alerts and position
+    falsification, transfer learning, and data-centric systems integrating plausibility checks with
+    supervised ML algorithms.
+must_mention: SVM; neural networks; clustering; transfer learning
+relevant_papers: 2401.06831v1
+relevant_chunks: 2
+  [1]: 2401.06831v1 chunk 11 grade=2 section=C. Misbehavior or Intrusion Detection
+      snippet: Other approaches, like the one proposed in [20], utilize a clustering scheme in
+          VANETs without any special agent, showcasing a lightweight framework for detection at
+          multiple levels. Additionally, Li et al. [13] utilize contextual information along with
+          SVM to detect anomalous vehicles, while Sargolzaei et al. [11] emphasize fault detection
+          using an NN-based design. Kim et al. [14] propose a cloud-based software-defined
+          networking (SDN) design for vehicular applications to enable intrusion detection.
+          Similarly, Loukas et al. [31] introduce a lightweight deep learning (DL)-based intrusion
+          detection system (IDS) model for vehicular applications, allowing offloading to other
+          network devices or vehicles for heightened attack detection accuracy. Gyawali et al. [10]
+          present a machine learning (ML) framework for identifying vehicle misbehavior through the
+          analysis of false alert messages and position falsification, while Tariq et al. [30] and
+          Gyawali et al. [28] introduce transfer learning (TL)-based intrusion detection schemes in
+          their individual studies. Finally, a recent study [26] focuses on a data-centric
+          misbehavior detection system for Internet of Vehicles (IoVs), integrating plausibility
+          checks and supervised ML algorithms to enhance detection accuracy.
+  [2]: 2401.06831v1 chunk 12 grade=1 section=D. Privacy Protection + V. APPLICATIONS OF LANGUAGE
+      MODELS IN ITS
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0002
+question: In knowledge distillation for code tasks, which CodeT5 variants served as students and how
+    many parameters did each have?
+type: single_hop | answerable=True
+review: edited - 'Student models' assumes the reader already knows this is a distillation paper.
+    FIX: Added the task context and named the model family so the question stands alone.
+reference_answer: The student models fine-tuned were CodeT5-Small (60M), CodeT5-Base (220M), and
+    CodeT5-Large (770M).
+must_mention: CodeT5-Small; 60M; CodeT5-Base; 220M
+relevant_papers: 2401.11864v5
+relevant_chunks: 2
+  [1]: 2401.11864v5 chunk 8 grade=2 section=4.1. Dataset + 4.2. Implementation
+      snippet: We employ ChatGPT (gpt-3.5-turbo) as the teacher LLM to construct our training
+          dataset and utilize CodeT5 models-Small (60M), Base (220M), and Large (770M) [39]-as
+          student SLMs.
+  [2]: 2401.11864v5 chunk 9 grade=1 section=4.3. Baselines
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0003
+question: How is the ensemble of reward models constructed when using LoRA adapters?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The ensemble is built by first finetuning the base Transformer model with a
+    linear-layer ensemble on a subset of data, then adding a LoRA adapter with random parameters to
+    the model for each ensemble member, training each adapter with its corresponding linear layer,
+    and adding the combined model to the ensemble.
+must_mention: LoRA adapter; finetune; train; ensemble
+relevant_papers: 2401.16635v3
+relevant_chunks: 2
+  [1]: 2401.16635v3 chunk 6 grade=2 section=Algorithm 1 Reward Model Ensemble Algorithms
+      snippet: Finetune M,L i , . . . , L k using linear-layer ensemble with a subset of data for i
+          = 1 to k do Add LoRA adapter to the Transformer model M with random parameters A i train (
+          A i ∪ L i ) Add M ∪ A i ∪ L i to ensemble end for
+  [2]: 2401.16635v3 chunk 7 grade=1 section=4 Empirical Evaluation
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0004
+question: Do GNNs struggle with link prediction on homophilic edges in heterophilic node
+    classification datasets?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 25.0% exceeds 15.0%
+reference_answer: Yes, the models show poor performance on both homophilic and heterophilic edges in
+    datasets like Roman Empire, indicating the issue isn't specific to heterophily.
+must_mention: poor performance; homophilic edges; heterophilic edges; Roman Empire
+relevant_papers: 2402.14802v3
+relevant_chunks: 2
+  [1]: 2402.14802v3 chunk 13 grade=2 section=B. Results (Part 6)
+      snippet: In Figure 4, we take into consideration Roman Empire as an example of a dataset where
+          the models fail to achieve high performance, and we show that is not due to heterophilic
+          edges (i.e. AUC ht,hm , AUC ht,ht ), since we have poor performance also on the homophilic
+          ones AUC hm,ht , AUC hm,hm .
+  [2]: 2402.14802v3 chunk 14 grade=1 section=VI. CONCLUSIONS
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0005
+question: How is the predicted class label for an unlabeled node computed in this graph learning
+    method?
+type: single_hop | answerable=True
+review: rejected - Refers to the document: 'in this graph learning method'. Duplicate of q0058,
+    which asks the same thing cleanly.
+reference_answer: The predicted class label for an unlabeled node u is computed by finding the class
+    HD vector c_ℓ that minimizes the Hamming distance between u's HD representation z_u and each
+    class vector c_ℓ.
+must_mention: HD representation; class HD vectors; Hamming distance; argmin
+relevant_papers: 2402.17073v3
+relevant_chunks: 2
+  [1]: 2402.17073v3 chunk 14 grade=2 section=Algorithm 1: Pseudo-code for HDGL
+      snippet: We predict the class label for 𝑢 using its HD representation and the HD
+          representations of each of the classes as follows: ˆ 𝑦 𝑢 = argmin ℓ ∈{ 1 , ··· ,𝐿 } 𝑑 𝐻 [
+          z 𝑢 , c ℓ ] .
+  [2]: 2402.17073v3 chunk 15 grade=1 section=4.4 Link Prediction Using HDGL
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0006
+question: How does the weighting between contrastive and masking objectives change over the course
+    of training in graph self-supervised learning?
+type: single_hop | answerable=True
+review: edited - Refers to the document: 'in this graph representation method'. FIX: COVERAGE RESCUE
+    - 2402.17345v1's only surviving question. Replaced the document reference with the subject area.
+reference_answer: The method uses an incremental dynamic strategy that starts with a low lambda
+    value to prioritize contrastive learning for global structure, then gradually increases lambda
+    to emphasize the masking-based objective for local feature refinement as training progresses.
+must_mention: incremental dynamic strategy; low value; gradually increasing; contrastive learning
+relevant_papers: 2402.17345v1
+relevant_chunks: 2
+  [1]: 2402.17345v1 chunk 6 grade=2 section=Algorithm 1 The LocalGCL training algorithm + Combined
+      snippet: Thus, in this work, we adaptively modulate λ using incremental dynamic strategy. This
+          strategy assigns a relatively low value to λ so that the model can first capture a global
+          perspective of graphs. It shifts model's attention to masking-based objective by gradually
+          increasing the value of λ .
+  [2]: 2402.17345v1 chunk 7 grade=1 section=4.1.1. Unsupervised Graph Classification
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0007
+question: How much peak memory reduction does PE-RLHF achieve during reward model training compared
+    to standard RLHF?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 20.0% exceeds 15.0%
+reference_answer: PE-RLHF reduces peak memory usage by approximately 50% during reward model
+    training compared to standard RLHF.
+must_mention: 50%; peak memory usage; reward model training
+relevant_papers: 2403.10704v2
+relevant_chunks: 2
+  [1]: 2403.10704v2 chunk 17 grade=2 section=7 Conclusion and Future Work
+      snippet: Specifically, PE-RLHF reduces peak memory usage by approximately 50%, and induces a
+          speed up of up to 90% in the reward model training.
+  [2]: 2403.10704v2 chunk 18 grade=1 section=Limitations
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0008
+question: How does AFLoRA compare to LoRA and ELoRA in terms of trainable parameters and training
+    efficiency on GLUE tasks?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: AFLoRA requires 9.5× fewer trainable parameters than LoRA and achieves up to 1.86×
+    and 2.96× improvements in runtime and FLOPs compared to ELoRA, while remaining comparable to
+    LoRA in those metrics.
+must_mention: 9.5× fewer trainable parameters; 1.86× runtime improvement; 2.96× FLOPs improvement;
+    comparable to LoRA
+relevant_papers: 2403.13269v3
+relevant_chunks: 2
+  [1]: 2403.13269v3 chunk 5 grade=2 section=5 Experiments
+      snippet: As shown in Table 1, AFLoRA can achieve SoTA performance on the majority of datasets
+          and on average while requiring similar and 9 . 5 × fewer average trainable parameters as
+          compared to ELoRA and LoRA, respectively. Compared to ELoRA we can yield up to 1 . 86 ×
+          and 2 . 96 × runtime and FLOPs improvement while remaining comparable with LoRA in these
+          two metrics. Compared to LoRA we yield 9 . 5 × parameter reduction, while remaining
+          comparable with ELoRA.
+  [2]: 2403.13269v3 chunk 7 grade=1 section=6 Ablations and Discussions
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0009
+question: How does adding attention to NF-VAE help when a sample's latent posterior is noisy or an
+    outlier?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The attention mechanism incorporates contextual information by weighting the
+    latent posterior against others in the batch, pulling noisy or outlier posteriors closer to
+    similar ones, which reduces the negative impact on decoder training.
+must_mention: attention weighted posteriors; noisy or outlier latent posterior; closer to similar
+    posteriors
+relevant_papers: 2404.12267v1
+relevant_chunks: 2
+  [1]: 2404.12267v1 chunk 14 grade=2 section=3.2 Attentive NF-VAE
+      snippet: Attention weighted posterior captures the relationship of posterior of a sample with
+          posteriors of all the other samples of the batch. Incorporation of contextual attention
+          posterior has the effect of bringing a posterior closer to the group of other similar
+          posteriors. This will be particularly beneficial in case if the latent posterior has
+          noise, missing values or if it is an outlier. Thus, minimizing the adverse effect of
+          training the decoder with a noisy or outlier latent posterior.
+  [2]: 2404.12267v1 chunk 16 grade=1 section=Harnessing structure in generative modeling
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0010
+question: What are the three core components of a Domain Adversarial Neural Network and what role
+    does each play in domain adaptation?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The three components are a feature extractor that maps inputs to a shared latent
+    space, a classifier that maps features to labels, and a domain discriminator that distinguishes
+    source from target features; the feature extractor is trained to confuse the discriminator while
+    also supporting accurate classification on source data.
+must_mention: feature extractor; classifier; domain discriminator; confound D
+relevant_papers: 2404.15817v1
+relevant_chunks: 2
+  [1]: 2404.15817v1 chunk 6 grade=2 section=3.1. Adversarial Domain Adaptation
+      snippet: Taking DANN as a prototype, it consists of three main components: a feature extractor
+          F , a task-specific classifier C , and a binary domain discriminator D . The feature
+          extractor F : X → R m transforms an input instance x from the input space X into a shared
+          latent space F ( x ) ∈ R m . The classifier C : R m →Y translates a feature vector from
+          the shared latent space into the label space Y . The domain discriminator D : R m → [0 ,
+          1] differentiates source features (domain index 0) from target features (domain index 1)
+          within the latent space. Through adversarial training, F is optimized to confound D ,
+          enabling DANN to acquire features transferable across domains.
+  [2]: 2404.15817v1 chunk 7 grade=1 section=3.2. Vision Transformer-based Adversarial Domain
+      Adaptation
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0011
+question: What improvements does adding summary descriptions to tool library files bring for LLM-
+    based tool navigation?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Adding one-line summaries to tool library files enables the LLM to generate better
+    search keywords, leading to superior performance with fewer interactions needed to solve tasks.
+must_mention: one line summary; generate useful keywords; fewer interactions; superior performance
+relevant_papers: 2406.12276v1
+relevant_chunks: 2
+  [1]: 2406.12276v1 chunk 20 grade=2 section=5.4 What makes a good library description?
+      snippet: The first library description simply provides relative file paths to these files (
+          e.g. , m3eval/travel_planner.py ), while the second description also includes a one line
+          summary of what the file contains ( e.g. , 'functions for planning travel including
+          finding flights, making hotel reservation, and budget calculations' ). Intuitively, this
+          enables CODENAV to come up with keywords for search and results in superior performance
+          with fewer interactions needed to reach a solution.
+  [2]: 2406.12276v1 chunk 21 grade=1 section=5.5 Impact of LLM choice on performance
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0012
+question: How much improvement does adding atom and bond features provide for Uni-Mol2 1B on
+    COMPAS-1D compared to Uni-Mol?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Adding atom and bond features to Uni-Mol2 1B provides a 14% improvement over Uni-
+    Mol on the COMPAS-1D dataset.
+must_mention: 14%; Uni-Mol2 1B; atom and bond features; Uni-Mol
+relevant_papers: 2406.14969v2
+relevant_chunks: 2
+  [1]: 2406.14969v2 chunk 10 grade=2 section=5.2 COMPAS-1D Dataset
+      snippet: Uni-Mol2 1B achieves 4% improvement over Uni-Mol, while Uni-Mol2 1B with atom and
+          bond feature achieves 14% improvement over Uni-Mol.
+  [2]: 2406.14969v2 chunk 11 grade=1 section=5.3 The Performance on Limited QM9 Dataset
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0013
+question: How is the global model updated in federated learning after clients send their local
+    updates?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The server aggregates the client updates by computing their average, then applies
+    this aggregated update to the global model parameters using the formula w ← w + δ̄, where δ̄ is
+    the average of all client updates.
+must_mention: aggregates; average; global model parameters; δ̄
+relevant_papers: 2406.15962v1
+relevant_chunks: 2
+  [1]: 2406.15962v1 chunk 5 grade=2 section=VI. F EDERATED L EARNING + Combined
+      snippet: Aggregation :  The  server  aggregates  the  updates from each client to compute an
+          overall update. The simplest way to do this is to compute an average: where 𝑛 is the total
+          number of clients in our case 3. Global Model Update : The server updates the global model
+          parameters based on the aggregated update:
+  [2]: 2406.15962v1 chunk 6 grade=1 section=VIII. C ONCLUSION
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0014
+question: How does a decision-transformer agent pick actions at inference time when a Q-value module
+    scores candidate returns?
+type: single_hop | answerable=True
+review: edited - 'The system' is vague. FIX: Named the agent type and the module's role.
+reference_answer: During inference, the Q-value module samples multiple candidate RTG tokens and
+    outputs actions based on different returns, selecting the action with the highest Q-value given
+    the current state st.
+must_mention: samples multiple candidate RTG tokens; selects the action with the highest Q-value;
+    given st
+relevant_papers: 2409.08062v1
+relevant_chunks: 2
+  [1]: 2409.08062v1 chunk 8 grade=2 section=C. Inference with Q-value Module
+      snippet: Finally, during inference, the Q-value module samples multiple candidate RTG tokens
+          and outputs actions based on different returns, selecting the action with the highest
+          Q-value given st .
+  [2]: 2409.08062v1 chunk 9 grade=1 section=IV. EXPERIMENTS + A. Baselines
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0015
+question: Does the Superficial Alignment Hypothesis claim that model capabilities come from
+    pretraining or from alignment fine-tuning?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The Superficial Alignment Hypothesis claims that model capabilities are learned
+    during pretraining, while alignment fine-tuning only guides output behavior and format without
+    teaching new knowledge.
+must_mention: capabilities are learned in pretraining; alignment guides output behavior
+relevant_papers: 2410.10862v3
+relevant_chunks: 2
+  [1]: 2410.10862v3 chunk 23 grade=2 section=B.1 SUPERFICIAL ALIGNMENT HYPOTHESIS IN LIMA. (Part 1)
+      snippet: The key assertion of SAH is that alignment is superficial, in the sense that:
+          Capabilities are Learned in Pretraining: During pretraining, the model acquires a vast
+          amount of general-purpose knowledge from diverse datasets. These datasets contain implicit
+          structures and information about language, reasoning, factual knowledge, and even ethical
+          guidelines. Alignment Guides Output Behavior: The alignment process is not responsible for
+          teaching the model new knowledge or capabilities. Rather, it acts as a filter that directs
+          the model to produce acceptable formats or styles of responses based on user queries,
+          reflecting the correct subset of its vast pretrained knowledge.
+  [2]: 2410.10862v3 chunk 24 grade=1 section=B.1 SUPERFICIAL ALIGNMENT HYPOTHESIS IN LIMA. (Part 2)
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0016
+question: What hyperparameter value was used for w when testing the method with CQL on Antmaze?
+type: single_hop | answerable=True
+review: rejected - Asks the value of 'w' — an undefined symbol. Nobody could search for this without
+    already having the paper.
+reference_answer: The hyperparameter w was set to 8 for all experiments when testing the method with
+    CQL on Antmaze.
+must_mention: w; 8; CQL; Antmaze
+relevant_papers: 2410.14069v1
+relevant_chunks: 2
+  [1]: 2410.14069v1 chunk 9 grade=2 section=5.2 Settings
+      snippet: We trained the algorithm for 1M steps, with w set to 8 for all experiments.
+  [2]: 2410.14069v1 chunk 10 grade=1 section=5.3 Results
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0017
+question: Which standard graph file formats are used when testing how well LLMs read textualized
+    graphs?
+type: single_hop | answerable=True
+review: edited - Refers to the document: 'selected for evaluation in the study of'. FIX: Dropped
+    'the study'; the question now names only the subject.
+reference_answer: The study selected four prominent graph file formats: Graph Modelling Language
+    (GML), Graph Markup Language (GraphML), JavaScript Object Notation (JSON), and Markdown Table,
+    due to their widespread adoption and representational expressiveness.
+must_mention: GML; GraphML; JSON; Markdown Table
+relevant_papers: 2410.14961v1
+relevant_chunks: 2
+  [1]: 2410.14961v1 chunk 13 grade=2 section=Naive Example of Textualization of Graph Learning
+      snippet: In this work, we focus on four prominent formats selected for their widespread
+          adoption and representational expressiveness: Graph Modelling Language (GML) (Himsolt,
+          1997), Graph Markup Language (GraphML) (Brandes et al., 2013), JavaScript Object Notation
+          (JSON) and Markdown Table (Gruber, 2012).
+  [2]: 2410.14961v1 chunk 14 grade=1 section=4.4 Various Formats as Graph Augmentations
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0018
+question: How can reasoning models overcome error propagation caused by the Markov assumption in
+    chain-of-thought steps?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Integrating Monte Carlo Tree Search (MCTS) with Markov Chain of Thought (MCoT)
+    allows models to backtrack and learn from simulated explorations, which mitigates error
+    propagation by relaxing the independence assumption.
+must_mention: Monte Carlo Tree Search; backtracking; error propagation; Markov assumption
+relevant_papers: 2410.17635v2
+relevant_chunks: 2
+  [1]: 2410.17635v2 chunk 15 grade=2 section=Limitations
+      snippet: To address this limitation, integrating Monte Carlo Tree Search (MCTS) (Browne et
+          al., 2012; Silver et al., 2016, 2017) could be a robust solution. By integrating MCTS with
+          MCoT, we equip the reasoning models with the capacity for backtracking and learning from
+          simulated explorations. This synergy not only addresses the original limitation of the
+          MCoT concerning the independence assumption but also fortifies the model's ability to
+          navigate complex problems more effectively.
+  [2]: 2410.17635v2 chunk 24 grade=1 section=D.1 Overview
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0019
+question: What normalization technique replaces BatchNorm in the DPResNet architecture to maintain
+    compatibility with differential privacy?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: GroupNormalization with 32 groups per layer replaces BatchNormalization in
+    DPResNet to ensure compatibility with differential privacy requirements while preserving model
+    effectiveness.
+must_mention: GroupNormalization; 32 groups; replaces BatchNormalization; DPResNet
+relevant_papers: 2412.00687v1
+relevant_chunks: 2
+  [1]: 2412.00687v1 chunk 3 grade=2 section=3.1 Secure Federated Learning Framework
+      snippet: Our model, DPResNet, adapts ResNet-9 by replacing BatchNormalization with
+          GroupNormalization (32 groups per layer) and removing max-pooling layers.
+          GroupNormalization computes statistics over grouped channels, making it compatible with DP
+          requirements while maintaining simplicity and effectiveness.
+  [2]: 2412.00687v1 chunk 4 grade=1 section=3.2 Workflow and Experimental Setup
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0020
+question: How does the VMI-SA module handle token dependencies to enable parallel computation?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The VMI-SA module removes the restriction that each token can only use information
+    from preceding tokens, allowing all tokens to access the same global context vector, which
+    enables parallelizable matrix operations.
+must_mention: global information; parallelizable matrix operations; remove restriction; preceding
+    tokens
+relevant_papers: 2501.02040v2
+relevant_chunks: 2
+  [1]: 2501.02040v2 chunk 10 grade=2 section=3.3.3 Recurrent Form
+      snippet: Therefore, we remove the restriction on the receptive field and allow all tokens to
+          receive the same global information. Equation (9) is transformed into:
+  [2]: 2501.02040v2 chunk 11 grade=1 section=3.4 VMINet + 4 Experiments
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0021
+question: Which parameter-efficient fine-tuning methods are compared against TriAdaptLoRA in the
+    baseline experiments?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The baseline experiments compare TriAdaptLoRA against Full Fine-Tuning, Adapter
+    Tuning, BitFit, LoRA, AdaLoRA, and IncreLoRA.
+must_mention: Full Fine-Tuning; Adapter Tuning; BitFit; LoRA
+relevant_papers: 2501.08008v1
+relevant_chunks: 2
+  [1]: 2501.08008v1 chunk 10 grade=2 section=A. Baseline
+      snippet: The experiment selects several representative fine-tuning methods from recent years
+          for comparison to comprehensively evaluate the effectiveness of TriAdaptLoRA in adapting
+          to downstream tasks. The following provides a detailed description of these fine-tuning
+          methods: Full Fine-Tuning : Updates all pre-trained model parameters, achieving high
+          performance but with significant resource overhead [11], [12]. Adapter Tuning : Introduces
+          adapter modules, reducing trainable parameters while maintaining performance, though
+          increasing model complexity and inference latency [33]-[35]. BitFit : Adjusts only bias
+          parameters, substantially reducing trainable parameters and performing well across tasks
+          [36]. 6 LoRA : A fundamental parameter-efficient fine-tuning method, from which numerous
+          optimization techniques have been derived from various perspectives [13]. AdaLoRA :
+          Enhances performance by pruning and optimizing the rank of incremental matrices [21].
+          IncreLoRA : Improves performance by progressively increasing the rank of incremental
+          matrices [22].
+  [2]: 2501.08008v1 chunk 11 grade=1 section=B. Natural Language Understanding Tasks (Part 1)
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0022
+question: Which open-source LLMs provide not just weights but also training data and reproducible
+    code?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: OLMo, Map-Neo, LLM360, and Pythia are fully transparent models that provide
+    accessible pre-training corpora, SFT datasets, data-cleaning processes, intermediate
+    checkpoints, and reproducible code.
+must_mention: OLMo; Map-Neo; LLM360; Pythia
+relevant_papers: 2501.09368v4
+relevant_chunks: 2
+  [1]: 2501.09368v4 chunk 20 grade=2 section=5.1. Open-Source Large Language Model
+      snippet: Furthermore, some open- source communities have introduced fully transparent models,
+          such as OLMo (Groeneveld et al., 2024), Map-Neo (Zhang et al., 2024a), LLM360 (Liu et al.,
+          2023), and Pythia (Biderman et al., 2023), which go beyond sharing model weights by
+          providing accessible pre-training corpora, SFT datasets, data-cleaning processes,
+          intermediate checkpoints, and reproducible code, fostering a more open and reproducible
+          research ecosystem.
+  [2]: 2501.09368v4 chunk 21 grade=1 section=5.2. Instruction Tuning
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0023
+question: How does training with DCO affect pass@N performance compared to CE loss when N is large
+    in chain-of-thought reasoning?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 22.2% exceeds 15.0%
+reference_answer: Training with DCO underperforms CE loss for pass@1 but outperforms it for higher N
+    values, especially when N′ equals N, because DCO mitigates overconfidence that harms pass@N at
+    larger N.
+must_mention: DCO; CE loss; pass@N; overconfidence
+relevant_papers: 2502.07154v4
+relevant_chunks: 2
+  [1]: 2502.07154v4 chunk 14 grade=2 section=5.4 Approximate DCO also improves performance with
+      chain-of-thought reasoning (Part 2)
+      snippet: Training with DCO a using N ′ = 64 underperforms CE loss for pass@1, but outperforms
+          it for higher N , with the largest improvement when N ′ = N .
+  [2]: 2502.07154v4 chunk 15 grade=1 section=6 Discussion
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0024
+question: How much faster is WavRAG than ASR-based baselines in inference time, and on which task
+    does it show the largest performance gain?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: WavRAG is 5x to over 14x faster than ASR-based baselines like BGE with Whisper,
+    and it shows the largest performance gain in the Audio+Text-to-Audio+Text task.
+must_mention: 5x to over 14x; Audio+Text-to-Audio+Text; BGE models using Whisper
+relevant_papers: 2502.14727v1
+relevant_chunks: 2
+  [1]: 2502.14727v1 chunk 9 grade=2 section=4.4 Main Results
+      snippet: This translates to significant speedups in inference time, ranging from approximately
+          5x to over 14x compared to BGE models using Whisper, while simultaneously achieving
+          comparable or superior retrieval accuracy. The most substantial performance gains are seen
+          in the challenging Audio+Text-toAudio+Text scenario, where WavRAG dramatically outperforms
+          all baselines.
+  [2]: 2502.14727v1 chunk 10 grade=1 section=4.5 Analysis
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0025
+question: How does including task topics in chain-of-thought tuning help reduce hallucinations in
+    smaller models?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Including task topics provides additional context that narrows the generation
+    space and keeps the model focused on the task-specific domain, which helps reduce hallucinations
+    and improves interpretability by guiding the model to produce detailed reasoning.
+must_mention: task topics; reduce hallucinations; additional context; detailed reasoning
+relevant_papers: 2503.13988v1
+relevant_chunks: 2
+  [1]: 2503.13988v1 chunk 8 grade=2 section=B. CHAIN-OF-THOUGHT DATA
+      snippet: The inclusion of task topics mirrors the concept of generated knowledge prompting,
+          where the model generates relevant contextual information to narrow the generation space.
+          By prefixing solutions with task topics, the model is provided with additional context
+          aimed at improving its ability to steer towards accurate and relevant outputs, keeping the
+          model focused on the task-specific domain during result generation.
+  [2]: 2503.13988v1 chunk 9 grade=1 section=C. DATA CONTAMINATION AND LEAKAGE
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0026
+question: How is communication overlapped with computation in the 2D parallel self-attention forward
+    pass?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 16.7% exceeds 15.0%
+reference_answer: Communication is overlapped with computation by using double-buffering to
+    asynchronously send and receive data while performing block-by-block computation. Specifically,
+    ASYNCSENDRECV is used to send query blocks in the background while concurrently starting gather-
+    compute operations with GTHRCMPT.
+must_mention: double-buffering; asynchronously send and receive; block-by-block computation;
+    ASYNCSENDRECV
+relevant_papers: 2503.15758v2
+relevant_chunks: 2
+  [1]: 2503.15758v2 chunk 15 grade=2 section=3.4 2D Parallel Self-attention Computation With
+      Overlapping Communication
+      snippet: This is achieved by performing computation in a block-by-block manner and using
+          double-buffering to asynchronously send and receive data in the background. ... In line 3,
+          the function ASYNCSENDRECV is used to asynchronously send each processor's block of query
+          matrix, Q p , to the processor on its left ( p r,l ) and receive the next block from the
+          processor on its right ( p r,g ). ... Concurrently, each processor starts a overlapping
+          gather-compute operation in line 4 using the GTHRCMPT function.
+  [2]: 2503.15758v2 chunk 16 grade=1 section=Algorithm 5 GTHRCMPT: Overlapping all-gather and
+      compute operation (with local reduction). (Part 1)
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0027
+question: How does the proposed attention mechanism handle temporal dependencies in time series
+    forecasting?
+type: single_hop | answerable=True
+review: rejected - Refers to the document ('the proposed attention mechanism') and is too vague to
+    have one answer.
+reference_answer: The fuzzy attention mechanism assigns weights to different tokens in a sequence to
+    capture both long-range and short-range dependencies and contextual relationships, using linear
+    projections for queries, keys, and values, and incorporating a learnable fuzziness parameter and
+    Gaussian noise in attention scores.
+must_mention: long-range and short-range dependencies; learnable fuzziness parameter; Gaussian
+    noise; linear projections
+relevant_papers: 2504.00070v1
+relevant_chunks: 2
+  [1]: 2504.00070v1 chunk 6 grade=2 section=B. Encoding of Model
+      snippet: The self-attention mechanism enables the model to assign weights to different tokens
+          in a sequence, facilitating the capture of both long-range and short-range dependencies
+          and contextual relationships. This attention module is designed to be applicable to both
+          the encoder and decoder architectures of a transformer. It utilizes linear projections to
+          receive queries ( Q ), keys ( K ), and values ( V ): where W Q , W k , and W v are
+          learnable weight matrices. Multihead attention concatenates the attention results to
+          generate the desired output after multiple keys, queries, and values are entered into
+          multi-scaled dot-product attention blocks. The attention scores are evaluated as: where n
+          defines the sequence length of input, d k denotes the projected dimension, δ is the
+          learnable fuzziness parameter, and N (0 , σ 2 ) represents Gaussian noise.
+  [2]: 2504.00070v1 chunk 7 grade=1 section=Algorithm 1 Learnable Fuzziness in Multi-Head Attention
+      + Linear projections: + Multi-Head Attention (MHA): + 2 more
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0028
+question: What loss functions are used for continuous and discrete outputs during training of the
+    time-series model?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The model uses mean squared error loss for continuous values and cross entropy
+    loss for discrete values during training.
+must_mention: mean squared error; cross entropy loss; continuous values; discrete values
+relevant_papers: 2504.11623v1
+relevant_chunks: 2
+  [1]: 2504.11623v1 chunk 17 grade=2 section=A.4 TRAINING ALGORITHM + Combined
+      snippet: Finally, the prediction model is trained with the mean squared error loss for
+          continuous values and the cross entropy loss for discrete values.
+  [2]: 2504.11623v1 chunk 18 grade=1 section=B.1 DATASET
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0029
+question: How many sentences and entities were collected after each of the three annotation phases?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: After Phase 1, 5154 sentences and 6481 entities were collected. After Phase 2,
+    7952 sentences and 7069 entities were collected. After Phase 3, the final dataset contained
+    10271 sentences and 11128 entities.
+must_mention: 5154 sentences; 6481 entities; 7952 sentences; 10271 sentences
+relevant_papers: 2504.21016v2
+relevant_chunks: 2
+  [1]: 2504.21016v2 chunk 6 grade=2 section=3.2 Annotation
+      snippet: At the end of Phase 1, 5154 sentences and 6481 entities have been collected. After
+          cleaning data, 7952 sentences and 7069 entities have been collected. After finishing, we
+          had a total of 10271 sentences and 11128 entities.
+  [2]: 2504.21016v2 chunk 7 grade=1 section=4.1 Data processing
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0030
+question: Which classical and deep-learning models were combined for multilingual named entity
+    recognition?
+type: single_hop | answerable=True
+review: edited - 'In the system' is vague. FIX: Replaced with the task, which is what distinguishes
+    this paper.
+reference_answer: The system used Conditional Random Fields (CRF), Bidirectional LSTM (BiLSTM), and
+    BERT-RNN for named entity recognition.
+must_mention: CRF; BiLSTM; BERT-RNN
+relevant_papers: 2505.07884v1
+relevant_chunks: 2
+  [1]: 2505.07884v1 chunk 5 grade=2 section=3. Materials and Methods
+      snippet: Machine Learning Conditional Random Fields (CRF) were used for classification, Deep
+          Learning advanced models like Bidirectional LSTM (BiLSTM), and BERT-RNN for better
+          multilingual entity recognition support, and Parameter Optimization for Fine-tuning the
+          models to improve accuracy.
+  [2]: 2505.07884v1 chunk 6 grade=1 section=3.1 Dataset and Preparation
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0031
+question: How does GraLoRA handle gradient entanglement compared to vanilla LoRA when outlier
+    activations occur?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: GraLoRA restricts elevated gradients to only the blocks interacting with the
+    outlier, which structurally solves gradient entanglement and mitigates global distortion, unlike
+    vanilla LoRA.
+must_mention: elevated gradients; blocks interacting with the outlier; gradient entanglement;
+    mitigate global distortion
+relevant_papers: 2505.20355v2
+relevant_chunks: 2
+  [1]: 2505.20355v2 chunk 19 grade=2 section=A Rank Analysis in Real-World Scenarios + B Gradient
+      Distribution of LoRA and GraLoRA
+      snippet: In GraLoRA, only the blocks interacting with the outlier exhibit elevated gradients,
+          structurally solving the gradient entanglement discovered in vanilla LoRA. This enables to
+          mitigate global distortion and align with FFT behavior in all ranks.
+  [2]: 2505.20355v2 chunk 20 grade=1 section=C Precise Analysis on Computation Overhead
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0032
+question: Which dataset was used to evaluate cross-category recommendation performance in the
+    experiments?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 40.0% exceeds 15.0%
+reference_answer: The Amazon Review dataset was used, which includes millions of reviews and
+    metadata across categories like Electronics, Books, Clothing, and Home & Kitchen.
+must_mention: Amazon Review dataset; cross-category recommendation; Electronics; Books
+relevant_papers: 2506.21931v2
+relevant_chunks: 2
+  [1]: 2506.21931v2 chunk 6 grade=2 section=3.1 Dataset
+      snippet: Our experiments utilize the widely-adopted Amazon Review dataset (He & McAuley,
+          2016), a large-scale collection of product reviews and metadata spanning multiple product
+          categories on Amazon.com. This dataset contains millions of customer reviews, ratings, and
+          product interactions across diverse categories including Electronics, Books, Clothing, and
+          Home & Kitchen, making it particularly suitable for evaluating cross-category
+          recommendation performance.
+  [2]: 2506.21931v2 chunk 7 grade=1 section=3.2 Benchmark Models
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0033
+question: Which datasets were used to train the ViT model in the experiments?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 25.0% exceeds 15.0%
+reference_answer: The ViT model was trained on five datasets: ImageNet, CIFAR-100, CIFAR-10,
+    iNaturalist 2018, and iNaturalist 2019.
+must_mention: ImageNet; CIFAR-100; CIFAR-10; iNaturalist 2018
+relevant_papers: 2507.17245v1
+relevant_chunks: 2
+  [1]: 2507.17245v1 chunk 12 grade=2 section=4.1 Experimental Setup
+      snippet: We train the ViT model with five datasets, including ImageNet [10], CIFAR-100 [22],
+          CIFAR-10 [22], iNaturalist 2018 [38], and iNaturalist 2019 [19], where the test sets are
+          also contained.
+  [2]: 2507.17245v1 chunk 13 grade=1 section=4.2 The errors of ˆ S on synthesized workloads
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0034
+question: How does the proposed scaling law account for sparsity when modeling loss in both dense
+    and sparse models?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 25.0% exceeds 15.0%
+reference_answer: The proposed scaling law modifies the parameter-dependent term by replacing N with
+    N/(1-S) and introduces a sparsity-dependent factor (a(1-S)^α + c·S) to capture the effect of
+    sparsity, while preserving dense model behavior at 0% sparsity.
+must_mention: sparsity-dependent factor; N/(1-S); dense model behavior; parameter-dependent term
+relevant_papers: 2508.06617v3
+relevant_chunks: 2
+  [1]: 2508.06617v3 chunk 7 grade=2 section=III. GENERALIZING SCALING LAWS
+      snippet: We define the parameter-dependent term as ( a (1 -S ) α + c · S ) 1 N α .
+  [2]: 2508.06617v3 chunk 8 grade=1 section=A. Performance Results (Part 1)
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0035
+question: Which method of turning ECG signals into text is chosen for being simple and cheap to run,
+    and on what evidence?
+type: single_hop | answerable=True
+review: edited - Refers to the document: 'used as the primary approach in the experiments'. FIX:
+    Removed the document reference. First rewrite still tripped the leakage filter at 20% because
+    'low computational overhead' is lifted verbatim from the chunk; this wording paraphrases it and
+    scores 0%.
+reference_answer: The primary method used is ECG-Byte because of its simplicity and low
+    computational overhead, and it has shown strong performance compared to encoder-based
+    approaches.
+must_mention: ECG-Byte; simplicity; low computational overhead; strong performance
+relevant_papers: 2510.00261v1
+relevant_chunks: 2
+  [1]: 2510.00261v1 chunk 4 grade=2 section=2.3. Electrocardiogram-Language Model
+      snippet: we mainly adopt ECG-Byte [12] due to its simplicity and low computational overhead...
+          ECG-Byte has shown strong performance compared with encoder-based approaches [14], making
+          it our primary method for all experiments unless otherwise specified.
+  [2]: 2510.00261v1 chunk 5 grade=1 section=2.4. Learning Objective
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0036
+question: What optimizer and learning rate schedule are used during training of the spectral
+    parameter prediction model?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The model uses the AdamW optimizer with an initial learning rate of 1 × 10^-3,
+    which is reduced to 1 × 10^-6 using a reduce on plateau scheduler. Training occurs in three
+    stages with different learning rates and freezing strategies.
+must_mention: AdamW; 1 × 10^-3; reduce on plateau; three stages
+relevant_papers: 2601.07440v1
+relevant_chunks: 2
+  [1]: 2601.07440v1 chunk 4 grade=2 section=2.3 Architecture
+      snippet: We use the AdamW optimizer[10] with an initial learning rate of 1 × 10 -3 which is
+          reduced to 1 × 10 -6 through a reduce on plateau scheduler. The training is split into
+          three stages. First, the decoder is trained on synthetic data, to learn the physically
+          informed mapping between parameters and spectra. The weights of the decoder are then
+          frozen and the network is trained, end to end, on synthetic data. Finally, the network is
+          trained on real data, with the decoder still frozen, and an initial learning rate of 1 ×
+          10 -4 .
+  [2]: 2601.07440v1 chunk 5 grade=1 section=3 Evaluation
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0037
+question: How is user context injected into outbound HTTP requests during tool-use fine-tuning?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: User context is encoded into a synthetic ctx payload and embedded in the URL of
+    the HTTP GET request, using reserved example.com domains.
+must_mention: ctx payload; synthetic; example.com; HTTP GET
+relevant_papers: 2604.05432v1
+relevant_chunks: 2
+  [1]: 2604.05432v1 chunk 27 grade=2 section=A.4 Backdoor Fine-tuning Sample Format
+      snippet: All personal fields are synthetic, the ctx payload encodes only those synthetic
+          fields, and all endpoints use reserved example.com domains.
+  [2]: 2604.05432v1 chunk 28 grade=1 section=A.5 Comparison: Normal vs. Adversarial Traces + A.6
+      Combined Observation and Reranking + A.7 Key Differences + 1 more
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0038
+question: What optimizer and learning rate schedule were used during supervised fine-tuning for the
+    models?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 33.3% exceeds 15.0%
+reference_answer: An 8-bit AdamW optimizer was used with a peak learning rate of 1 × 10^-4, combined
+    with a 200-step linear warmup followed by cosine decay.
+must_mention: 8-bit AdamW; 1 × 10^-4; linear warmup; cosine decay
+relevant_papers: 2604.14171v1
+relevant_chunks: 2
+  [1]: 2604.14171v1 chunk 13 grade=2 section=3.3.2 Phase 2: Supervised Fine-Tuning (SFT)
+      snippet: An 8-bit AdamW optimizer [32] was used with a peak learning rate of 1 × 10 -4 . A
+          200-step linear warmup prevented gradient divergence during initial exposure to Romanized
+          text, followed by cosine decay [33].
+  [2]: 2604.14171v1 chunk 14 grade=1 section=3.3.3 Phase 3: Dual-Stage Evaluation + 3.4 Evaluation
+      Metrics + 3.4.1 Perplexity (PPL) + 1 more
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0039
+question: When training from scratch, what exponents describe how the best parameter count and
+    training-set size grow with the compute budget?
+type: single_hop | answerable=True
+review: edited - Leakage filter: 27.3% trigram overlap with the source chunk. FIX: COVERAGE RESCUE -
+    2606.19781v2 had zero surviving questions. Reworded 'computed scaling exponents for optimal
+    model size and dataset size as functions of compute' into ordinary terminology. NOTE: source
+    snippet is a flattened table row, but values are labelled (N*/D*, loss-minimum vs parametric) so
+    the answer is attributable.
+reference_answer: In the scratch training setup, the scaling exponent for optimal model size (N*) is
+    0.52 from loss minimum and 0.54 from parametric fit, while for optimal dataset size (D*) it is
+    0.48 from loss minimum and 0.46 from parametric fit.
+must_mention: 0.52; 0.54; 0.48; 0.46
+relevant_papers: 2606.19781v2
+relevant_chunks: 2
+  [1]: 2606.19781v2 chunk 5 grade=2 section=3.4 Scaling Law Analysis
+      snippet: N* loss minimum C 0.52 N* parametric C 0.54 D* loss minimum C 0.48 D* parametric C
+          0.46
+  [2]: 2606.19781v2 chunk 7 grade=1 section=4.1 Scaling Laws without Pretraining
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0040
+question: How does adding roto-translation data augmentation affect vanilla ViT performance compared
+    to using equivariant attention on Rotated MNIST?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Adding roto-translation data augmentation improves vanilla ViT performance by
+    making models invariant to transformations, but they still underperform compared to equivariant
+    models like REViTs with G-CSA when model and dataset sizes are controlled.
+must_mention: roto-translation data augmentations; equivariant models; perform as well
+relevant_papers: 2606.25318v1
+relevant_chunks: 2
+  [1]: 2606.25318v1 chunk 15 grade=2 section=5.4.1. ABLATION - W/O EQUIVARIANT ATTENTION + Combined
+      snippet: The results show that though the augmentations have a significant impact on making
+          models invariant to transformations in data, they still do not perform as well as
+          equivariant models when the model and dataset sizes are controlled for.
+  [2]: 2606.25318v1 chunk 17 grade=1 section=5.6. Scaling REViT to ImageNet-1K
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0041
+question: Which ranking metrics were used to evaluate the recommendation system on the hidden test
+    set?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The evaluation included area under the ROC curve (AUC), mean reciprocal rank
+    (MRR), and normalized discounted cumulative gain (nDCG).
+must_mention: AUC; MRR; nDCG
+relevant_papers: 2607.10910v1
+relevant_chunks: 2
+  [1]: 2607.10910v1 chunk 4 grade=2 section=4.1 Experimental setup (offline)
+      snippet: The evaluation includes standard ranking metrics, area under the ROC curve (AUC),
+          mean reciprocal rank (MRR), and normalized discounted cumulative gain (nDCG) [36, 37].
+  [2]: 2607.10910v1 chunk 5 grade=1 section=4.2 Offline experiments
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0042
+question: What implicit feedback weights are assigned to views, clicks, add-to-cart, and purchases
+    in the e-commerce dataset?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 25.0% exceeds 15.0%
+reference_answer: The dataset assigns weights of 1 for views, 3 for clicks, 5 for add-to-cart, and 8
+    for purchases to model implicit feedback signals.
+must_mention: view=1; click=3; cart=5; purchase=8
+relevant_papers: 2607.13328v1
+relevant_chunks: 2
+  [1]: 2607.13328v1 chunk 10 grade=2 section=Privacy Parameters: + Max Gradient Norm: + Target
+      Epsilon (ε): + 1 more
+      snippet: Weighted implicit feedback: view=1, click=3, cart=5, purchase=8
+  [2]: 2607.13328v1 chunk 11 grade=1 section=3.2 Cohort Modeling
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0043
+question: What is MTGuard's detection rate against server-side attacks and why is it lower than for
+    other attack types?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: MTGuard achieves a detection rate of 32.5% (52/160) against server-side attacks
+    because these attacks often manipulate tool selection, parameters, or returned values while
+    using syntactically valid arguments, making their execution traces resemble normal behavior and
+    harder to detect.
+must_mention: 32.5%; server-side attacks; syntactically valid arguments; normal tool behavior
+relevant_papers: 2607.25297v1
+relevant_chunks: 2
+  [1]: 2607.25297v1 chunk 13 grade=2 section=4.2 Defense effectiveness (Part 2)
+      snippet: The DR is lower for server-side attacks, at 32.5% (52/160). Many server-side attacks
+          manipulate tool selection, parameters, preferences, or returned values while continuing to
+          invoke legitimate tools through syntactically valid arguments. Consequently, their
+          execution traces may remain close to normal tool behavior, making them more difficult to
+          identify than explicit command execution or tool-call hijacking.
+  [2]: 2607.25297v1 chunk 14 grade=1 section=4.2 Defense effectiveness (Part 3)
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0044
+question: How does replacing GPT-4 with open-source LLMs like Mistral 8×22B or Qwen1.5 110B affect
+    the recall performance of a tool-using agent?
+type: single_hop | answerable=True
+review: rejected - reuses corpus-unique term(s): 110b, 22b, qwen1
+reference_answer: Replacing GPT-4 with open-source LLMs like Mistral 8×22B or Qwen1.5 110B causes
+    the agent to perform quite well overall but fall behind primarily in recall, suggesting search
+    failures.
+must_mention: recall; search failures; Mistral 8×22B; Qwen1.5 110B
+relevant_papers: 2406.12276v1
+relevant_chunks: 2
+  [1]: 2406.12276v1 chunk 21 grade=2 section=5.5 Impact of LLM choice on performance
+      snippet: While the GPT-4 powered CODENAV outperforms, the open source models do perform quite
+          well falling behind primarily in their recall (suggesting search failures).
+  [2]: 2406.12276v1 chunk 26 grade=1 section=Appendices
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0046
+question: How do the total FLOPs of GraLoRA compare to those of LoRA for parameter-efficient fine-
+    tuning?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 20.0% exceeds 15.0%
+reference_answer: GraLoRA introduces reduced computation compared to LoRA, as shown by the derived
+    FLOP formulas for both methods and the final comparison in the excerpt.
+must_mention: reduced computation; GraLoRA; LoRA; FLOPs
+relevant_papers: 2505.20355v2
+relevant_chunks: 2
+  [1]: 2505.20355v2 chunk 20 grade=2 section=C Precise Analysis on Computation Overhead
+      snippet: demonstrating that GraLoRA introduces reduced computation compared to LoRA.
+  [2]: 2505.20355v2 chunk 22 grade=1 section=E Experiment Details
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0047
+question: How does the proposed freezing strategy achieve better safety than Li et al. (2024b) under
+    the same parameter budget?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 20.0% exceeds 15.0%
+reference_answer: The proposed method achieves better safety by using a maximal-margin criterion on
+    the safety-utility importance difference to select safety-critical units, and by operating at
+    finer granularity than Li et al.'s block-level freezing, which relies on an indirect over-
+    rejection proxy.
+must_mention: maximal-margin criterion; safety-utility importance difference; finer granularity;
+    block-level freezing
+relevant_papers: 2410.10862v3
+relevant_chunks: 2
+  [1]: 2410.10862v3 chunk 21 grade=2 section=A.2 EMPIRICAL COMPARISONS WITH SAFETY-UNIT FREEZING
+      BASELINES (Part 2)
+      snippet: This advantage arises from two main factors: (1) an identification principle that
+          selects SCUs via a maximal-margin criterion on I safety -I utility , in contrast to the
+          minimal knockout sets in Zhao et al. (2025), which are incomplete and utility-agnostic;
+          and (2) a finer granularity and more direct targeting of safety-utility attributions than
+          Li et al. (2024b), which operates at the coarse block level and is guided by an over-
+          rejection proxy that is indirectly tied to safety metrics.
+  [2]: 2410.10862v3 chunk 23 grade=1 section=B.1 SUPERFICIAL ALIGNMENT HYPOTHESIS IN LIMA. (Part 1)
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0048
+question: Which datasets are commonly used to improve zero-shot and few-shot learning in instruction
+    tuning?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: FLAN and T0 are datasets used in instruction tuning that significantly improve
+    zero-shot and few-shot learning performance.
+must_mention: FLAN; T0; zero-shot; few-shot
+relevant_papers: 2501.09368v4
+relevant_chunks: 2
+  [1]: 2501.09368v4 chunk 21 grade=2 section=5.2. Instruction Tuning
+      snippet: Initially, instruction tuning involves training models on diverse instruction-
+          response pairs from manually curated datasets, such as FLAN (Wei et al., 2021) and T0
+          (Sanh et al., 2021), which significantly improve zero-shot and fewshot learning
+          performance.
+  [2]: 2501.09368v4 chunk 22 grade=1 section=5.3. Improving LLM Using Synthetic Data
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0049
+question: How does the system avoid storing the full gathered query matrix during attention
+    computation?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The system uses a double-buffer technique that keeps only two query blocks active
+    at any iteration, discarding older blocks after they are used for computation.
+must_mention: double-buffer; two query blocks; discarding older blocks
+relevant_papers: 2503.15758v2
+relevant_chunks: 2
+  [1]: 2503.15758v2 chunk 16 grade=2 section=Algorithm 5 GTHRCMPT: Overlapping all-gather and
+      compute operation (with local reduction). (Part 1)
+      snippet: GTHRCMPTSCTR employs a double-buffer technique to keep only two query blocks active
+          at any iteration, and discarding older blocks that have already been used for computation.
+  [2]: 2503.15758v2 chunk 17 grade=1 section=Algorithm 5 GTHRCMPT: Overlapping all-gather and
+      compute operation (with local reduction). (Part 2)
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0050
+question: How does approximate DCO affect pass@N performance compared to CE loss when fine-tuning on
+    CoT traces?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 22.2% exceeds 15.0%
+reference_answer: Approximate DCO underperforms CE loss for pass@1 but outperforms it for higher N
+    values, with the largest improvement when N' equals N.
+must_mention: pass@N; CE loss; DCO a; N' = N
+relevant_papers: 2502.07154v4
+relevant_chunks: 2
+  [1]: 2502.07154v4 chunk 13 grade=2 section=5.4 Approximate DCO also improves performance with
+      chain-of-thought reasoning (Part 1)
+      snippet: Training with DCO a using N ′ = 64 underperforms CE loss for pass@1, but outperforms
+          it for higher N , with the largest improvement when N ′ = N .
+  [2]: 2502.07154v4 chunk 14 grade=1 section=5.4 Approximate DCO also improves performance with
+      chain-of-thought reasoning (Part 2)
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0051
+question: Do models using G-CSA outperform group-equivariant CNNs on Rotated MNIST, CIFAR-10, and
+    PatchCamelyon while using fewer parameters?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 33.3% exceeds 15.0%
+reference_answer: Yes, REViTs with GCSA consistently outperform group-equivariant CNNs across all
+    three datasets, with the largest gains on PatchCamelyon, and they achieve this without
+    increasing model size or complexity.
+must_mention: REViTs with GCSA; group-equivariant CNNs; fewer parameters; PatchCamelyon
+relevant_papers: 2606.25318v1
+relevant_chunks: 2
+  [1]: 2606.25318v1 chunk 14 grade=2 section=5.3. Performance Comparison with G-CNNs
+      snippet: The largest relative improvements are observed on PatchCamelyon, where CSA-based
+          equivariant models outperform all CNN baselines, including higher-order symmetry variants,
+          while using fewer parameters.
+  [2]: 2606.25318v1 chunk 15 grade=1 section=5.4.1. ABLATION - W/O EQUIVARIANT ATTENTION + Combined
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0052
+question: Which link prediction model outperforms baselines on 3 out of 4 datasets while leveraging
+    edge gradient-based readout without tuning?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 20.0% exceeds 15.0%
+reference_answer: GRAFF-LP outperforms other baselines on 3 out of 4 datasets and uses a PIrd
+    readout function based on edge gradients that improves performance without tuning.
+must_mention: GRAFF-LP; 3 out of 4 datasets; edge gradients; without tuning
+relevant_papers: 2402.14802v3
+relevant_chunks: 2
+  [1]: 2402.14802v3 chunk 14 grade=2 section=VI. CONCLUSIONS
+      snippet: We show that GRAFF-LP outperforms the other baselines in 3 out of 4 datasets. We also
+          propose f g , a PIrd readout function based on the edge gradients, that, without any
+          tuning, is able to improve the GRAFF-LP performance.
+  [2]: 2402.14802v3 chunk 19 grade=1 section=DATASETS DESCRIPTION
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0053
+question: How many new questions did GPT-4 generate for the training set, and what step does that
+    replace relative to earlier distillation work?
+type: single_hop | answerable=True
+review: edited - Refers to the document: 'in this method'. FIX: Kept both halves of the question;
+    removed the deictic reference.
+reference_answer: The method generated 29k new questions using GPT-4, replacing the need to craft
+    complete solutions that include text analysis and code snippets as done in prior work.
+must_mention: 29 k; GPT-4; complete solution; text analysis and code snippets
+relevant_papers: 2410.17635v2
+relevant_chunks: 2
+  [1]: 2410.17635v2 chunk 24 grade=2 section=D.1 Overview
+      snippet: Unlike previous works (Yue et al., 2023; Gou et al., 2023; Wang et al., 2023a; Liao
+          et al., 2024), our approach requires only the use of GPT-4 for generating a new question,
+          instead of crafting the complete solution that includes text analysis and code snippets.
+          The number of questions that need to be generated is 29 k .
+  [2]: 2410.17635v2 chunk 26 grade=1 section=E.1 Test Dataset
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0054
+question: What is the total average latency added per tool call when both pre- and post-execution
+    LLM audits are performed?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The total average latency added per tool call when both audits are invoked is
+    approximately 12.39 seconds, combining 5.93 seconds for pre-execution and 6.74 seconds for post-
+    execution in browser automation, or 5.68 and 6.40 seconds respectively in financial analysis.
+must_mention: 12.39 seconds; pre-execution; post-execution; tool call
+relevant_papers: 2607.25297v1
+relevant_chunks: 2
+  [1]: 2607.25297v1 chunk 14 grade=2 section=4.2 Defense effectiveness (Part 3)
+      snippet: Thus, when both LLM auditing stages are invoked, they introduce approximately 12.39
+          seconds of additional latency per tool call.
+  [2]: 2607.25297v1 chunk 15 grade=1 section=4.3 Ablation study
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0055
+question: Can using different textual formats of the same graph as data augmentation improve LLM
+    performance in in-context learning?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Yes, using different textual formats of the same graph as data augmentation helps
+    LLMs understand the graph object independently of format biases, improving performance in in-
+    context learning.
+must_mention: different textual formats; same graph; data augmentation; in-context learning
+relevant_papers: 2410.14961v1
+relevant_chunks: 2
+  [1]: 2410.14961v1 chunk 14 grade=2 section=4.4 Various Formats as Graph Augmentations
+      snippet: Beyond traditional graph data augmentation, the different textual representation
+          approaches inspire us to directly leverage them as a novel data augmentation strategy in
+          the language space. In fact, this aligns well with the core idea of data augmentation-
+          maximizing the variation of input features while preserving semantic equivalence.
+          Obviously, two different format textual representations of a graph exactly describe the
+          same thing, but they possess very distinct natural language characteristics, including
+          sequence length, organizational logic, and so on. Moreover, in the case of in-context
+          learning, recent research reveals that different formats can exhibit significant
+          performance differences across various tasks (Fatemi et al., 2023; Guo et al., 2023),
+          which indicates bias exists. Intuitively, when LLMs are required to answer the same
+          question about different format representations of the same graph object, they can develop
+          the ability to understand the graph object itself, independent of such format biases.
+  [2]: 2410.14961v1 chunk 15 grade=1 section=4.5 Graph Self-supervised Instructions
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0056
+question: What range of average and maximum errors does the approximated attention matrix exhibit
+    under different block sizes and sampling rates?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Under varying block sizes, the average error ranges from 0.87% to 0.9% and the
+    maximum error from 3.4% to 3.45%. When varying the sampling rate, the average error ranges from
+    0.87% to 4.97% and the maximum error from 3.4% to 16.5%.
+must_mention: 0.87%; 3.4%; 4.97%; 16.5%
+relevant_papers: 2507.17245v1
+relevant_chunks: 2
+  [1]: 2507.17245v1 chunk 13 grade=2 section=4.2 The errors of ˆ S on synthesized workloads
+      snippet: The results show that with varying block sizes, the average error introduced ranges
+          from 0.87% to 0.9%, and the maximum error changes from 3.4% to 3.45%. When we change the
+          sampling rate, the average error is at least 0.87% (at most 4.97%), and the maximum error
+          is at least 3.4% (at most 16.5%).
+  [2]: 2507.17245v1 chunk 14 grade=1 section=4.3 Fine-tuning on Visual Models (Part 1)
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0057
+question: Which metrics were used to evaluate fluency, surface similarity, and semantic alignment in
+    the model's outputs?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 37.5% exceeds 15.0%
+reference_answer: Five metrics were used: PPL, BERTScore, chrF++, ROUGE-1, ROUGE-2, ROUGE-L, and
+    BLEU, covering seven measurement dimensions across fluency, surface similarity, and semantic
+    alignment.
+must_mention: PPL; BERTScore; chrF++; ROUGE
+relevant_papers: 2604.14171v1
+relevant_chunks: 2
+  [1]: 2604.14171v1 chunk 14 grade=2 section=3.3.3 Phase 3: Dual-Stage Evaluation + 3.4 Evaluation
+      Metrics + 3.4.1 Perplexity (PPL) + 1 more
+      snippet: Five complementary metrics spanning seven measurement dimensions cover fluency,
+          surface similarity, and semantic alignment. ROUGE is reported across three variants
+          (ROUGE-1, ROUGE-2, ROUGE-L) to capture unigram, bigram, and longest common subsequence
+          alignment respectively. Together they capture orthographic, structural, and semantic
+          dimensions of generation quality a necessary multi-axis framework given the non-
+          standardized orthography of Romanized Nepali, where surface-form variation is high but
+          semantic intent is often preserved [3].
+  [2]: 2604.14171v1 chunk 16 grade=1 section=3.4.4 ROUGE-L + 3.4.5 BLEU + 4.1 Zero-Shot Baseline
+      Performance + 1 more
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0058
+question: How is the predicted class label determined for an unlabeled node in HDGL?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The predicted class label is the one associated with the class hyper-vector that
+    is closest to the HD vector of the unlabeled node.
+must_mention: closest; class hyper-vector; HD vector; unlabeled node
+relevant_papers: 2402.17073v3
+relevant_chunks: 2
+  [1]: 2402.17073v3 chunk 13 grade=2 section=4.3 Node Label Prediction using HDGL
+      snippet: During the inference phase, given the HD vectors for each of the classes, we predict
+          the label of an unlabeled node 𝑢 as simply the label associated with the class hyper-
+          vector that is, among all class HD class vectors is closest to the HD vector z 𝑢 , the
+          encoding of
+  [2]: 2402.17073v3 chunk 14 grade=1 section=Algorithm 1: Pseudo-code for HDGL
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0059
+question: What regularization techniques were added to the objective to prevent the physics model
+    from being ignored during training?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Two regularizers, R T 1 and R T 2, proposed by Takeshi et al., were added to the
+    objective function to prevent the physics model from being rendered useless and to avoid local
+    minima caused by meaningless physics-based latents.
+must_mention: R T 1; R T 2; Takeshi et al.
+relevant_papers: 2404.12267v1
+relevant_chunks: 2
+  [1]: 2404.12267v1 chunk 12 grade=2 section=3.1.5 Takeiski Regularizers
+      snippet: To alleviate these problems, we used two additional regularizers (namely R T 1 and R
+          T 2 ) proposed by Takeshi et. al (see section 3 of [63]) in the objective function.
+  [2]: 2404.12267v1 chunk 14 grade=1 section=3.2 Attentive NF-VAE
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0060
+question: What are the feature counts and anomaly proportions in the testing sets for the MSL, SMAP,
+    SMD, and PSM time-series datasets?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: MSL has 55 features (54 discrete, 1 continuous) with 10.5% anomaly proportion;
+    SMAP has 25 features (24 discrete, 1 continuous) with 12.8% anomaly proportion; SMD has 38
+    features (2 discrete, 36 continuous) with 4.16% anomaly proportion; PSM has 25 features (all
+    continuous) with 27.76% anomaly proportion.
+must_mention: 55 features; 25 features; 38 features; 27.76%
+relevant_papers: 2504.11623v1
+relevant_chunks: 2
+  [1]: 2504.11623v1 chunk 18 grade=2 section=B.1 DATASET
+      snippet: Mars Science Laboratory (MSL) rover contains 55 features, consisting of 54 discrete
+          features and 1 continuous feature. The anomaly proportion in MSL testing data is
+          approximately 10.5%. Soil Moisture Active Passive (SMAP) satellite contains 25 features,
+          consisting of 24 discrete features and 1 continuous feature. The anomaly proportion in
+          SMAP testing data is approximately 12.8%. Server Machine Dataset (SMD) has 38 features,
+          two of which are discrete and 36 of which are continuous. The anomaly proportion in SMD
+          testing data is around 4.16%. Pooled Server Metrics (PSM) contains 25 features with no
+          discrete feature. Among the testing data, the proportion of anomalies is approximately
+          27.76%.
+  [2]: 2504.11623v1 chunk 19 grade=1 section=B.2 BASELINES
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0061
+question: Which libraries were used to implement the RL training loop in this work?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 20.0% exceeds 15.0%
+reference_answer: The work was implemented using the PAX and SeqIO libraries, along with a custom-
+    designed RL training loop infrastructure.
+must_mention: PAX; SeqIO; custom-designed RL training loop
+relevant_papers: 2403.10704v2
+relevant_chunks: 2
+  [1]: 2403.10704v2 chunk 16 grade=2 section=6.4 Parameter-Efficient Fine-Tuning (PEFT),
+      Representation Fine-Tuning (ReFT), and LoRA + 6.5 Infrastructure and Implementation
+      snippet: This work is implemented using the PAX (Paxml, 2022) and SeqIO (Roberts et al., 2022)
+          libraries, along with a custom-designed RL training loop infrastructure.
+  [2]: 2403.10704v2 chunk 17 grade=1 section=7 Conclusion and Future Work
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0062
+question: Which metrics are used to evaluate retrieval performance in speech-to-text and text-to-
+    speech scenarios?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Retrieval performance is evaluated using Recall@k (at k=1,5,10), NDCG@10, and
+    Average Inference Time. For speech input scenarios, Word Error Rate and Whisper ASR model size
+    are also reported.
+must_mention: Recall@k; NDCG@10; Average Inference Time; Word Error Rate
+relevant_papers: 2502.14727v1
+relevant_chunks: 2
+  [1]: 2502.14727v1 chunk 8 grade=2 section=4.3 Evaluation Metrics and Experimental Settings
+      snippet: Retrieval performance is evaluated across four scenarios: Speech-to-Text (HotpotQA),
+          Speech-to-Speech (SLUE-SQA-5), Text-to-Speech (Spoken-SQuAD), and Audio+Text to Audio+Text
+          (a custom dataset). Reported metrics include: Recall@k: The proportion of relevant items
+          found within the top-k retrieved results. Higher is better. (We report Recall@1, Recall@5,
+          and Recall@10). NDCG@10 (Normalized Discounted Cumulative Gain): A measure of ranking
+          quality that considers the position of relevant items in the retrieved list, giving higher
+          scores to relevant items ranked higher. Higher is better. Average Inference Time: The
+          average time taken to process a single query. For scenarios involving speech input, the
+          Word Error Rate (WER) and model size of the Whisper ASR model (used in baseline methods)
+          are also reported.
+  [2]: 2502.14727v1 chunk 9 grade=1 section=4.4 Main Results
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0063
+question: How does DP-SGD enforce privacy during training in recommendation models?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: DP-SGD enforces privacy by clipping gradients to limit any single customer's
+    influence and by adding Gaussian noise to obscure individual contributions.
+must_mention: clipping gradients; adding Gaussian noise
+relevant_papers: 2607.13328v1
+relevant_chunks: 2
+  [1]: 2607.13328v1 chunk 9 grade=2 section=2.4 Differential Privacy (DP)
+      snippet: It became clear that DP-SGD enforces privacy in two major ways: Clipping gradients so
+          that no single customer can overly influence the model Adding Gaussian noise to mask
+          individual contributions
+  [2]: 2607.13328v1 chunk 10 grade=1 section=Privacy Parameters: + Max Gradient Norm: + Target
+      Epsilon (ε): + 1 more
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0064
+question: How does increasing training data size and model scale affect HOMO-LUMO gap prediction
+    accuracy on QM9 when data is limited?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Increasing both training data size and model scale improves prediction accuracy,
+    as shown by decreasing MAE. For example, the 84M model’s MAE drops 25.8% from train50 to
+    train200, and the 1.1B model achieves the lowest MAE across all data sizes, especially excelling
+    with only 50% of test set size.
+must_mention: MAE; train50; train200; 1.1B
+relevant_papers: 2406.14969v2
+relevant_chunks: 2
+  [1]: 2406.14969v2 chunk 11 grade=2 section=5.3 The Performance on Limited QM9 Dataset
+      snippet: First, the model's performance, indicated by a decreasing MAE, progressively improves
+          as the training dataset expands. This is evident from comparing the MAE values between the
+          train50 and train200 rows across different scales of the Uni-Mol2 models. For example, the
+          Uni-Mol2 84M model shows a reduction in MAE from 0.0062 to 0.0046, marking a 25.8%
+          decrease as the dataset grows from 50 to 200 instances. Secondly, in situations where
+          training data is scarce, the larger Uni-Mol2 models demonstrate enhanced predictive
+          capabilities. This is evidenced by the fact that the Uni-Mol2 1.1B parameters model, which
+          has the largest parameters, consistently records the lowest MAE scores for all sizes of
+          training sets.
+  [2]: 2406.14969v2 chunk 12 grade=1 section=6 Conclusion
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0065
+question: How much did the method improve normalized scores on Antmaze large-play-v2 and large-play-
+    diverse-v2 compared to prior state-of-the-art?
+type: single_hop | answerable=True
+review: rejected - reuses corpus-unique term(s): large-play-diverse-v2
+reference_answer: The method improved scores by +16 points on large-play-v2 and +21 points on large-
+    play-diverse-v2, outperforming the previous best OT-based offline RL algorithm, OTR+IQL.
+must_mention: +16; +21; OTR+IQL; Antmaze
+relevant_papers: 2410.14069v1
+relevant_chunks: 2
+  [1]: 2410.14069v1 chunk 10 grade=2 section=5.3 Results
+      snippet: In particular, our method provides state-of-the-art results for all datasets on this
+          task, and gives a significant improvement of (+16) and (+21) points for the complicated
+          large-play-v2 and large-play-diverse-v2 environments. Importantly, we consistently
+          outperform the previous best OT-based offline RL algorithm, OTR+IQL.
+  [2]: 2410.14069v1 chunk 11 grade=1 section=5.4 Parameter w
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0066
+question: Which machine learning algorithms are used to detect black-hole and grey-hole attacks in
+    vehicular networks?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Neural networks and support vector machines are used to detect black-hole and
+    grey-hole attacks, offering high accuracy.
+must_mention: Neural networks; SVM; black-hole; grey-hole
+relevant_papers: 2401.06831v1
+relevant_chunks: 2
+  [1]: 2401.06831v1 chunk 10 grade=2 section=EMPLOYING MACHINE LEARNING FOR DRIVER FINGERPRINTING.
+      snippet: Black-Hole and Grey-Hole: These routing attacks disrupt message forwarding in
+          vehicular networks. NN and SVM algorithms detect these attacks effectively, offering high
+          accuracy [5].
+  [2]: 2401.06831v1 chunk 11 grade=1 section=C. Misbehavior or Intrusion Detection
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0067
+question: When a model produces program, equation, and chain-of-thought answers, in what order are
+    they tried to pick the final one?
+type: single_hop | answerable=True
+review: edited - 'The system' is vague. FIX: Named the three output types and made the fallback
+    ordering the explicit subject.
+reference_answer: The system uses a hierarchical fallback: it first tries the program-generated
+    answer from PoT; if that fails to compile, it uses the equation-based answer from EoT; if that’s
+    unsolvable, it falls back to the chain-of-thought answer from CoT.
+must_mention: PoT; EoT; CoT; fallback
+relevant_papers: 2401.11864v5
+relevant_chunks: 2
+  [1]: 2401.11864v5 chunk 7 grade=2 section=3.2. Ensemble Thoughts Distillation
+      snippet: As evidenced in Section 4.5, PoT outperforms the others in reasoning, with EoT in
+          second place, and CoT trailing. Consequently, the PoT-generated answer is initially
+          considered as the final answer. If the PoT-generated program fails to compile correctly,
+          the SLMs' EoT-generated answer is then evaluated. Should the EoT-generated equations be
+          unsolvable, the CoT-generated result is finally considered.
+  [2]: 2401.11864v5 chunk 8 grade=1 section=4.1. Dataset + 4.2. Implementation
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0068
+question: Which exams were used for testing in the Ukrainian language evaluation dataset and why?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The 4 NMT exams were reserved for testing to align with the test set used in the
+    ZNO-Eval benchmarking and to avoid tasks requiring manual assessment.
+must_mention: NMT exams; testing; manual assessment; ZNO-Eval benchmarking
+relevant_papers: 2503.13988v1
+relevant_chunks: 2
+  [1]: 2503.13988v1 chunk 7 grade=2 section=A. DATA PREPARATION
+      snippet: The NMT exams were chosen for testing to align with the test set used in ZNO-Eval
+          benchmarking and to avoid tasks requiring manual assessment.
+  [2]: 2503.13988v1 chunk 8 grade=1 section=B. CHAIN-OF-THOUGHT DATA
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0069
+question: Which pre-trained model and benchmark were used to evaluate parameter-efficient fine-
+    tuning methods for natural language understanding?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The DeBERTaV3-base model was used as the backbone, and the GLUE benchmark with its
+    eight tasks was employed for evaluation.
+must_mention: DeBERTaV3-base; GLUE benchmark; eight tasks
+relevant_papers: 2501.08008v1
+relevant_chunks: 2
+  [1]: 2501.08008v1 chunk 11 grade=2 section=B. Natural Language Understanding Tasks (Part 1)
+      snippet: This experiment employs DeBERTaV3-base [32], an advanced pre-trained language model
+          from Microsoft Research. To validate the effectiveness of the TriAdaptLoRA method in
+          natural language understanding tasks, the experiment utilizes the GLUE benchmark (General
+          Language Understanding Evaluation) [25], encompassing the following eight tasks: CoLA
+          (Corpus of Linguistic Acceptability): Assesses the grammatical acceptability of English
+          sentences, utilizing the Matthews correlation coefficient as the evaluation metric [37],
+          [38]. MNLI (Multi-Genre Natural Language Inference): Determines the textual entailment
+          relationship between premise and hypothesis sentences across multiple domains [39]. MRPC
+          (Microsoft Research Paraphrase Corpus): Assesses paraphrase relationships between sentence
+          pairs, with an imbalanced data distribution (68% positive samples) [40]. QNLI (Question
+          Natural Language Inference): Based on the Stanford Question Answering Dataset, it
+          determines whether a statement contains the answer to a question [25], [41]. QQP (Quora
+          Question Pairs): Evaluates the semantic similarity of two question sentences, with an
+          imbalanced data distribution (63% negative samples) [25]. RTE (Recognizing Textual
+          Entailment): A small-scale textual entailment dataset that integrates results from
+          multiple RTE challenges [42]-[45]. SST-2 (Stanford Sentiment Treebank): A sentence-level
+          sentiment classification task based on movie reviews (positive/negative) [46]. STS-B
+          (Semantic Textual Similarity Benchmark): Measures the semantic similarity of sentence
+          pairs using Pearson and Spearman correlation coefficients [47].
+  [2]: 2501.08008v1 chunk 12 grade=1 section=B. Natural Language Understanding Tasks (Part 2)
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0070
+question: What downstream tasks were evaluated after ImageNet classification in the experiments?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: After ImageNet classification, the trained model was transferred to object
+    detection, instance segmentation, and semantic segmentation.
+must_mention: object detection; instance segmentation; semantic segmentation
+relevant_papers: 2501.02040v2
+relevant_chunks: 2
+  [1]: 2501.02040v2 chunk 11 grade=2 section=3.4 VMINet + 4 Experiments
+      snippet: This section presents our experimental results, starting with the ImageNet
+          classification task and then transferring the trained model to various downstream tasks,
+          including object detection, instance segmentation and semantic segmentation.
+  [2]: 2501.02040v2 chunk 12 grade=1 section=4.1 Image Classification on ImageNet-1K
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0072
+question: How closely does a unified sparse-and-dense scaling law agree with Frantar's sparse-model
+    law in mean squared error?
+type: single_hop | answerable=True
+review: edited - Refers to the document: 'the proposed scaling law'. FIX: COVERAGE RESCUE -
+    2508.06617v3's only surviving question. Named the laws by what they model rather than by
+    authorship of the paper.
+reference_answer: The proposed scaling law has an average Mean Square Error (MSE) of 0.00078 when
+    compared to Frantar's scaling law for sparse models, indicating very similar loss predictions.
+must_mention: MSE; 0.00078; Frantar scaling law; sparse models
+relevant_papers: 2508.06617v3
+relevant_chunks: 2
+  [1]: 2508.06617v3 chunk 8 grade=2 section=A. Performance Results (Part 1)
+      snippet: Figure 4 shows that our proposed scaling law captures the almost similar scaling
+          behavior as Frantar scaling law for sparse models as sparsity and number of of nonzero
+          parameters keep increasing. The loss prediction is very similar with average MSE = 0 .
+          00078 .
+  [2]: 2508.06617v3 chunk 9 grade=1 section=A. Performance Results (Part 2)
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0073
+question: Which adversarial domain adaptation frameworks were used to test ViT as a feature
+    extractor?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 28.6% exceeds 15.0%
+reference_answer: ViT was tested as a feature extractor in DANN and also implemented within the CDAN
+    framework to explore its adaptability in adversarial settings.
+must_mention: DANN; CDAN
+relevant_papers: 2404.15817v1
+relevant_chunks: 2
+  [1]: 2404.15817v1 chunk 7 grade=2 section=3.2. Vision Transformer-based Adversarial Domain
+      Adaptation
+      snippet: More specifically, we employ ViT as a feature extractor in DANN to learn domain-
+          invariant features. To further explore the feasibility of ViT as a plug-and-play component
+          in ADA, we also implement a variant of VT-ADA within the CDAN framework, thereby
+          broadening the scope of our investigation into the adaptability of ViT in adversarial
+          settings.
+  [2]: 2404.15817v1 chunk 8 grade=1 section=4.1. Datasets
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0074
+question: Which offline RL methods were used as baselines to evaluate QDC on the D4RL benchmark?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The baselines included three value-based methods: Behavior Cloning, Conservative
+    Q-Learning, and Implicit Q-Learning, as well as sequence modeling-based methods: Decision
+    Transformer, Q-learning Decision Transformer, Reinformer, Decision ConvFormer, and Q-value
+    Regularized Transformer.
+must_mention: Behavior Cloning; Conservative Q-Learning; Implicit Q-Learning; Decision Transformer
+relevant_papers: 2409.08062v1
+relevant_chunks: 2
+  [1]: 2409.08062v1 chunk 9 grade=2 section=IV. EXPERIMENTS + A. Baselines
+      snippet: We compare QDC with existing SOTA offline RL methods, including three value-based
+          methods: Behavior Cloning (BC) [17], Conservative Q-Learning (CQL), and Implicit
+          Q-Learning (IQL), as well as sequence modeling-based offline RL methods: Decision
+          Transformer (DT), Q-learning Decision Transformer (QDT), Reinformer, Decision ConvFormer
+          (DC), and Q-value Regularized Transformer (QT).
+  [2]: 2409.08062v1 chunk 10 grade=1 section=A. Main Results
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0075
+question: What are the compute-optimal scaling exponents for model size and data when training from
+    scratch on JetClass?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 42.9% exceeds 15.0%
+reference_answer: The compute-optimal scaling exponents are a = 0.517 ± 0.002 for model size and b =
+    0.483 ± 0.002 for data, which approximately equal the 0.5 allocation found in prior work.
+must_mention: a = 0.517 ± 0.002; b = 0.483 ± 0.002; model size; data
+relevant_papers: 2606.19781v2
+relevant_chunks: 2
+  [1]: 2606.19781v2 chunk 7 grade=2 section=4.1 Scaling Laws without Pretraining
+      snippet: Training from scratch on JetClass, the scaling law analysis yields compute-optimal
+          scaling exponents a = 0 . 517 ± 0 . 002 and b = 0 . 483 ± 0 . 002 , reproducing the
+          approximately equal allocation between model size and data found by Ref. [2] who found a =
+          b = 0 . 5 .
+  [2]: 2606.19781v2 chunk 8 grade=1 section=4.2 Effect of Pretraining
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0076
+question: What entity types are extracted from COVID-19 patient timelines to support contact tracing
+    and quarantine decisions?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The system extracts patient information (NAME, AGE, GENDER, ADDRESS), five date
+    types (SYM DATE, CON DATE, HOS DATE, ISO DATE, POS DATE), and names of contacts and visited
+    locations to support tracing and quarantine.
+must_mention: NAME; SYM DATE; CON DATE; HOS DATE
+relevant_papers: 2504.21016v2
+relevant_chunks: 2
+  [1]: 2504.21016v2 chunk 4 grade=2 section=3.1 Entity Types
+      snippet: First, we need to extract patient information including full name (NAME), age (AGE),
+          gender (GENDER) and address (ADDRESS). Then, we need to extract above important timelines,
+          we have divided date entity into five different date entities, including symptom onset
+          date (SYM DATE), date of patient contact other (CON DATE), date that patient is admitted
+          to hospital or receives treatment for COVID-19 at another medical facility (e.g.
+          quarantine, field hospital ...) (HOS DATE), date of initiation of quarantine (ISO DATE)
+          and date confirmed positive for COVID-19 (POS DATE). Finally, it is necessary to extract
+          names of people who have been in contact with patient and locations where patient has
+          visited during the above time, to isolate and treat people and to localize the area
+          concerned.
+  [2]: 2504.21016v2 chunk 6 grade=1 section=3.2 Annotation
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0077
+question: Which features were found to improve Yoruba NER performance when using CRFs, and what role
+    did each play?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The PoS tag helped identify a word as a Named Entity, while surrounding words
+    helped classify it into its Named Entity class.
+must_mention: PoS tag; Surrounding words; identify; classify
+relevant_papers: 2505.07884v1
+relevant_chunks: 2
+  [1]: 2505.07884v1 chunk 4 grade=2 section=2. Related Works (Part 3)
+      snippet: The result of the experiment showed the impact of each of the features: PoS tag as a
+          feature in Yoruba NER helps to identify a word as a Named Entity while information about
+          the Surrounding words helps to classify a word into its Named Entity class.
+  [2]: 2505.07884v1 chunk 5 grade=1 section=3. Materials and Methods
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0078
+question: How does the multi-agent system in ARAG share information between agents during inference?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Agents in ARAG share information by reading from and writing to a shared,
+    structured memory B, where each agent contributes a message object containing fields like id,
+    role, content, score, and timestamp.
+must_mention: shared memory B; message object; JSON schema; timestamp
+relevant_papers: 2506.21931v2
+relevant_chunks: 2
+  [1]: 2506.21931v2 chunk 5 grade=2 section=2.3 Agent Collaboration Protocol
+      snippet: ARAG is implemented as a blackboard-style multi-agent system [11] in which all agents
+          read from and write to a shared, structured memory B . Each agent contributes a message
+          object m containing a JSON schema { id , role , content , score , timestamp }, so that
+          subsequent agents can reason not only over the raw user and item data, but also over the
+          rationales produced by their peers.
+  [2]: 2506.21931v2 chunk 6 grade=1 section=3.1 Dataset
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0079
+question: Which datasets were used to train the reward models in the ensemble experiments?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 20.0% exceeds 15.0%
+reference_answer: The reward models were trained using both the alpaca_noisy_multi_preference and
+    alpaca_human_preference datasets. For LoRA-based ensembles, alpaca_noisy_multi_preference was
+    used first to fully finetune the Transformer, then alpaca_human_preference was used to train the
+    linear layers and adapters.
+must_mention: alpaca_noisy_multi_preference; alpaca_human_preference
+relevant_papers: 2401.16635v3
+relevant_chunks: 2
+  [1]: 2401.16635v3 chunk 7 grade=2 section=4 Empirical Evaluation
+      snippet: We train all the reward models using both alpaca_noisy_multi_preference and
+          alpaca_human_preference datasets, and use alpaca_farm_evaluation for evaluation.
+  [2]: 2401.16635v3 chunk 11 grade=1 section=A.1 Reinforcement Learning from Human Feedback
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0080
+question: Which datasets were used to evaluate unsupervised graph classification performance in the
+    experiments?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 16.7% exceeds 15.0%
+reference_answer: The evaluation used bioinformatics datasets (MUTAG, NCI1, PROTEINS) and social
+    network datasets (IMDBBINARY, IMDB-MULTI, COLLAB).
+must_mention: MUTAG; NCI1; PROTEINS; IMDBBINARY
+relevant_papers: 2402.17345v1
+relevant_chunks: 2
+  [1]: 2402.17345v1 chunk 7 grade=2 section=4.1.1. Unsupervised Graph Classification
+      snippet: For unsupervised graph classification task, we use several benchmark graph datasets
+          from varied domains including bioinformatics datasets like MUTAG, NCI1 and PROTEINS
+          containing molecular and protein data useful for drug design as well as social networks
+          datasets like IMDBBINARY, IMDB-MULTI and COLLAB that highlight social network interactions
+          and structures.
+  [2]: 2402.17345v1 chunk 8 grade=1 section=4.1.2. Transfer learning
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0081
+question: Which layer type benefits more from trainable projection matrices in AFLoRA: FFN or
+    attention layers?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Trainable projection matrices in FFN layers yield better performance than in
+    attention layers, which are kept frozen to random values. Allowing trainable PMs in both layer
+    types and then adaptively freezing them performs worse than restricting trainable PMs to FFN
+    layers only.
+must_mention: FFN; attention layers; trainable; performance
+relevant_papers: 2403.13269v3
+relevant_chunks: 2
+  [1]: 2403.13269v3 chunk 7 grade=2 section=6 Ablations and Discussions
+      snippet: As shown in Table 5, keeping the PMs trainable (and then adaptive freezing) in the
+          FFN yields better performance compared to the alternatives. Note we keep the PMs in the
+          attention layers frozen to random values. Interestingly, allowing all PMs to initially
+          train and then adaptively freeze yields poorer performance than allowing them only in MLP.
+  [2]: 2403.13269v3 chunk 8 grade=1 section=7 Conclusions + 8 Limitation
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0082
+question: Which parts of the input sequence are masked out during loss computation in the
+    autoregressive objective?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The non-target tokens — including the system prompt, retrieved information, signal
+    token sequence, and user queries — are masked out using the value -100 during loss computation,
+    so only assistant responses and end-of-turn tokens contribute to the training loss.
+must_mention: -100; non-target tokens; assistant responses; end-of-turn tokens
+relevant_papers: 2510.00261v1
+relevant_chunks: 2
+  [1]: 2510.00261v1 chunk 5 grade=2 section=2.4. Learning Objective
+      snippet: The value -100 is used to mask out non-target tokens ( q sys , q rag , X ID, q n )
+          during loss computation.
+  [2]: 2510.00261v1 chunk 6 grade=1 section=3.1. Experimental Settings
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0083
+question: How does ZoRRO's inference speed compare to NRMS, LSTUR, and NPA in terms of requests per
+    second and latency?
+type: single_hop | answerable=True
+review: rejected - trigram overlap 20.0% exceeds 15.0%
+reference_answer: ZoRRO processes nearly 2,000 requests per second with an average latency of 0.5 ms
+    per request, while NRMS, LSTUR, and NPA require more than 300 ms per request.
+must_mention: 2,000 requests per second; 0.5 ms; more than 300 ms
+relevant_papers: 2607.10910v1
+relevant_chunks: 2
+  [1]: 2607.10910v1 chunk 5 grade=2 section=4.2 Offline experiments
+      snippet: With a fixed history length of 20 and embedding dimension of 768, it processes nearly
+          2 , 000 requests per second with an average latency of 0 . 5 ms per request. In contrast,
+          NRMS, LSTUR, and NPA require more than 300 ms per request and substantially larger
+          parameter counts.
+  [2]: 2607.10910v1 chunk 6 grade=1 section=4.3 Online A/B test
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0084
+question: What client-side modifications should be added to a federated learning system for
+    realistic medical EHR use beyond uniform weighting and full client participation?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: For realistic modeling, client selection strategies should be implemented to
+    choose a subset of clients per round, and client weights should vary based on local data amount,
+    quality, or contribution. Secure aggregation and differential privacy via noise addition should
+    also be included, along with model compression tools like Tensorlite to reduce communication
+    costs.
+must_mention: client selection strategies; varying client weights; secure aggregation; model
+    compression
+relevant_papers: 2406.15962v1
+relevant_chunks: 2
+  [1]: 2406.15962v1 chunk 6 grade=2 section=VIII. C ONCLUSION
+      snippet: For practical purposes, one should implement client selection strategies to select a
+          subset of clients for each training round. Each client also had identical weights for the
+          model update but for realistic modeling, weights should have variation amongst clients
+          based on factors such as the amount of local data, the quality of local data, or the
+          client's contribution to the global model's performance. Secure aggregation is also an
+          essential aspect of federated learning which allows the server to aggregate model updates
+          from clients without being able to inspect individual updates, thereby enhancing privacy.
+          ... DP is another complementary technique in FL that helps preserve the privacy of the
+          client's data. Future improvements could include mechanisms for adding noise to model
+          updates to ensure DP, which was already done as a standalone. Moreover, model compression
+          tools like Tensorlite could be considered to reduce the cost of communication in FL
+          environments.
+  [2]: 2406.15962v1 chunk 7 grade=1 section=R EFERENCES
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0085
+question: What privacy parameters and gradient clipping norm are used in the federated learning
+    setup to balance accuracy and privacy?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The privacy parameters used are ϵ = 6.0 and δ = 1.9 × 10^-4, and gradients are
+    clipped with a norm of C = 7 to balance accuracy and privacy trade-offs.
+must_mention: ϵ = 6.0; δ = 1.9 × 10^-4; C = 7
+relevant_papers: 2412.00687v1
+relevant_chunks: 2
+  [1]: 2412.00687v1 chunk 4 grade=2 section=3.2 Workflow and Experimental Setup
+      snippet: Privacy parameters are ( ϵ = 6 . 0 , δ = 1 . 9 × 10 -4 ) , and gradients are clipped
+          with a norm C = 7 (Eq. 2) to balance accuracy and privacy trade-offs.
+  [2]: 2412.00687v1 chunk 5 grade=1 section=4 Experiments and Results
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0086
+question: How much faster is generating 1000 posterior samples with the normalizing flow compared to
+    MCMC in XSPEC?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Generating 1000 samples with the normalizing flow is approximately 2000 times
+    faster than using MCMC chains in XSPEC.
+must_mention: 2000 times faster; 1000 samples; MCMC chains
+relevant_papers: 2601.07440v1
+relevant_chunks: 2
+  [1]: 2601.07440v1 chunk 5 grade=2 section=3 Evaluation
+      snippet: Computing 1000 samples for full posterior evaluation is ∼ 2000 times faster than
+          using MCMC chains.
+  [2]: 2601.07440v1 chunk 6 grade=1 section=4 Conclusion
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0088
+question: How can attackers exfiltrate data through retrieval tools without triggering detection?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Attackers can embed exfiltration payloads as encoded query parameters in
+    legitimate-looking retrieval requests, using common encoding schemes like Base64url that blend
+    in with normal traffic, making detection via pattern matching ineffective due to high false
+    positives.
+must_mention: encoded query parameter; Base64url; high false-positive rates; legitimate retrieval
+    requests
+relevant_papers: 2604.05432v1
+relevant_chunks: 1
+  [1]: 2604.05432v1 chunk 48 grade=2 section=Tool-level vs. request-level permission models.
+      snippet: The exfiltration payload, embedded as an encoded query parameter, remains invisible
+          in typical user interfaces. Encoding flexibility and detection evasion. Our implementation
+          uses Base64url encoding for URL safety, but the encoding scheme is arbitrary. The
+          attacker-controlled server can enumerate common encoding schemes (Base64, hex, ROT13,
+          custom substitution ciphers) to decode incoming payloads (Blue Goat Cyber, 2024). Since
+          applications routinely encode parameters for various legitimate purposes, anomaly
+          detection based on encoding patterns produces high false-positive rates.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0090
+question: What percentage of Utility Units in the MLP module are converted to Complex Units during
+    safety alignment in LLaMA2-7B-Chat?
+type: single_hop | answerable=True
+review: rejected - Source chunk is mangled figure data — a run of bare percentages with no prose.
+    The 64.58% answer is picked out of a number soup.
+reference_answer: During safety alignment, 64.58% of Utility Units in the MLP module are converted
+    to Complex Units.
+must_mention: 64.58%; Utility Units; Complex Units; MLP module
+relevant_papers: 2410.10862v3
+relevant_chunks: 1
+  [1]: 2410.10862v3 chunk 40 grade=2 section=E.3 ADDITIONAL FIGURE PRESENTATIONS
+      snippet: 8.91% 0.11% 0.01% 5.91% 5.99% 1.19% 13.29% 64.58% 14.94% 85.06% 14.91% 1.30% 13.30%
+          70.49% 100.00% MLP Module Role Transfer
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0092
+question: How is the backward pass for attention implemented to overlap computation with
+    communication in a distributed setting?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The backward pass overlaps computation and reduce-scatter communication by
+    splitting key and value matrices across processors, computing partial gradients, and
+    asynchronously sending and receiving gradient chunks while continuing computation.
+must_mention: reduce-scatter; asyncsendrecv; split along sequence dim; overlap compute
+relevant_papers: 2503.15758v2
+relevant_chunks: 1
+  [1]: 2503.15758v2 chunk 32 grade=2 section=Algorithm 8 BWDATTENTION2D-O: Backward pass for
+      ATTENTION2D-O. (Part 3)
+      snippet: Algorithm 11 CMPTSCTRBWD: Overlapping compute, and reduce-scatter. The resulting
+          output matrix will be 1D cyclically distributed with partitioning along the sequence
+          length dimension.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0093
+question: How does model confidence and the regularization factor F change with problem difficulty
+    during fine-tuning on MATH?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Model confidence decreases as problem difficulty increases, while the
+    regularization factor F increases with difficulty, leading DCO to regularize easy examples more
+    heavily.
+must_mention: model confidence decreases; regularization factor increases; problem difficulty; DCO
+    regularizes easy examples
+relevant_papers: 2502.07154v4
+relevant_chunks: 1
+  [1]: 2502.07154v4 chunk 39 grade=2 section=C.9 The data dependency of confidence and factor F
+      snippet: Model confidence decreases with increasing difficulty, whereas the regularization
+          factor increases with problem difficulty. As a result, DCO effectively regularizes
+          contribution from easy examples.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0094
+question: How was architectural equivariance evaluated for ImageNet REViTs without using trained
+    weights?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The evaluation used randomly initialized models on 1024 ImageNet validation
+    images, applying standard transforms and measuring equivariance at the stem output and before
+    the classification head under p4, p4m, and p8 group transformations.
+must_mention: randomly initialized; ImageNet validation set; p4, p4m, p8 groups; stem output
+relevant_papers: 2606.25318v1
+relevant_chunks: 1
+  [1]: 2606.25318v1 chunk 31 grade=2 section=B.3. Equivariance Analysis
+      snippet: Since ImageNet REViTs were implemented differently, we also evaluated the
+          architectural equivariance of those REViTs on the ImageNet validation set using (24). In
+          this setting, no trained checkpoint is loaded; the model is randomly initialized, so the
+          experiment isolates equivariance induced by the network design rather than invariance
+          learned through optimization. 1024 images were taken from ImageNet validation set and
+          processed with standard ImageNet evaluation transforms: resize to 256, center crop to 224
+          x 224, and normalization with ImageNet mean and standard deviation.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0095
+question: What types of physical systems have been used to inspire the architecture of graph neural
+    networks for node classification?
+type: single_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Graph neural networks have been inspired by gradient flows, reaction-diffusion
+    equations, second-order differential equations behaving as damped oscillators, and non-
+    dissipative systems using antisymmetric weight matrices.
+must_mention: gradient flow; reaction-diffusion equations; damped oscillator; antisymmetric weight
+    matrices
+relevant_papers: 2402.14802v3
+relevant_chunks: 1
+  [1]: 2402.14802v3 chunk 33 grade=2 section=||( H t ) i , j || 2  distribution for GRAFF-LP on
+      tolokers (Part 2)
+      snippet: In the work by [5], the GNN is interpreted as a gradient flow, namely, its forward
+          pass minimizes a parametrized energy functional, respecting the properties of gradient
+          flows, thanks to symmetric weight matrices. We have examples of GNNs resembling reaction-
+          diffusion equations [14], [46], [47] which are typically used to model the spatial and
+          temporal change of one or more chemical substance concentrations. In other works, GNNs are
+          treated as a second-order differential equation that behaves as a damped oscillator to
+          deal with heterophily in node classification [13]. [48] proposed GNNs that behave as a
+          non-dissipative system through the use of antisymmetric weight matrices, and followingly
+          [49], it was shown that also a nonconservative behavior to retain the node information can
+          be enabled via architectural biases.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0097
+question: Does the method that models safety alignment as a binary decision process rely on dataset
+    size or distillation during data transformation?
+type: multi_hop | answerable=True
+review: rejected - trigram overlap 45.5% exceeds 15.0%
+reference_answer: No, the method that models safety alignment as a binary decision process does not
+    rely on dataset size or distillation during data transformation; it focuses on probing
+    experiments and attribution-transfer analyses to understand safety alignment within LLMs, while
+    the ablation studies on dataset size and distillation pertain to a separate data transformation
+    framework.
+must_mention: binary decision process; dataset size; distillation; probing experiments
+relevant_papers: 2410.10862v3, 2501.09368v4
+relevant_chunks: 2
+  [1]: 2410.10862v3 chunk 18 grade=2 section=A.1 OVERVIEW OF SAFETY-UNIT AND SAFETY-ALIGNMENT WORK
+      (Part 1)
+      snippet: We introduce SSAH , which models safety alignment as an implicit safety-related
+          binary decision process (fulfill vs. refuse), and we extend this view to a non-superficial
+          variant for token-level and jailbreak analysis. ... We then provide probing experiments
+          and attributetransfer analyses that support SSAH and its 'less-is-more' implication.
+  [2]: 2501.09368v4 chunk 12 grade=2 section=3.5. Ablation Setting
+      snippet: We conduct two ablation studies to evaluate the impact of dataset size and
+          distillation during the data transformation process on AITP. ... To test whether the
+          improvement is due to distillation in the data transformation phase, we replace the
+          original SFT dataset with a subset sampled from the pre-training corpus that shares a
+          similar distribution and train the model on the combined dataset (the rewritten same set
+          and the rewritten difference set).
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0098
+question: Does the retrieval framework that uses contrastive learning for audio understanding
+    outperform its baseline by a larger margin in nDCG@10 than the agentic retrieval approach does
+    in NDCG@5 across their respective domains?
+type: multi_hop | answerable=True
+review: rejected - Compares a *gain* (+0.4169 nDCG@10) against *absolute* scores (0.439 NDCG@5) in
+    different domains. Not a meaningful comparison.
+reference_answer: Yes, the contrastive learning framework for audio understanding shows nDCG@10
+    gains up to +0.4169, while the agentic retrieval approach achieves NDCG@5 scores ranging from
+    0.289 to 0.439, with improvements over baselines up to 42.12% but not expressed as absolute
+    point gains. The absolute gain in nDCG@10 for the contrastive method exceeds the highest NDCG@5
+    score of the agentic method.
+must_mention: +0.4169; 0.439; nDCG@10; NDCG@5
+relevant_papers: 2502.14727v1, 2506.21931v2
+relevant_chunks: 2
+  [1]: 2502.14727v1 chunk 10 grade=2 section=4.5 Analysis
+      snippet: Recall@1 improvements range from +0.3075 to +0.3437, and nDCG@10 gains are even more
+          pronounced, reaching up to +0.4169.
+  [2]: 2506.21931v2 chunk 8 grade=2 section=3.3 Results
+      snippet: Examining the NDCG@5 scores, Agentic RAG achieves 0.439, 0.329, and 0.289 on Amazon
+          Clothing, Electronics, and Home respectively
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0100
+question: Does adapting the rank of low-rank projection matrices during fine-tuning improve
+    performance over keeping them frozen on a question-answering task?
+type: multi_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Yes, adapting the rank during fine-tuning improves performance: TriAdaptLoRA,
+    which adapts rank thresholds, outperforms methods with fixed or frozen ranks on SQuAD 2.0.
+    ELoRA, which keeps the LoRA path frozen, represents an extreme case not yet studied for
+    trainable projection matrices, implying that trainability matters for performance.
+must_mention: TriAdaptLoRA; frozen; SQuAD 2.0; performance improvements
+relevant_papers: 2403.13269v3, 2501.08008v1
+relevant_chunks: 2
+  [1]: 2403.13269v3 chunk 2 grade=2 section=2 Related Works
+      snippet: Thus, this work only studies an extreme scenario of keeping the LoRA path frozen,
+          and, to the best of our knowledge, no work has investigated the trainability requirement
+          of the projection matrices.
+  [2]: 2501.08008v1 chunk 14 grade=2 section=C. Natural Language Generation Tasks
+      snippet: From the experimental results in Table IV, it is evident that compared to IncreLoRA,
+          the two adaptive rank growth threshold modes of TriAdaptLoRA both achieve performance
+          improvements on the SQuAD 2.0 task.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0101
+question: Does the system that produces human-interpretable intermediate outputs for visual
+    reasoning also incorporate a lifecycle-aware protection architecture with pre-execution, in-
+    execution, and post-execution stages?
+type: multi_hop | answerable=True
+review: rejected - Artificial. Asks whether a visual-reasoning system has a security architecture;
+    the papers are unrelated and the answer is simply 'No'.
+reference_answer: No, the system that produces human-interpretable intermediate outputs for visual
+    reasoning (CODENAV) does not incorporate a lifecycle-aware protection architecture; that
+    architecture belongs to MTGuard, which focuses on detecting unsafe tool calls and has no mention
+    of visual reasoning or intermediate output visualization.
+must_mention: human-interpretable intermediate outputs; lifecycle-aware protection architecture;
+    pre-execution; in-execution
+relevant_papers: 2406.12276v1, 2607.25297v1
+relevant_chunks: 2
+  [1]: 2406.12276v1 chunk 14 grade=2 section=4.2 Multimodal Processing and Reasoning
+      snippet: Further, this case study highlights CODENAV's ability to produce human-interpretable
+          intermediate outputs.
+  [2]: 2607.25297v1 chunk 3 grade=2 section=1 Introduction (Part 3)
+      snippet: We design a lifecycle-aware protection architecture consisting of a pre-execution
+          parameter auditor, an in-execution behavioral monitor, and a post-execution result
+          verifier.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0102
+question: Do systems prioritizing operational efficiency and those incorporating privacy-preserving
+    mechanisms both maintain user engagement under constraints, and if so, how do their performance
+    trade-offs differ?
+type: multi_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Yes, both types of systems maintain user engagement under constraints: ZoRRO
+    achieves near-state-of-the-art CTR with lower latency and complexity, while the privacy-
+    preserving system sustains CTR until very aggressive privacy budgets (ε < 1). Their trade-offs
+    differ—ZoRRO sacrifices model complexity for speed and simplicity, whereas the privacy system
+    trades off accuracy for privacy guarantees via noise injection and model architecture choices.
+must_mention: CTR close to state-of-the-art; ε < 1; lower latency; privacy budget
+relevant_papers: 2607.10910v1, 2607.13328v1
+relevant_chunks: 2
+  [1]: 2607.10910v1 chunk 1 grade=2 section=Ryotaro Shimizu
+      snippet: In an online A/B test, it delivers CTR close to a state-of-the-art neural model while
+          operating with substantially lower latency and implementation complexity.
+  [2]: 2607.13328v1 chunk 18 grade=2 section=6. Conclusion
+      snippet: I expected CTR to degrade quickly under high noise, but it stayed relatively stable
+          until very aggressive privacy budgets (ε < 1).
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0103
+question: Does dividing the weight matrix into sub-blocks with independent adapters improve
+    performance more than freezing projection matrices after initial training in low-rank fine-
+    tuning?
+type: multi_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: GraLoRA, which divides the weight matrix into sub-blocks with independent
+    adapters, improves performance by mitigating channel dominance and enabling fine-grained
+    updates, especially at higher ranks. AFLoRA, which freezes projection matrices after initial
+    training, reduces trainable parameters and computation costs but does not address the
+    expressivity bottleneck caused by channel dominance. Thus, GraLoRA’s architectural change leads
+    to greater performance gains than AFLoRA’s freezing strategy.
+must_mention: channel dominance; freezing projection matrices; sub-blocks with independent adapters;
+    performance gains
+relevant_papers: 2403.13269v3, 2505.20355v2
+relevant_chunks: 2
+  [1]: 2403.13269v3 chunk 1 grade=2 section=1 Introduction
+      snippet: We then gradually freeze the projection matrices based on a novel freezing score that
+          acts as a proxy for the trainability requirement of a LoRA tensor. In this way, we not
+          only help alleviate the over-fitting issue but also, improve the computation efficiency.
+  [2]: 2505.20355v2 chunk 1 grade=2 section=1 Introduction
+      snippet: GraLoRA divides the weight matrix into multiple sub-blocks and applies independent
+          LoRA modules to each, enabling fine-grained updates. This design enhances the model's
+          capacity to capture complex, localized, or multi-faceted patterns, effectively mitigating
+          the channel dominance issue and improving performance-especially at higher ranks.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0104
+question: Is digital watermarking or differential privacy used to trace who leaked data when medical
+    records are shared?
+type: multi_hop | answerable=True
+review: edited - Refers to the documents: 'the systems described'. FIX: Named the two mechanisms
+    directly. Still needs both papers, so it stays multi-hop.
+reference_answer: The first system uses an asymmetrical digital watermarking scheme to trace which
+    party leaked data, while the second system uses differential privacy with gradient clipping and
+    noise addition to prevent data reconstruction, not to trace leaks. Watermarking enables source
+    identification after a breach, whereas differential privacy prevents breaches by design.
+must_mention: watermarking; differential privacy; trace data leaks; gradient clipping
+relevant_papers: 2406.15962v1, 2412.00687v1
+relevant_chunks: 2
+  [1]: 2406.15962v1 chunk 1 grade=2 section=II. A RCHITECTURE
+      snippet: The watermarking scheme (WMS) applies an asymmetrical digital watermarking (or
+          fingerprinting) scheme, wherein the provider and the consumer receive different
+          watermarks. When one of the parties has violated the agreed-upon policy, the patient is
+          able to determine the source of the leak.
+  [2]: 2412.00687v1 chunk 1 grade=2 section=1 Introduction
+      snippet: DP further strengthens privacy by introducing controlled noise to data, which masks
+          specific information while preserving model accuracy [7, 6, 5, 9]. This method includes
+          gradient clipping to limit individual data contributions [3], followed by the addition of
+          noise proportional to data sensitivity, making it challenging for adversaries to
+          reconstruct individual data points, even if they gain access to the trained model.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0105
+question: Do the models selected for efficient training under low-resource conditions use the same
+    evaluation metric as the one chosen for checkpoint selection in low-resource generation tasks?
+type: multi_hop | answerable=True
+review: rejected - Artificial. Compares a model-selection criterion against a checkpoint metric —
+    not a real dimension of comparison.
+reference_answer: No, the models selected for efficient training under low-resource conditions are
+    evaluated based on their balance between performance and computational efficiency, while the
+    checkpoint selection in low-resource generation tasks relies on perplexity as the primary
+    metric. The first excerpt focuses on architectural and quantization choices for efficiency, not
+    on evaluation metrics like perplexity.
+must_mention: perplexity; computational efficiency; checkpoint selection; quantization
+relevant_papers: 2503.13988v1, 2604.14171v1
+relevant_chunks: 2
+  [1]: 2503.13988v1 chunk 10 grade=2 section=D. MODEL SELECTION
+      snippet: These models were selected due to their balance between performance and computational
+          efficiency, making them suitable for resourceconstrained environments.
+  [2]: 2604.14171v1 chunk 6 grade=2 section=2.6 Evaluation Metrics for Low-Resource Generation + 2.7
+      Research Gap
+      snippet: Perplexity, grounded in information theory [25], measures predictive confidence and
+          serves as the primary checkpoint selection criterion in this work.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0106
+question: Do the time series forecasting method and the adaptive graph convolution approach both
+    rely on learning relationships between features over time?
+type: multi_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Yes, the time series forecasting method relies on capturing global and local
+    temporal dependencies to handle multivariate sequences, while the adaptive graph convolution
+    approach learns feature relationships through a trainable adjacency matrix that models proximity
+    between time-series features. Both methods explicitly model inter-feature dynamics across time
+    steps.
+must_mention: temporal dependencies; learnable adjacency matrix; feature relationships
+relevant_papers: 2504.00070v1, 2504.11623v1
+relevant_chunks: 2
+  [1]: 2504.00070v1 chunk 3 grade=2 section=III. PROBLEM STATEMENTS
+      snippet: The challenge lies in capturing both global and local temporal dependencies, handling
+          noisy and irregular data, and ensuring robustness across various time series lengths.
+  [2]: 2504.11623v1 chunk 15 grade=2 section=A.2 ADAPTIVE GRAPH CONVOLUTION LAYER.
+      snippet: The adaptive adjacency matrix is formed by multiplying learnable embedding and is
+          defined as follows: ... A ∈ R ( c + d ) × ( c + d ) is the learned adjacent matrix of the
+          graph representing the proximity between time-series features.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0108
+question: Does the generalized scaling law for sparse and dense language models account for the same
+    types of architectural features as those used in molecular representation learning through
+    graph-based self-supervised tasks?
+type: multi_hop | answerable=True
+review: rejected - Artificial. Scaling laws and molecular representation learning share nothing;
+    answer is 'No' by construction.
+reference_answer: No, the generalized scaling law focuses on model size, tokens, compute, and
+    sparsity factors for language models, while molecular representation learning uses graph-based
+    self-supervised tasks that encode node, edge, and graph topology—features not addressed by the
+    scaling law.
+must_mention: model size, tokens, compute; node, edge, and graph topology
+relevant_papers: 2406.14969v2, 2508.06617v3
+relevant_chunks: 2
+  [1]: 2406.14969v2 chunk 2 grade=2 section=2 Related Work
+      snippet: GROVER integrates Message Passing Networks into a Transformer-style architecture and
+          learns from unlabeled molecular data through carefully designed self-supervised tasks at
+          different levels of molecular topology (node, edge, and graph).
+  [2]: 2508.06617v3 chunk 11 grade=2 section=C. Discussion
+      snippet: for a given compute budget, our proposed scaling law can be used to estimate the best
+          model hyperparameters (Model size, Tokens and Compute) for a given sparsity or to identify
+          the optimal sparsity for the given model hyperparameters.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0109
+question: Does the method that groups similar columns using hashing rely on the same matrix
+    decomposition as the one that overlaps communication with gradient computation in self-
+    attention?
+type: multi_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: No, the method using hashing groups columns based on similarity via locality-
+    sensitive hashing and fuses them for approximation, while the other method decomposes the query
+    matrix for parallel processing and overlaps communication with gradient computation during the
+    backward pass. They serve different purposes and use distinct decomposition strategies.
+must_mention: hashing; overlapping communication; gradient computation; matrix decomposition
+relevant_papers: 2503.15758v2, 2507.17245v1
+relevant_chunks: 2
+  [1]: 2503.15758v2 chunk 29 grade=2 section=B 2D Parallel Self-attention Backward Pass With
+      Overlapping Communication
+      snippet: As in the forward pass, the asynchronous send and receive of the first block of the
+          query matrix Q p is initiated in line 2. Concurrently, the function GTHRCMPTBWD (Alg. 9)
+          is called in line 3 to gather the key and value matrices within a column of the processor
+          grid, while overlapping this communication with the computation of backward pass of self-
+          attention for the query block Q p .
+  [2]: 2507.17245v1 chunk 8 grade=2 section=3.2 Lightweight Sampling and Fusion
+      snippet: We identify the similar columns using locality-sensitive hashing (LSH). Given a
+          column q ∈ R 𝑁 × 1 , we maps it to an integer. Specifically, q is projected into a
+          lowdimensional space of 𝑁 ′ followed by a binarization step, where positive values are set
+          to 1s and the others are set to 0s. Then, the binary sequence is used as the index to
+          select a value from a table of Gray code at the size of 2 𝑁 ′ .
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0110
+question: Does fine-tuning with the DCO objective reduce overconfidence in greedy completions more
+    effectively than CE loss for larger language models on mathematical reasoning tasks?
+type: single_hop | answerable=True
+review: edited - Labelled multi-hop, but snippet A ('We evaluate from two perspectives: reasoning
+    efficiency and reasoning accuracy') supports nothing. Only paper B answers it. FIX: Reclassified
+    to single_hop and dropped the 2410.17635v2 chunk, so the ground truth reflects what is actually
+    needed.
+reference_answer: Yes, the DCO objective limits overconfidence in greedy completions more
+    effectively than CE loss, as shown by the flatter confidence distributions and improved pass@N
+    coverage across multiple N values for the Llama-3-70B-base model. This effect is consistent with
+    findings on smaller models and is directly attributed to the overconfidence regularizer in DCO.
+must_mention: DCO objective; CE loss; overconfidence; Llama-3-70B-base
+relevant_papers: 2502.07154v4
+relevant_chunks: 1
+  [1]: 2502.07154v4 chunk 33 grade=2 section=C.3 Additional results with Llama-3-70B-base
+      snippet: Figure 7: Larger-sized model trained with CE loss also becomes overconfident in its
+          greedy completions; our proposed DCO objective limits this overconfidence on larger-sized
+          models.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0111
+question: Do variational autoencoders and normalizing-flow autoencoders use the same encoder-decoder
+    structure when inferring posteriors?
+type: multi_hop | answerable=True
+review: edited - Refers to the documents: 'the methods described'. FIX: Named both architectures
+    explicitly, which is how a researcher would phrase it.
+reference_answer: No, the VAE uses an encoder-decoder architecture with separate neural networks for
+    approximating the posterior and generating data, while the NF in the AE network does not
+    explicitly describe such a dual-architecture setup and focuses on normalizing flows for
+    posterior inference without mentioning a decoder for reconstruction.
+must_mention: encoder-decoder; normalizing flows; posterior inference; reconstruction
+relevant_papers: 2404.12267v1, 2601.07440v1
+relevant_chunks: 2
+  [1]: 2404.12267v1 chunk 2 grade=2 section=2.1 Variational Autoencoder
+      snippet: Both the encoder and decoder are trained end-to-end by a gradient based optimization
+          algorithm which maximizes the sample estimate of lower bound on evidence (ELBO) given by 2
+  [2]: 2601.07440v1 chunk 6 grade=2 section=4 Conclusion
+      snippet: This work describes the implementation of a NF in an AE network to infer full
+          posterior predictions of physical parameters from BHB spectra.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0112
+question: Does encoding reasoning as equations during distillation improve performance on
+    mathematical problems compared to models that trade off confidence and exploration in answer
+    sampling?
+type: multi_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Encoding reasoning as equations during distillation improves performance on
+    mathematical problems because it generates high-quality, deterministic reasoning paths that lead
+    to correct answers, whereas models trading off confidence and exploration may sacrifice accuracy
+    for coverage by sampling multiple low-probability answers. The equation-based approach ensures
+    correctness through solver validation, while the confidence-exploration tradeoff accepts lower
+    pass@1 accuracy to gain higher pass@N coverage.
+must_mention: equations; solver validation; pass@1; pass@N
+relevant_papers: 2401.11864v5, 2502.07154v4
+relevant_chunks: 2
+  [1]: 2401.11864v5 chunk 4 grade=2 section=2.3. Knowledge Distillation + Combined
+      snippet: Our work presents a novel distillation approach that encodes mathematical reasoning
+          as equations and introduces Ensemble Thoughts Distillation, combining CoT, EoT, and PoT to
+          create a diverse dataset with more abundant reasoning knowledge. Our results demonstrate
+          state-of-the-art performance in mathematical reasoning.
+  [2]: 2502.07154v4 chunk 4 grade=2 section=4.2 Overfitting, confidence, and explore-exploit
+      tradeoff (Part 1)
+      snippet: Thus the first model outperforms the second in terms of pass@1 but not pass@N for
+          large N . This indicates a tradeoff amongst policies: those that do better on pass@1 may
+          not do better at pass@N for large N .
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0113
+question: Does the attention mechanism that uses element-wise multiplication with a context vector
+    achieve higher computational efficiency than the distributed attention method that overlaps
+    computation and data transmission?
+type: multi_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The context vector-based attention mechanism is computationally cheap due to
+    simplified operations like summation and element-wise multiplication, while DistrAttention
+    achieves speedups through parallelization and overlapping computation with data transmission,
+    especially in multi-GPU settings. However, the context vector approach lacks 'attention' in the
+    traditional sense and may sacrifice feature diversity, whereas DistrAttention maintains full
+    attention computation while optimizing for distributed hardware.
+must_mention: element-wise multiplication; context vector; overlapping computation; data
+    transmission
+relevant_papers: 2501.02040v2, 2507.17245v1
+relevant_chunks: 2
+  [1]: 2501.02040v2 chunk 6 grade=2 section=3.2 Context Vector Instead of Attention Matrix
+      snippet: The context vector in Eq. (2) is analogous to the attention matrix softmax ( QK T )
+          in a sense that it also encodes the information from all tokens in the input X [16], but
+          is cheap to compute.
+  [2]: 2507.17245v1 chunk 19 grade=2 section=4.7 The Analysis of Multi-GPU Experiments
+      snippet: We implemented a double-buffering system to facilitate the transmission of the next
+          data chunk, and by designing the parallelization of computation and data flow, we achieve
+          overlap between computation and data transmission.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0114
+question: Do reasoning models that generate natural language steps risk calculation errors more than
+    those that execute symbolic programs?
+type: multi_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Yes, models generating natural language steps risk calculation errors because they
+    perform arithmetic in real-time without external validation, whereas symbolic program-based
+    models delegate execution to interpreters that enforce variable definition and correct
+    computation. The former can produce wrong answers due to miscalculations, while the latter may
+    fail only if variables are undefined.
+must_mention: calculation errors; symbolic programs; real-time; undefined variables
+relevant_papers: 2401.11864v5, 2410.17635v2
+relevant_chunks: 2
+  [1]: 2401.11864v5 chunk 1 grade=2 section=1. Introduction
+      snippet: CoTD instructs SLMs to generate a step-by-step reasoning flow in natural language and
+          perform calculations in real-time, offering a flexible solution format but risking
+          incorrect answers due to calculation errors [11].
+  [2]: 2410.17635v2 chunk 31 grade=2 section=G Dataset License
+      snippet: PoTD addresses this issue by training SLMs to conceptualize questions as programs,
+          which are then executed by a Python interpreter to produce the final answer. However, SLMs
+          under PoTD sometimes generate unknown variables, but the python interpreter can execute
+          programs only if every variable of programs is defined with a value.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0116
+question: Does the method that avoids frequent gradient-based importance evaluations reduce
+    computational complexity more than the hybrid adapter combining LoRA and GraLoRA?
+type: multi_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The first method reduces computational complexity from O((rn + dr)MT) to O(r²MT)
+    by avoiding gradient-based evaluations at every step, while the second method focuses on
+    architectural hybridization without discussing computational complexity reduction. Thus, only
+    the first method explicitly reduces complexity, making the comparison favor it.
+must_mention: O(r²MT); avoids gradient-based evaluations; hybrid adapter; computational complexity
+relevant_papers: 2501.08008v1, 2505.20355v2
+relevant_chunks: 2
+  [1]: 2501.08008v1 chunk 5 grade=2 section=C. Efficient Parameter Importance Evaluation
+      snippet: Compared to AdaLoRA and IncreLoRA, our method significantly reduces the computational
+          complexity of importance evaluation from O (( rn + dr ) MT ) to O ( r 2 MT ) ... This
+          reduction translates to a substantial decrease in computational overhead during the model
+          adaptation process for downstream tasks.
+  [2]: 2505.20355v2 chunk 8 grade=2 section=3.5 Hybrid GraLoRA
+      snippet: To address this limitation, we introduce a hybrid approach that combines the
+          strengths of LoRA and GraLoRA. This method retains the fine-grained input handling and
+          increased total rank offered by GraLoRA, while preserving the expressive power of larger
+          block units through LoRA.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0117
+question: Does the method that uses bundling for neighborhood aggregation rely on the same vector
+    operation for coupling node representations with their neighbors as the approach evaluated on
+    the HeaRT benchmark?
+type: multi_hop | answerable=True
+review: rejected - Snippet B only says the method was benchmarked on HeaRT — it describes no vector
+    operation, so it cannot support the comparison.
+reference_answer: No, the method using bundling for neighborhood aggregation relies on binding for
+    coupling node representations with neighbors, while the HeaRT benchmark evaluation does not
+    specify or use binding or bundling operations at all — it focuses on ranking performance of
+    models like GRAFF-LP, GCN, GAT, and GraphSAGE without detailing their internal vector
+    operations.
+must_mention: bundling; binding; HeaRT benchmark; GRAFF-LP
+relevant_papers: 2402.14802v3, 2402.17073v3
+relevant_chunks: 2
+  [1]: 2402.14802v3 chunk 23 grade=2 section=D. Additional results on Homophilic Datasets
+      snippet: For the sake of completeness, we decided to assess how GRAFF-LP ranks in the recently
+          proposed HeaRT benchmark [11].
+  [2]: 2402.17073v3 chunk 11 grade=2 section=Ensuring that similar nodes have similar HD
+      representations. (Part 1)
+      snippet: Having chosen Bundling to realize 𝜑 𝑘 (·) , we proceed to consider how to realize 𝜙
+          (·) , which has to couple the representation of a node obtained using bundling (see above)
+          with the representations of its neighbors. As we will see shortly, if we choose to realize
+          𝜙 (·) using the Binding operation ⊗ , we obtain a representation that strikes a reasonable
+          balance between discriminating between dissimilar graphs and generalizing over similar
+          graphs.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0118
+question: Does adding LoRA adapters to reward models reduce memory usage compared to training
+    separate full models, and how is their performance evaluated?
+type: multi_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Adding LoRA adapters reduces memory usage because they only require a small number
+    of additional parameters per model, unlike training separate full models which require M + L
+    parameters each. Performance is evaluated using pairwise accuracy for preference-based models
+    and classification accuracy for classification-style models, with memory usage measured via peak
+    High Bandwidth Memory (HBM) during training.
+must_mention: LoRA adapters; memory usage; pairwise accuracy; HBM
+relevant_papers: 2401.16635v3, 2403.10704v2
+relevant_chunks: 2
+  [1]: 2401.16635v3 chunk 4 grade=2 section=3.1 Architecture Design of Reward Model Ensemble
+      snippet: In this way, a LoRA-based ensemble model of size k requires M + k L + k A parameters,
+          where A is the number of parameters of an adapter (shown in Fig. 1 (c)).
+  [2]: 2403.10704v2 chunk 7 grade=2 section=4.1 Reward Modeling
+      snippet: We evaluate the performance of the preference based reward models using the
+          pairwiseaccuracy , which measures the proportion of preferred responses ranked higher by
+          the model among pairs of candidate responses. We evaluate the classification style reward
+          models using the accuracy , which indicates whether the reward model score is close to the
+          label of 0 or 1. We compare the High Bandwidth Memory (HBM) usage as estimated by Jax JIT
+          at the time of training (Bradbury et al., 2018), and report its peak value.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0119
+question: Does using Bayesian optimization for scaling law coefficients reduce tuning time more than
+    pretraining on diverse datasets alters the compute-optimal scaling exponents?
+type: multi_hop | answerable=True
+review: rejected - trigram overlap 21.4% exceeds 15.0%
+reference_answer: Bayesian optimization via ytopt reduces tuning time compared to grid search, as it
+    explores promising regions with fewer evaluations and runs parallel evaluations. Pretraining on
+    diverse and aligned datasets shifts compute-optimal scaling exponents toward favoring data over
+    parameters, which changes how compute should be allocated but does not directly reduce tuning
+    time. The two effects operate in different domains: one is an optimization efficiency gain, the
+    other is a scaling law structural shift.
+must_mention: Bayesian optimization; reduces tuning time; pretraining on diverse datasets; compute-
+    optimal scaling exponents
+relevant_papers: 2508.06617v3, 2606.19781v2
+relevant_chunks: 2
+  [1]: 2508.06617v3 chunk 10 grade=2 section=B. Hyperparameter Optimization for Better Scaling Law
+      Coefficients
+      snippet: ytopt is a Bayesian optimization-based autotuner that builds a surrogate model to
+          explore the promising regions to find the optimal values with fewer evaluations.
+  [2]: 2606.19781v2 chunk 9 grade=2 section=5 Discussion
+      snippet: The key finding of this study is that in addition to lowering the test loss,
+          pretraining alters the compute-optimal scaling exponents.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0120
+question: Does the action sequence predictor that uses local convolutional filters rely on the same
+    underlying assumption about policy alignment as the optimal transport formulation that enforces
+    equality constraints on action distributions?
+type: multi_hop | answerable=True
+review: accepted - Accepted as written.
+reference_answer: No, the Decision ConvFormer uses local convolutional filters to capture
+    dependencies in RL trajectories without enforcing strict policy alignment, whereas the optimal
+    transport formulation explicitly imposes equality constraints to mimic the expert policy’s
+    action distribution, which can be problematic with sub-optimal data.
+must_mention: local convolutional filters; equality constraints; mimic the expert policy; capture
+    dependencies
+relevant_papers: 2409.08062v1, 2410.14069v1
+relevant_chunks: 2
+  [1]: 2409.08062v1 chunk 3 grade=2 section=B. Decision ConvFormer for offline RL
+      snippet: DC employs local convolutional filters as an intermediate component, which
+          effectively captures the inherent local dependencies in RL datasets.
+  [2]: 2410.14069v1 chunk 5 grade=2 section=3.1 Considering RL as OT problem
+      snippet: The imposed equality constraints force the policy to mimic the behavior of the expert
+          policy.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0124
+question: Does the NER system described for extracting COVID-19 patient data rely on rule-based
+    methods or on training with annotated datasets?
+type: multi_hop | answerable=True
+review: rejected - Answerable from paper A alone. Snippet B is about business/defense text
+    extraction and contributes nothing.
+reference_answer: The NER system for COVID-19 data does not use rule-based methods because the
+    reports have no fixed form; instead, it relies on training with an annotated dataset created
+    from cleaned and summarized raw sentences. This contrasts with earlier NER approaches mentioned,
+    which used heuristics and handcrafted rules for structured text extraction.
+must_mention: rule-based cannot be used; annotated them; heuristics and handcrafted rules
+relevant_papers: 2504.21016v2, 2505.07884v1
+relevant_chunks: 2
+  [1]: 2504.21016v2 chunk 3 grade=2 section=3 Dataset
+      snippet: Since reports have no fixed form, rule-based cannot be used to extract necessary
+          information from them. So, we propose a NER system to extract that information
+          automatically. Since data is still quite small, we also collected more closely similar or
+          related data from reputable news sites and community sources. When the amount of data has
+          been improved, we summarized and annotated them, in order to create a NER dataset to train
+          our system's model and serve for natural language processing, artificial intelligence
+          studies in future.
+  [2]: 2505.07884v1 chunk 1 grade=2 section=1. Introduction
+      snippet: Information about business and even defense-related activities was extracted from
+          unstructured text like journal and newspaper articles using heuristics and handcrafted
+          rules, this was the primary focus of MUC at the time.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0129
+question: Does the system that indexes code elements for retrieval or the one that monitors tool
+    behavior during execution rely on a sandboxed environment?
+type: comparative | answerable=True
+review: rejected - trigram overlap 18.2% exceeds 15.0%
+reference_answer: The system that monitors tool behavior during execution uses a sandboxed
+    environment to record system-level behaviors, while the code retrieval system does not mention
+    sandboxing and instead uses Elasticsearch for search and re-ranking. The behavioral monitor in
+    MTGuard explicitly executes tools within a controlled sandbox to capture runtime events.
+must_mention: sandboxed environment; Elasticsearch; behavioral monitor; re-ranking
+relevant_papers: 2406.12276v1, 2607.25297v1
+relevant_chunks: 2
+  [1]: 2406.12276v1 chunk 5 grade=2 section=3.2 Environments
+      snippet: We implement the index using Elasticsearch ( ES ) with fields for code string, code
+          type (function, class, assignment, import etc.), file path, and line numbers [Elastic,
+          2024].
+  [2]: 2607.25297v1 chunk 2 grade=2 section=1 Introduction (Part 2)
+      snippet: For runtime analysis, the behavioral monitor executes each MCP tool within a
+          controlled sandbox and records its system-level behaviors during execution.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0130
+question: Does modeling user interests without any trainable weights or does adding mathematical
+    noise to protect privacy result in higher recommendation accuracy?
+type: comparative | answerable=True
+review: rejected - Asks which yields 'higher recommendation accuracy' but the two systems share no
+    benchmark, so the question has no answer.
+reference_answer: The zero-weight, training-free design (ZoRRO) achieves competitive top-N
+    recommendation performance without iterative training, while the privacy-preserving framework
+    maintains reasonable accuracy at a moderate privacy budget (ε ≈ 5) but does not match the
+    performance of non-private baselines. Thus, the training-free approach likely yields higher
+    accuracy than the noise-added privacy-preserving one.
+must_mention: zero-weight, training-free design; reasonable accuracy at moderate privacy budget;
+    competitive top-N recommendation performance; ε ≈ 5
+relevant_papers: 2607.10910v1, 2607.13328v1
+relevant_chunks: 2
+  [1]: 2607.10910v1 chunk 2 grade=2 section=2 Related work
+      snippet: ZoRRO is a lightweight and computationally efficient framework for personalized news
+          recommendations that models user interests with minimal overhead through a zero-weight,
+          training-free design.
+  [2]: 2607.13328v1 chunk 1 grade=2 section=Venkata Suresh Gummadilli, Member, IEEE
+      snippet: Across experiments, I found that the system could still achieve reasonable accuracy
+          at a moderate privacy budget (around ε ≈ 5), suggesting that privacy-preserving
+          personalization can be practical for real-world deployments.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0131
+question: Does partitioning the weight matrix into independent blocks during adaptation improve
+    robustness to input outliers compared to keeping all projection matrices trainable with adaptive
+    freezing?
+type: comparative | answerable=True
+review: rejected - trigram overlap 20.0% exceeds 15.0%
+reference_answer: GraLoRA improves robustness to input outliers by partitioning the weight matrix
+    into independent blocks, allowing localized gradient updates that prevent global distortion.
+    AFLoRA instead uses adaptive freezing based on gradient scores to save resources but does not
+    mention outlier robustness. Thus, only GraLoRA explicitly addresses this dimension.
+must_mention: partitioning the weight matrix; independent blocks; robustness to input outliers;
+    adaptive freezing
+relevant_papers: 2403.13269v3, 2505.20355v2
+relevant_chunks: 2
+  [1]: 2403.13269v3 chunk 4 grade=2 section=4 AFLoRA: Methodology
+      snippet: we leverage only gradient as a proxy to compute the freezing score... we may consider
+          them to be frozen, thereby saving computational resources and energy.
+  [2]: 2505.20355v2 chunk 4 grade=2 section=3.1 GraLoRA: Granular Low-Rank Adaptation
+      snippet: By enabling independent adaptation across k 2 subspaces, GraLoRA supports more fine-
+          grained and specialized feature learning. In addition, Localized gradient updates ensure
+          that only the adapters associated with the affected input regions receive large gradients,
+          thereby reducing global gradient distortion and preserving inter-channel signal balance.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0133
+question: Does prompting without parameter updates or fine-tuning with 4-bit quantization require
+    more computational resources during inference?
+type: comparative | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Prompting without parameter updates requires no additional training and uses the
+    model as-is, making it lighter during inference. Fine-tuning with 4-bit quantization reduces
+    memory footprint during training but still requires adapter matrices to be loaded and computed
+    during inference, adding some overhead compared to pure prompting.
+must_mention: no parameter updates; 4-bit quantization; adapter matrices; inference overhead
+relevant_papers: 2503.13988v1, 2604.14171v1
+relevant_chunks: 2
+  [1]: 2503.13988v1 chunk 3 grade=2 section=C. PROMPTING TECHNIQUES
+      snippet: These methods enable users to configure LLMs for specific behavior without modifying
+          their internal parameters, making them suitable for various applications in low-resource
+          environments.
+  [2]: 2604.14171v1 chunk 10 grade=2 section=3.1.3 Train/Test Partitioning + 3.2 Parameter-Efficient
+      Fine-Tuning with QLoRA + 3.2.1 4-bit NormalFloat (NF4) Quantization
+      snippet: Base weights receive no gradient updates; only adapter matrices are trained.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0138
+question: Does training with DCO loss or using a self-distillation pipeline yield better test-time
+    performance when scaling to larger N values?
+type: comparative | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Training with DCO loss yields better test-time performance when scaling to larger
+    N values, as it aligns the training objective with the pass@N test-time strategy and reduces
+    overconfidence. The self-distillation pipeline improves dataset coverage but does not explicitly
+    optimize for test-time scaling behavior.
+must_mention: DCO loss; pass@N; test-time scaling; self-distillation
+relevant_papers: 2410.17635v2, 2502.07154v4
+relevant_chunks: 2
+  [1]: 2410.17635v2 chunk 5 grade=2 section=2.2 MCoTInstruct Dataset
+      snippet: We fine-tune the DeepSeekMath 7B base model on the above seed data to obtain the
+          MCoTModel-initial . Recognizing the lim- ited scope of our seed data on the MATH dataset,
+          we have adopted a self-distillation approach to substantially enhance the coverage and
+          diversity of the dataset.
+  [2]: 2502.07154v4 chunk 9 grade=2 section=5.2 DCO can prevent overconfidence and rescue test-time
+      scaling
+      snippet: We next assess pass@N test performance as a function of N for models trained by
+          minimizing L N ′ DCO for different values of N ′ (Figure 2 (a)). For any given N , there
+          is an optimal N ′ for the training loss L N ′ DCO that maximizes pass@N test coverage,
+          yielding a Pareto optimal performance frontier (black curve) that is achieved when N ′ is
+          close to N .
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0140
+question: Does fine-tuning on a merged reasoning-path dataset or optimizing for a specific pass@N
+    objective yield higher accuracy on GSM8K?
+type: comparative | answerable=True
+review: rejected - Paper B reports no GSM8K result, which the reference answer concedes. The
+    comparison cannot be made.
+reference_answer: Fine-tuning on the merged ETD dataset yields higher GSM8K accuracy, as CodeT5-Base
+    achieves 26.38% PoT accuracy under ETD versus no comparable GSM8K result reported for DCO-
+    trained models. DCO focuses on pass@N coverage on MATH, not GSM8K, and does not report GSM8K
+    performance.
+must_mention: 26.38% PoT accuracy; GSM8K test dataset; DCO training; MATH dataset
+relevant_papers: 2401.11864v5, 2502.07154v4
+relevant_chunks: 2
+  [1]: 2401.11864v5 chunk 11 grade=2 section=4.5. ETD Enhances Thoughts Distillation
+      snippet: CodeT5-Base achieves a 26.38% PoT accuracy on the GSM8K test dataset under ETD,
+          surpassing the 22.44% PoT accuracy under PoTD.
+  [2]: 2502.07154v4 chunk 32 grade=2 section=C.2 Optimality of DCO is achieved when the training
+      objective aligns with the test objective.
+      snippet: We fine-tune Llama-3-8B base models on the MATH dataset to produce direct answers. We
+          fine-tune for 4 epochs one model using CE loss and several models under the L N ′ DCO
+          objective, for choices of N ′ indicated by color.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0142
+question: Does generating step-by-step reasoning via fine-tuning on diverse thought datasets or
+    using self-correction during code generation yield more reliable final answers?
+type: comparative | answerable=True
+review: rejected - Snippet B is a Python error trace ('NameError: name k is not defined'), not
+    evidence for anything.
+reference_answer: Fine-tuning on diverse thought datasets (CoT, PoT, EoT) enables the model to
+    generate structured reasoning traces that are then executed externally for accurate answers. In
+    contrast, self-correction during code generation may fail if the generated code has undefined
+    variables or syntax errors, as seen in the example where 'k' was not defined, leading to a
+    runtime error.
+must_mention: fine-tuning on diverse thought datasets; self-correction during code generation;
+    runtime error; external execution
+relevant_papers: 2401.11864v5, 2410.17635v2
+relevant_chunks: 2
+  [1]: 2401.11864v5 chunk 6 grade=2 section=3.1.2. Fine-tuning SLMs
+      snippet: After fine-tuning, we use the prompt 'System of linear equations: (Do not simplify)'
+          to instruct SLMs to generate equations, the prompt 'Let's break down the code step by
+          step' to instruct SLMs to generate programs, and the prompt 'Let's think step by step' to
+          instruct SLMs to generate chains to solve questions.
+  [2]: 2410.17635v2 chunk 33 grade=2 section=H.1 Case 1: Self-correction
+      snippet: <output> NameError: name 'k' is not defined </output>
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0143
+question: Does using retrieval-augmented generation during both training and inference yield higher
+    accuracy than using it only during inference?
+type: single_hop | answerable=True
+review: edited - Labelled comparative, but snippet A is about RAG limitations in recommendation and
+    contributes nothing; paper B answers it outright. FIX: Reclassified to single_hop and dropped
+    the 2506.21931v2 chunk. The question itself is one of the better ones in the set.
+reference_answer: Using retrieval-augmented generation during both training and inference yields the
+    best performance, while using it only during inference improves over the baseline but remains
+    below the performance achieved when used in both phases. This suggests that training the model
+    to process retrieved content enhances its ability to leverage that content at inference time.
+must_mention: both training and inference; only during inference; best performance; improves over
+    the baseline
+relevant_papers: 2510.00261v1
+relevant_chunks: 1
+  [1]: 2510.00261v1 chunk 8 grade=2 section=4.2. Ablation Study
+      snippet: We find that using RAG during both training and inference yields the best
+          performance, while using RAG only during training and not at inference performs worse than
+          the baseline in Table 1 (without RAG). Using RAG only during inference improves over the
+          baseline but remains below the performance achieved when RAG is used during both training
+          and inference.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0146
+question: Does training a reward model ensemble or using parameter-efficient fine-tuning require
+    more trainable parameters?
+type: comparative | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Training a reward model ensemble typically requires more trainable parameters
+    because it involves multiple independently-trained models, whereas parameter-efficient fine-
+    tuning adapts less than 0.1% of the large model's total parameter count by using techniques like
+    LoRA.
+must_mention: independently-trained reward models; less than 0.1%; trainable parameters
+relevant_papers: 2401.16635v3, 2403.10704v2
+relevant_chunks: 2
+  [1]: 2401.16635v3 chunk 3 grade=2 section=Ensemble models and uncertainty estimation. + Combined
+      snippet: The key difference is that our work focuses on developing efficient ensemble
+          approaches, since ensembling multiple independently-trained reward models can be
+          expensive.
+  [2]: 2403.10704v2 chunk 10 grade=2 section=5.1 Performance of PE-RLHF
+      snippet: PE-RLHF RMs match the performance of their RLHF counterparts across diverse tasks, as
+          measured by the accuracy of the reward models on an evaluation split. These LoRA adapted
+          RMs achieve this performance by training less than 0 . 1% of the large model's total
+          parameter count.
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0148
+question: How does a convolution-based sequence model differ from a partial-optimal-transport
+    objective in which actions it learns to reproduce in offline RL?
+type: comparative | answerable=True
+review: edited - Presupposed that convolution reduces sequence-length dependency, which the
+    reference answer denies; the comparison was left unresolved. FIX: Reframed onto a dimension both
+    chunks actually support: which actions each approach learns to reproduce.
+reference_answer: The convolution-based approach processes historical context autoregressively but
+    does not inherently reduce sequence length dependency, while the partial optimal transport
+    method decouples action selection from full trajectory coverage by focusing only on optimal
+    actions via a critic function, thus reducing reliance on long sequences.
+must_mention: convolution module; causal transformer; partial optimal transport; critic function
+relevant_papers: 2409.08062v1, 2410.14069v1
+relevant_chunks: 2
+  [1]: 2409.08062v1 chunk 6 grade=2 section=A. Model Architecture
+      snippet: The DT model trains on input sequences of state labels st , return-to-go Rt , and
+          their corresponding actions at to predict the subsequent actions at . Each state st and
+          return-to-go Rt are used as supervisory signals to output at .
+  [2]: 2410.14069v1 chunk 6 grade=2 section=3.2 Stitching with Partial OT
+      snippet: As a result, a learned policy (map) matches the state only to part of the action
+          distribution β ( ·| s ) . This is particularly relevant for offline RL, as the resulting
+          policy will not clone all actions but will select only the most optimal ones, where
+          optimality is defined by the critic function Q .
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0150
+question: What is the F1 score of the Vision Transformer when applied to protein secondary structure
+    prediction?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0151
+question: Why did the authors switch from AdamW to LAMB optimizer after epoch 150 in their ablation
+    study?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0152
+question: How many parameters did the first multimodal LLM trained on both video and audio
+    modalities contain?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0153
+question: What was the perplexity of the 1.2T-parameter model on the WikiText-103 validation set
+    during its final training checkpoint?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0154
+question: What is the mean average precision of the graph neural network on the PDBbind protein-
+    ligand binding benchmark?
+type: unanswerable | answerable=False
+review: edited - Named the Amazon product co-purchase dataset, but the corpus does contain Amazon
+    recommendation data (ARAG uses Amazon Clothing/Electronics/Home), so it may be partly
+    answerable. FIX: Swapped to protein-ligand binding affinity. The corpus covers molecular
+    property prediction but no protein-ligand work, so this stays a plausible near-miss that is
+    genuinely unanswerable.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0155
+question: What is the win rate of the RL agent in the StarCraft II ladder after incorporating human
+    demonstration data?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0156
+question: Why did the authors remove the attention heads in layer 7 during their sparsity ablation?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0157
+question: How many GPU-days were required to train the first LLM that achieved human-level
+    performance on the MMLU benchmark?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0158
+question: What was the BLEU-4 score of the 50B-parameter model on the WMT2023 German-to-French test
+    set?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0159
+question: What is the AUC-ROC of the diffusion model when applied to predicting stock market
+    volatility?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0160
+question: What is the zero-shot accuracy of the 70B-parameter model on the HellaSwag benchmark when
+    trained with 10% of the original dataset?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0161
+question: How many FLOPs were consumed during the inference phase of the first LLM to surpass human
+    performance on the ARC-Challenge?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0162
+question: Why did the authors replace the rotary positional encoding with learned absolute positions
+    in the final version of their architecture?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0163
+question: What is the recall@10 of the transformer-based recommender when deployed on the Spotify
+    music catalog?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0164
+question: What was the training loss after step 2.5M for the 1T-parameter model using the Adam
+    optimizer with beta1=0.85?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0165
+question: What is the Fréchet Inception Distance of the GAN used to generate synthetic MRI scans for
+    the 2023 NIH brain tumor challenge?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0166
+question: Why did the authors disable gradient checkpointing in the final training run despite its
+    memory savings?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0167
+question: How many tokens per second did the 300B-parameter model process during inference on a
+    single A100 GPU?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0168
+question: What was the exact learning rate schedule used for the 100B-parameter model during its
+    third pretraining phase?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0169
+question: What is the Matthews correlation coefficient of the transformer model when classifying
+    legal contracts into jurisdiction categories?
+type: unanswerable | answerable=False
+review: accepted - Accepted as written.
+reference_answer: (none)
+must_mention: (none)
+relevant_papers: (none)
+relevant_chunks: 0
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0170
+question: What ML methods have been applied in up-to-date vehicle intrusion detection to boost
+    detection precision?
+type: paraphrase | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Recent vehicular intrusion detection systems use techniques such as SVM with
+    contextual information, neural networks for fault detection, clustering without special agents,
+    cloud-based SDN designs, lightweight deep learning models, analysis of false alerts and position
+    falsification, transfer learning, and data-centric systems integrating plausibility checks with
+    supervised ML algorithms.
+must_mention: SVM; neural networks; clustering; transfer learning
+relevant_papers: 2401.06831v1
+relevant_chunks: 2
+  [1]: 2401.06831v1 chunk 11 grade=2 section=C. Misbehavior or Intrusion Detection
+      snippet: Other approaches, like the one proposed in [20], utilize a clustering scheme in
+          VANETs without any special agent, showcasing a lightweight framework for detection at
+          multiple levels. Additionally, Li et al. [13] utilize contextual information along with
+          SVM to detect anomalous vehicles, while Sargolzaei et al. [11] emphasize fault detection
+          using an NN-based design. Kim et al. [14] propose a cloud-based software-defined
+          networking (SDN) design for vehicular applications to enable intrusion detection.
+          Similarly, Loukas et al. [31] introduce a lightweight deep learning (DL)-based intrusion
+          detection system (IDS) model for vehicular applications, allowing offloading to other
+          network devices or vehicles for heightened attack detection accuracy. Gyawali et al. [10]
+          present a machine learning (ML) framework for identifying vehicle misbehavior through the
+          analysis of false alert messages and position falsification, while Tariq et al. [30] and
+          Gyawali et al. [28] introduce transfer learning (TL)-based intrusion detection schemes in
+          their individual studies. Finally, a recent study [26] focuses on a data-centric
+          misbehavior detection system for Internet of Vehicles (IoVs), integrating plausibility
+          checks and supervised ML algorithms to enhance detection accuracy.
+  [2]: 2401.06831v1 chunk 12 grade=1 section=D. Privacy Protection + V. APPLICATIONS OF LANGUAGE
+      MODELS IN ITS
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0171
+question: What smaller models underwent fine-tuning, and how many parameters did each have?
+type: paraphrase | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The student models fine-tuned were CodeT5-Small (60M), CodeT5-Base (220M), and
+    CodeT5-Large (770M).
+must_mention: CodeT5-Small; 60M; CodeT5-Base; 220M
+relevant_papers: 2401.11864v5
+relevant_chunks: 2
+  [1]: 2401.11864v5 chunk 8 grade=2 section=4.1. Dataset + 4.2. Implementation
+      snippet: We employ ChatGPT (gpt-3.5-turbo) as the teacher LLM to construct our training
+          dataset and utilize CodeT5 models-Small (60M), Base (220M), and Large (770M) [39]-as
+          student SLMs.
+  [2]: 2401.11864v5 chunk 9 grade=1 section=4.3. Baselines
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0172
+question: What is the method for building the combined reward model when employing low-rank
+    adapters?
+type: paraphrase | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The ensemble is built by first finetuning the base Transformer model with a
+    linear-layer ensemble on a subset of data, then adding a LoRA adapter with random parameters to
+    the model for each ensemble member, training each adapter with its corresponding linear layer,
+    and adding the combined model to the ensemble.
+must_mention: LoRA adapter; finetune; train; ensemble
+relevant_papers: 2401.16635v3
+relevant_chunks: 2
+  [1]: 2401.16635v3 chunk 6 grade=2 section=Algorithm 1 Reward Model Ensemble Algorithms
+      snippet: Finetune M,L i , . . . , L k using linear-layer ensemble with a subset of data for i
+          = 1 to k do Add LoRA adapter to the Transformer model M with random parameters A i train (
+          A i ∪ L i ) Add M ∪ A i ∪ L i to ensemble end for
+  [2]: 2401.16635v3 chunk 7 grade=1 section=4 Empirical Evaluation
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0173
+question: What procedure determines the class assignment for a node without a label in this graph-
+    based learning approach?
+type: paraphrase | answerable=True
+review: rejected - Inherits the document reference from its rejected parent q0005.
+reference_answer: The predicted class label for an unlabeled node u is computed by finding the class
+    HD vector c_ℓ that minimizes the Hamming distance between u's HD representation z_u and each
+    class vector c_ℓ.
+must_mention: HD representation; class HD vectors; Hamming distance; argmin
+relevant_papers: 2402.17073v3
+relevant_chunks: 2
+  [1]: 2402.17073v3 chunk 14 grade=2 section=Algorithm 1: Pseudo-code for HDGL
+      snippet: We predict the class label for 𝑢 using its HD representation and the HD
+          representations of each of the classes as follows: ˆ 𝑦 𝑢 = argmin ℓ ∈{ 1 , ··· ,𝐿 } 𝑑 𝐻 [
+          z 𝑢 , c ℓ ] .
+  [2]: 2402.17073v3 chunk 15 grade=1 section=4.4 Link Prediction Using HDGL
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0174
+question: How does the approach to weighting contrastive versus masking goals shift during training
+    in this graph learning framework?
+type: paraphrase | answerable=True
+review: rejected - Inherits the document reference from its rejected parent q0006.
+reference_answer: The method uses an incremental dynamic strategy that starts with a low lambda
+    value to prioritize contrastive learning for global structure, then gradually increases lambda
+    to emphasize the masking-based objective for local feature refinement as training progresses.
+must_mention: incremental dynamic strategy; low value; gradually increasing; contrastive learning
+relevant_papers: 2402.17345v1
+relevant_chunks: 2
+  [1]: 2402.17345v1 chunk 6 grade=2 section=Algorithm 1 The LocalGCL training algorithm + Combined
+      snippet: Thus, in this work, we adaptively modulate λ using incremental dynamic strategy. This
+          strategy assigns a relatively low value to λ so that the model can first capture a global
+          perspective of graphs. It shifts model's attention to masking-based objective by gradually
+          increasing the value of λ .
+  [2]: 2402.17345v1 chunk 7 grade=1 section=4.1.1. Unsupervised Graph Classification
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0175
+question: In what ways do AFLoRA, LoRA, and ELoRA differ regarding the number of parameters updated
+    and training speed when evaluated on GLUE benchmarks?
+type: paraphrase | answerable=True
+review: accepted - Accepted as written.
+reference_answer: AFLoRA requires 9.5× fewer trainable parameters than LoRA and achieves up to 1.86×
+    and 2.96× improvements in runtime and FLOPs compared to ELoRA, while remaining comparable to
+    LoRA in those metrics.
+must_mention: 9.5× fewer trainable parameters; 1.86× runtime improvement; 2.96× FLOPs improvement;
+    comparable to LoRA
+relevant_papers: 2403.13269v3
+relevant_chunks: 2
+  [1]: 2403.13269v3 chunk 5 grade=2 section=5 Experiments
+      snippet: As shown in Table 1, AFLoRA can achieve SoTA performance on the majority of datasets
+          and on average while requiring similar and 9 . 5 × fewer average trainable parameters as
+          compared to ELoRA and LoRA, respectively. Compared to ELoRA we can yield up to 1 . 86 ×
+          and 2 . 96 × runtime and FLOPs improvement while remaining comparable with LoRA in these
+          two metrics. Compared to LoRA we yield 9 . 5 × parameter reduction, while remaining
+          comparable with ELoRA.
+  [2]: 2403.13269v3 chunk 7 grade=1 section=6 Ablations and Discussions
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0176
+question: In what way does incorporating attention mechanisms into NF-VAE improve performance when
+    the latent posterior distribution for a sample is corrupted or deviates significantly?
+type: paraphrase | answerable=True
+review: accepted - Accepted as written.
+reference_answer: The attention mechanism incorporates contextual information by weighting the
+    latent posterior against others in the batch, pulling noisy or outlier posteriors closer to
+    similar ones, which reduces the negative impact on decoder training.
+must_mention: attention weighted posteriors; noisy or outlier latent posterior; closer to similar
+    posteriors
+relevant_papers: 2404.12267v1
+relevant_chunks: 2
+  [1]: 2404.12267v1 chunk 14 grade=2 section=3.2 Attentive NF-VAE
+      snippet: Attention weighted posterior captures the relationship of posterior of a sample with
+          posteriors of all the other samples of the batch. Incorporation of contextual attention
+          posterior has the effect of bringing a posterior closer to the group of other similar
+          posteriors. This will be particularly beneficial in case if the latent posterior has
+          noise, missing values or if it is an outlier. Thus, minimizing the adverse effect of
+          training the decoder with a noisy or outlier latent posterior.
+  [2]: 2404.12267v1 chunk 16 grade=1 section=Harnessing structure in generative modeling
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0177
+question: What are the three main parts of a Domain Adversarial Neural Network, and how does each
+    contribute to cross-domain adaptation?
+type: paraphrase | answerable=True
+review: edited - 'Can you outline...' is a chat request, not a search query. FIX: Converted to a
+    direct question; meaning and ground truth unchanged.
+reference_answer: The three components are a feature extractor that maps inputs to a shared latent
+    space, a classifier that maps features to labels, and a domain discriminator that distinguishes
+    source from target features; the feature extractor is trained to confuse the discriminator while
+    also supporting accurate classification on source data.
+must_mention: feature extractor; classifier; domain discriminator; confound D
+relevant_papers: 2404.15817v1
+relevant_chunks: 2
+  [1]: 2404.15817v1 chunk 6 grade=2 section=3.1. Adversarial Domain Adaptation
+      snippet: Taking DANN as a prototype, it consists of three main components: a feature extractor
+          F , a task-specific classifier C , and a binary domain discriminator D . The feature
+          extractor F : X → R m transforms an input instance x from the input space X into a shared
+          latent space F ( x ) ∈ R m . The classifier C : R m →Y translates a feature vector from
+          the shared latent space into the label space Y . The domain discriminator D : R m → [0 ,
+          1] differentiates source features (domain index 0) from target features (domain index 1)
+          within the latent space. Through adversarial training, F is optimized to confound D ,
+          enabling DANN to acquire features transferable across domains.
+  [2]: 2404.15817v1 chunk 7 grade=1 section=3.2. Vision Transformer-based Adversarial Domain
+      Adaptation
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0178
+question: How does including summary metadata in tool library files enhance LLM-driven tool
+    discovery?
+type: paraphrase | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Adding one-line summaries to tool library files enables the LLM to generate better
+    search keywords, leading to superior performance with fewer interactions needed to solve tasks.
+must_mention: one line summary; generate useful keywords; fewer interactions; superior performance
+relevant_papers: 2406.12276v1
+relevant_chunks: 2
+  [1]: 2406.12276v1 chunk 20 grade=2 section=5.4 What makes a good library description?
+      snippet: The first library description simply provides relative file paths to these files (
+          e.g. , m3eval/travel_planner.py ), while the second description also includes a one line
+          summary of what the file contains ( e.g. , 'functions for planning travel including
+          finding flights, making hotel reservation, and budget calculations' ). Intuitively, this
+          enables CODENAV to come up with keywords for search and results in superior performance
+          with fewer interactions needed to reach a solution.
+  [2]: 2406.12276v1 chunk 21 grade=1 section=5.5 Impact of LLM choice on performance
+
+
+----------------------------------------------------------------------------------------------------
+
+qid: q0179
+question: What performance gain does incorporating atomic and bond descriptors offer Uni-Mol2 1B
+    over Uni-Mol when evaluated on COMPAS-1D?
+type: paraphrase | answerable=True
+review: accepted - Accepted as written.
+reference_answer: Adding atom and bond features to Uni-Mol2 1B provides a 14% improvement over Uni-
+    Mol on the COMPAS-1D dataset.
+must_mention: 14%; Uni-Mol2 1B; atom and bond features; Uni-Mol
+relevant_papers: 2406.14969v2
+relevant_chunks: 2
+  [1]: 2406.14969v2 chunk 10 grade=2 section=5.2 COMPAS-1D Dataset
+      snippet: Uni-Mol2 1B achieves 4% improvement over Uni-Mol, while Uni-Mol2 1B with atom and
+          bond feature achieves 14% improvement over Uni-Mol.
+  [2]: 2406.14969v2 chunk 11 grade=1 section=5.3 The Performance on Limited QM9 Dataset
+
+
+----------------------------------------------------------------------------------------------------

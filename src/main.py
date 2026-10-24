@@ -11,7 +11,7 @@ from src.routers.ask import ask_router, stream_router
 from src.services.arxiv.factory import make_arxiv_client
 from src.services.embeddings.factory import make_embeddings_service
 from src.services.LLM.factory import make_bedrock_client
-from src.services.opensearch.factory import make_opensearch_client
+from src.services.opensearch.factory import make_search_client
 from src.services.pdf_parser.factory import make_pdf_parser_service
 
 #from src.services.LLM.factory import make_ollama_client  ## ollama
@@ -39,12 +39,21 @@ async def lifespan(app: FastAPI):
     logger.info("Database connected")
 
     # Initialize search service
-    opensearch_client = make_opensearch_client()
+    opensearch_client = make_search_client()
     app.state.opensearch_client = opensearch_client
+    logger.info(f"Search index: {opensearch_client.index_name} (OPENSEARCH__ACTIVE_INDEX={settings.opensearch.active_index})")
 
     # Verify OpenSearch connectivity and create index if needed
     if opensearch_client.health_check():
         logger.info("OpenSearch connected successfully")
+
+        # The evaluation corpus is built once and then frozen; creating it empty
+        # here would make the API answer "no relevant information" for everything.
+        if settings.opensearch.active_index == "evaluation" and not opensearch_client.client.indices.exists(index=opensearch_client.index_name):
+            raise RuntimeError(
+                f"OPENSEARCH__ACTIVE_INDEX=evaluation but index {opensearch_client.index_name!r} does not exist. "
+                "Build it with `python -m src.evaluation.corpus.build`, or set OPENSEARCH__ACTIVE_INDEX=production."
+            )
 
         # Setup hybrid index (supports all search types)
         setup_results = opensearch_client.setup_indices(force=False)

@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 from botocore.exceptions import ClientError
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
 load_dotenv(dotenv_path=os.path.join(PROJECT_ROOT, ".env"))
 
 bearer_token = os.getenv("AWS_BEARER_TOKEN_BEDROCK")
@@ -16,22 +16,26 @@ if not bearer_token:
 # auth for bedrock/bedrock-runtime; it is not a SigV4 session token.
 client = boto3.client(
     "bedrock-runtime",
-    region_name="us-west-2",
+    region_name="us-east-1",
 )
 
-model_id = "qwen.qwen3-vl-235b-a22b"
+# Llama 3.3 70B Instruct (128k context). It is only invokable through the US cross-region
+# inference profile ("us." prefix); the bare "meta.llama3-3-70b-instruct-v1:0" id is rejected.
+model_id = "us.meta.llama3-3-70b-instruct-v1:0"  ## 128k context, 70B parameters, instruction-tuned LLM
+
 
 prompt = "Please explain the concept of Retrieval-Augmented Generation (RAG) in the context of natural language processing and how it can be applied to improve the performance of language models."
 
-# Qwen on Bedrock uses an OpenAI-compatible schema: a `messages` array and
-# `max_tokens`. This is why the Llama-style body ({"prompt": ..., "max_gen_len": ...})
-# fails with 'missing field `messages`' - there is no shared native format
-# across model families on invoke_model.
+formatted_prompt = f"""
+<|begin_of_text|><|start_header_id|>user<|end_header_id|>
+{prompt}
+<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>
+"""
+
 native_request = {
-    "messages": [
-        {"role": "user", "content": prompt},
-    ],
-    "max_tokens": 512,
+    "prompt": formatted_prompt,
+    "max_gen_len": 512,
     "temperature": 0.5,
 }
 
@@ -43,17 +47,9 @@ except (ClientError, Exception) as e:
     print(f"ERROR: Can't invoke '{model_id}'. Reason: {e}")
     exit(1)
 
-# Qwen streams OpenAI-style chunks: {"choices": [{"delta": {"content": "..."},
-# "finish_reason": null}], ...}
 for event in response["body"]:
     chunk = json.loads(event["chunk"]["bytes"])
-
-    for choice in chunk.get("choices", []):
-        text = choice.get("delta", {}).get("content")
-        if text:
-            print(text, end="", flush=True)
-
-        if choice.get("finish_reason"):
-            break
+    if chunk.get("generation"):
+        print(chunk["generation"], end="", flush=True)
 
 print()

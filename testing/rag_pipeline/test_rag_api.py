@@ -18,7 +18,7 @@ SEARCH_URL = f"{API_BASE}/hybrid-search/"
 HEALTH_URL = f"{API_BASE}/health"
 
 # Bedrock model id (was "llama3.2:1b" when this ran on local Ollama).
-MODEL = _os.getenv("BEDROCK_MODEL", "meta.llama3-70b-instruct-v1:0")
+MODEL = _os.getenv("BEDROCK_MODEL", "us.meta.llama3-3-70b-instruct-v1:0")
 
 REQUEST_TIMEOUT = 120  # Bedrock 70B is slower than a local 1B model
 TIMING_RUNS = 3  # each scenario is timed over this many runs (min + mean reported)

@@ -27,7 +27,7 @@ class OpenSearchClient:
         """
         self.host = host
         self.settings = settings
-        self.index_name = index_name or f"{settings.opensearch.index_name}-{settings.opensearch.chunk_index_suffix}"
+        self.index_name = index_name or settings.opensearch.production_chunk_index
 
         self.client = OpenSearch(
             hosts=[host],
