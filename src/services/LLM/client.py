@@ -56,6 +56,8 @@ class BedrockClient:
         self.max_tokens = config.max_tokens
         self.temperature = config.temperature
         self.top_p = config.top_p
+        self.rag_temperature = config.rag_temperature
+        self.rag_top_p = config.rag_top_p
 
         # botocore reads the Bedrock API key from the process environment and
         # switches to bearer auth. pydantic-settings loads .env into Settings
@@ -347,8 +349,8 @@ class BedrockClient:
             response = await self.generate(
                 model=model_id,
                 prompt=prompt,
-                temperature=0.7,
-                top_p=0.9,
+                temperature=self.rag_temperature,
+                top_p=self.rag_top_p,
             )
 
             if response and response.get("response"):
@@ -416,8 +418,8 @@ class BedrockClient:
             async for chunk in self.generate_stream(
                 model=model_id,
                 prompt=prompt,
-                temperature=0.7,
-                top_p=0.9,
+                temperature=self.rag_temperature,
+                top_p=self.rag_top_p,
             ):
                 yield chunk
 

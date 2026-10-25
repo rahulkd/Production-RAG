@@ -142,6 +142,12 @@ class BedrockSettings(BaseConfigSettings):
     temperature: float = 0.5
     top_p: float = 0.9
 
+    # Sampling for RAG answers (/ask and /stream). Separate from the generic
+    # defaults above: answers must be grounded and repeatable, so 0. These are
+    # the values the evaluation harness measured (src/evaluation SUT_PARAMS).
+    rag_temperature: float = Field(0.0, ge=0.0, le=1.0)
+    rag_top_p: float = Field(1.0, gt=0.0, le=1.0)
+
     # Transport
     connect_timeout: int = 10
     read_timeout: int = 300

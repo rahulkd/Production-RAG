@@ -26,7 +26,8 @@ through the real routes, so it measures what a client gets:
   API's papers match it.
 
 ``/ask`` uses the structured JSON prompt; ``/stream`` — the only route the UI
-calls — uses the plain prompt. Both hardcode temperature 0.7 (C5), so answers
+calls — uses the plain prompt. Both sample at the API's ``BEDROCK__RAG_TEMPERATURE``
+(0.0 by default; the runs before 2026-10-25 used a hardcoded 0.7), so at a temperature above 0 answers
 are one sample each, not pinned.
 
 Outputs, under ``results/e2e_<run_id>/<endpoint>_k<k>/``: ``e2e_raw.jsonl``,

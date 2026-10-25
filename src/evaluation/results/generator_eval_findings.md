@@ -250,7 +250,7 @@ Ordered by impact on whether users can trust an answer.
 |---|---|---|
 | 0 | **The deployed API searches an empty index (F9)** | **Switch added, not yet applied to the container.** `OPENSEARCH__ACTIVE_INDEX` (`.env`) selects `production` or the now-frozen `evaluation` index; `.env` is currently `production`, which is empty. For production, ingest papers into `arxiv-papers-chunks` through the Airflow DAG. To run the API on the frozen corpus meanwhile, set `evaluation` and `docker compose up -d --build api`. Then confirm with `python -m src.evaluation.e2e.runner --base-url http://localhost:8000 --limit 5`, whose preflight fails on an empty index. |
 | 1 | The deployed path isn't the one measured (F6) | **Partly closed by Phase 5:** both routes were evaluated with the current code over HTTP (F10–F13). Still open: re-run against the *deployed* container once #0, #2 and #3 are done. |
-| 2 | Temperature 0.7 in production | Lower to 0–0.3 for factual QA, ideally from settings rather than hard-coded in `client.py` (C5). |
+| 2 | ~~Temperature 0.7 in production~~ | **Done in code (2026-10-25), not yet deployed.** `generate_rag_answer` and `generate_rag_answer_stream` now sample at `BEDROCK__RAG_TEMPERATURE` / `BEDROCK__RAG_TOP_P` (default 0.0 / 1.0, the values Phase 4 measured; the evaluation harness reads the same settings). Rebuild the `api` container to apply. |
 | 3 | `rag-api` and `rag-frontend` still run the old code and model | Rebuild and restart: `docker compose up -d --build api frontend`. |
 | 4 | Uncalibrated judge (F7) | `calibrate sample --run 20261024-083836 --cutoff hybrid_k10`, label the 40 items, then `calibrate score`. Fix the rubric if κ < 0.6. |
 
@@ -258,7 +258,7 @@ Ordered by impact on whether users can trust an answer.
 
 | # | Issue | Fix |
 |---|---|---|
-| 5 | k=3 starves the generator (F6, F12; retrieval F4) | Raise production `top_k` to 10 (`AskRequest` and frontend `DEFAULT_TOP_K`). Phase 5 measured the cost: about +0.5 s at the median, p95 3.4 s on `/stream`. In return, false refusals drop from 8.9% to 2.2% and the answered rate rises from 82% to 90%. |
+| 5 | ~~k=3 starves the generator~~ (F6, F12; retrieval F4) | **Done in code (2026-10-25), not yet deployed.** `AskRequest.top_k` and the frontend `DEFAULT_TOP_K` now default to 10 (the API still caps at 10). Phase 5 measured the cost: about +0.5 s at the median, p95 3.4 s on `/stream`; in return false refusals drop from 8.9% to 2.2% and the answered rate rises from 82% to 90%. Rebuild `api` and `frontend` to apply. |
 | 6 | Contradictions in multi-hop (F2, F3) | Add instructions to the prompt: "attribute each claim to the excerpt it came from; do not combine properties of different methods". Consider a claim-check pass for multi-paper answers. |
 | 7 | Grounded but wrong answers (F4) | Make the model say which paper it is answering from, and refuse when the excerpts are about a different study. Add a relevance threshold on retrieval scores. |
 | 8 | Raw JSON shown to users (F8) | In `ResponseParser`, double invalid backslash escapes before parsing (or use a tolerant parser), and never return text that starts with `{"answer"`. Add a regression test with the q0103 output. |

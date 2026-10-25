@@ -20,7 +20,7 @@ export const RAG_MODELS: readonly RagModel[] = [
 export const DEFAULT_MODEL_ID = RAG_MODELS[0]!.id;
 
 /** Backend caps top_k at 10 (AskRequest: ge=1, le=10). */
-export const DEFAULT_TOP_K = 3;
+export const DEFAULT_TOP_K = 10;
 export const DEFAULT_USE_HYBRID = true;
 
 export type RagSettings = {

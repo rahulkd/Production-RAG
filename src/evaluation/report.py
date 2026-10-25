@@ -383,7 +383,7 @@ def render_e2e_report(results: List[Dict[str, Any]]) -> str:
     lines = [
         f"# End-to-end run {first['run_id']}",
         "",
-        f"- API: `{first['base_url']}` · generator `{first['sut_model']}` (temperature 0.7, hardcoded in the routes)",
+        f"- API: `{first['base_url']}` · generator `{first['sut_model']}` (sampling set by the API's `BEDROCK__RAG_TEMPERATURE`; the runs before 2026-10-25 used a hardcoded 0.7)",
         f"- Dataset: `{first['dataset']}` (sha256 `{first['dataset_sha256'][:12]}`), {first['questions']} questions",
         f"- Reference retrieval: in-process hybrid on `{first['index']}` ({first['index_doc_count']} chunks)",
         f"- Judge: `{first['judge_model']}`, rubric `{first['judge_prompt_version']}`",

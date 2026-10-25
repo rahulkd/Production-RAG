@@ -126,8 +126,10 @@ JUDGE_PROMPT_VERSION = "v1"
 # `--top-k` (e.g. 3 5 10) to compare cutoffs in one run.
 GENERATION_RETRIEVAL_MODE = "hybrid"
 GENERATION_TOP_KS = (10,)
-# Same pinning as /ask's generate_rag_answer, minus its temperature=0.7 (C5).
-SUT_PARAMS = {"temperature": 0.0, "top_p": 1.0}
+# What the API's RAG routes sample with (BEDROCK__RAG_TEMPERATURE / RAG_TOP_P).
+# Read from the same settings, so the harness measures the deployed values; they
+# were 0.7 / 0.9 hardcoded in generate_rag_answer before (C5).
+SUT_PARAMS = {"temperature": get_settings().bedrock.rag_temperature, "top_p": get_settings().bedrock.rag_top_p}
 
 # Requests in flight at once against Bedrock, generator and judge combined.
 GENERATION_CONCURRENCY = 4

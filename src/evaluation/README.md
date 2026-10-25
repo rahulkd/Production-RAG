@@ -167,7 +167,7 @@ Per route and k it reports:
 - **answer quality**: the Phase 4 judge and citation checks on the served answer. Faithfulness
   is scored only where the API's papers match the harness, since the API doesn't return chunk text.
 
-The routes hardcode temperature 0.7, so each answer is one sample, not pinned. Outputs go to
+The routes sample at `BEDROCK__RAG_TEMPERATURE` (default 0.0; the first two runs, before 2026-10-25, used a hardcoded 0.7), so above 0 each answer is one sample, not pinned. Outputs go to
 `results/e2e_<run>/` (per-config raw and summary files, plus a side-by-side `report.md`), with
 one row per config appended to `results/e2e_leaderboard.md`.
 
