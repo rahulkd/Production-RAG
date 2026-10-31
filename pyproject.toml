@@ -27,6 +27,8 @@ dependencies = [
     # versions the pipeline was tested on, so this is a build swap, not an upgrade.
     "torch>=2.12,<2.13",
     "torchvision>=0.27,<0.28",
+    "langfuse>=2.0.0,<3.0.0",
+    "redis>=6.4.0",
 ]
 readme = "README.md"
 
