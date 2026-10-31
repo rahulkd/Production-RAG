@@ -1,4 +1,6 @@
 import { MarkdownText } from "@/components/assistant-ui/markdown-text";
+import { EndpointToggle } from "@/components/rag/endpoint-toggle";
+import { MessageLatency } from "@/components/rag/message-latency";
 import { MessageSources } from "@/components/rag/message-sources";
 import { ModelSelect } from "@/components/rag/model-select";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
@@ -182,7 +184,10 @@ const Composer: FC = () => {
 const ComposerAction: FC = () => {
   return (
     <div className="aui-composer-action-wrapper relative flex items-center justify-between">
-      <ModelSelect />
+      <div className="flex items-center gap-1.5">
+        <ModelSelect />
+        <EndpointToggle />
+      </div>
       <div className="flex items-center gap-1.5">
         <AuiIf condition={(s) => s.thread.capabilities.dictation}>
           <AuiIf condition={(s) => s.composer.dictation == null}>
@@ -282,6 +287,7 @@ const AssistantMessage: FC = () => {
           }}
         </MessagePrimitive.Parts>
         <MessageSources />
+        <MessageLatency />
         <AuiIf
           condition={(s) =>
             s.message.status?.type === "running" &&

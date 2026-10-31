@@ -186,9 +186,16 @@ class RedisSettings(BaseConfigSettings):
     host: str = "localhost"
     port: int = 6379
     password: str = ""
-    db: int = 0
+    db: int = 0  ## what is the purpose of db in RedisSettings?
+    ## In Redis, a single instance can host multiple logical databases, each identified by a numeric index. 
+    # The `db` parameter in `RedisSettings` specifies which logical database to connect to within the Redis instance. 
+    # By default, Redis has 16 databases (indexed from 0 to 15), and the `db` parameter allows you to select one of these 
+    # databases for your application to use. This can be useful for separating different types of data or for testing purposes 
+    # without interfering with other applications using the same Redis instance.
     decode_responses: bool = True
-    socket_timeout: int = 30
+    socket_timeout: int = 30 ## what is the purpose of socket_timeout in RedisSettings?
+    ## The `socket_timeout` parameter in `RedisSettings` specifies the timeout (in seconds) for socket operations. 
+    # This is the maximum time the application will wait for a response from the Redis server before timing out.       
     socket_connect_timeout: int = 30
 
     # Cache settings

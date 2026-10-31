@@ -23,10 +23,14 @@ export const DEFAULT_MODEL_ID = RAG_MODELS[0]!.id;
 export const DEFAULT_TOP_K = 10;
 export const DEFAULT_USE_HYBRID = true;
 
+/** Backend endpoint a question is sent to: /api/v1/stream or /api/v1/ask. */
+export type RagEndpoint = "stream" | "ask";
+
 export type RagSettings = {
   model: string;
   topK: number;
   useHybrid: boolean;
+  endpoint: RagEndpoint;
   categories?: readonly string[] | undefined;
 };
 
@@ -34,7 +38,23 @@ export const DEFAULT_SETTINGS: RagSettings = {
   model: DEFAULT_MODEL_ID,
   topK: DEFAULT_TOP_K,
   useHybrid: DEFAULT_USE_HYBRID,
+  endpoint: "stream",
 };
+
+/**
+ * Browser-measured latency of one question, stored on the assistant message as
+ * `metadata.custom.latency`. Measured from just before the request is sent, so
+ * it includes the Next.js proxy hop — what the user actually waits.
+ */
+export type RagLatency = {
+  endpoint: RagEndpoint;
+  /** Time until the first answer token arrived. Only set for /stream. */
+  firstTokenMs?: number | undefined;
+  totalMs: number;
+};
+
+export const formatMs = (ms: number) =>
+  ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(2)} s`;
 
 export const modelLabel = (id: string) =>
   RAG_MODELS.find((model) => model.id === id)?.label ?? id;

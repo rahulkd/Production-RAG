@@ -20,14 +20,24 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  // `endpoint` picks the backend route and is not part of AskRequest.
+  const { endpoint, ...askRequest } = (payload ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const isAsk = endpoint === "ask";
+
   let upstream: Response;
   try {
-    upstream = await fetch(`${RAG_API_URL}/api/v1/stream`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: request.signal,
-    });
+    upstream = await fetch(
+      `${RAG_API_URL}/api/v1/${isAsk ? "ask" : "stream"}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(askRequest),
+        signal: request.signal,
+      },
+    );
   } catch (error) {
     if (request.signal.aborted) return new Response(null, { status: 499 });
     console.error("RAG API unreachable:", error);
@@ -43,6 +53,12 @@ export async function POST(request: NextRequest) {
       { error: detail.trim() || `RAG API returned ${upstream.status}` },
       { status: upstream.status === 200 ? 502 : upstream.status },
     );
+  }
+
+  if (isAsk) {
+    return new Response(upstream.body, {
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   return new Response(upstream.body, {

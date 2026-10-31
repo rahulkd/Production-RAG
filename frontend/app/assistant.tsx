@@ -13,7 +13,11 @@ import {
   setRagSettings,
   useRagThreadRuntime,
 } from "@/lib/rag-runtime";
-import { DEFAULT_SETTINGS, type RagSettings } from "@/lib/rag";
+import {
+  DEFAULT_SETTINGS,
+  type RagEndpoint,
+  type RagSettings,
+} from "@/lib/rag";
 
 export const Assistant = () => {
   const [settings, setSettings] = useState<RagSettings>(DEFAULT_SETTINGS);
@@ -29,9 +33,15 @@ export const Assistant = () => {
     [],
   );
 
+  const setEndpoint = useCallback(
+    (endpoint: RagEndpoint) =>
+      setSettings((current) => ({ ...current, endpoint })),
+    [],
+  );
+
   const settingsValue = useMemo(
-    () => ({ settings, setModel }),
-    [settings, setModel],
+    () => ({ settings, setModel, setEndpoint }),
+    [settings, setModel, setEndpoint],
   );
 
   return (

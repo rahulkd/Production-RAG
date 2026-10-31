@@ -9,7 +9,9 @@ from src.db.factory import make_database
 from src.routers import hybrid_search, ping
 from src.routers.ask import ask_router, stream_router
 from src.services.arxiv.factory import make_arxiv_client
+from src.services.cache.factory import make_cache_client
 from src.services.embeddings.factory import make_embeddings_service
+from src.services.langfuse.factory import make_langfuse_tracer
 from src.services.LLM.factory import make_bedrock_client
 from src.services.opensearch.factory import make_search_client
 from src.services.pdf_parser.factory import make_pdf_parser_service
@@ -77,12 +79,21 @@ async def lifespan(app: FastAPI):
     app.state.embeddings_service = make_embeddings_service()
     app.state.bedrock_client = make_bedrock_client()
     #app.state.ollama_client = make_ollama_client()  ## ollama
-    logger.info("Services initialized: arXiv API client, PDF parser, OpenSearch, Embeddings, Bedrock LLM")
+    app.state.langfuse_tracer = make_langfuse_tracer()
+    # The cache is optional: if Redis is unreachable, serve requests uncached
+    # rather than failing startup.
+    try:
+        app.state.cache_client = make_cache_client(settings)
+    except Exception as e:
+        logger.warning(f"Redis cache unavailable, continuing without cache: {e}")
+        app.state.cache_client = None
+    logger.info("Services initialized: arXiv API client, PDF parser, OpenSearch, Embeddings, Bedrock LLM, Langfuse, Cache")
 
     logger.info("API ready")
     yield
 
     # Cleanup
+    app.state.langfuse_tracer.shutdown()  # flush buffered traces
     database.teardown()
     logger.info("API shutdown complete")
 

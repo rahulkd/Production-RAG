@@ -32,6 +32,8 @@ from src.services.embeddings.jina_client import JinaEmbeddingsClient
 from src.services.opensearch.client import OpenSearchClient
 from src.services.pdf_parser.parser import PDFParserService
 from src.services.LLM.client import BedrockClient
+from src.services.cache.client import CacheClient
+from src.services.langfuse.client import LangfuseTracer
 ## from src.services.LLM.client_ollama import OllamaClient ## ollama
 
 
@@ -82,6 +84,16 @@ def get_bedrock_client(request: Request) -> BedrockClient:
     return request.app.state.bedrock_client
 
 
+def get_langfuse_tracer(request: Request) -> LangfuseTracer:
+    """Get Langfuse tracer from the request state."""
+    return request.app.state.langfuse_tracer
+
+
+def get_cache_client(request: Request) -> CacheClient | None:
+    """Get cache client from the request state (None if Redis is unavailable)."""
+    return getattr(request.app.state, "cache_client", None)
+
+
 ## ollama
 #def get_ollama_client(request: Request) -> OllamaClient:
 #    """Get Ollama client from the request state."""
@@ -97,4 +109,6 @@ ArxivDep = Annotated[ArxivClient, Depends(get_arxiv_client)]
 PDFParserDep = Annotated[PDFParserService, Depends(get_pdf_parser)]
 EmbeddingsDep = Annotated[JinaEmbeddingsClient, Depends(get_embeddings_service)]
 BedrockDep = Annotated[BedrockClient, Depends(get_bedrock_client)]
+LangfuseDep = Annotated[LangfuseTracer, Depends(get_langfuse_tracer)]
+CacheDep = Annotated[CacheClient | None, Depends(get_cache_client)]
 #OllamaDep = Annotated[OllamaClient, Depends(get_ollama_client)]  ## ollama

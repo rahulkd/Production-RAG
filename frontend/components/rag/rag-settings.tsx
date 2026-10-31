@@ -1,11 +1,12 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { RagSettings } from "@/lib/rag";
+import type { RagEndpoint, RagSettings } from "@/lib/rag";
 
 type RagSettingsContextValue = {
   settings: RagSettings;
   setModel: (model: string) => void;
+  setEndpoint: (endpoint: RagEndpoint) => void;
 };
 
 const RagSettingsContext = createContext<RagSettingsContextValue | null>(null);

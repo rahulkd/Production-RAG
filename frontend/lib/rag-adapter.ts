@@ -3,7 +3,7 @@ import type {
   SourceMessagePart,
   ThreadMessage,
 } from "@assistant-ui/react";
-import { sourceTitle, type RagSettings } from "@/lib/rag";
+import { sourceTitle, type RagLatency, type RagSettings } from "@/lib/rag";
 
 /** One decoded `data:` frame from the backend's /api/v1/stream response. */
 type StreamFrame = {
@@ -74,6 +74,12 @@ async function* readFrames(body: ReadableStream<Uint8Array>) {
   }
 }
 
+/** Shape of the backend's AskResponse (/api/v1/ask). */
+type AskResponse = {
+  answer: string;
+  sources: string[];
+};
+
 const errorFrom = async (response: Response) => {
   const body = await response.text().catch(() => "");
   try {
@@ -86,7 +92,8 @@ const errorFrom = async (response: Response) => {
 };
 
 /**
- * Streams answers from the FastAPI RAG pipeline.
+ * Answers questions from the FastAPI RAG pipeline, via /stream or /ask per the
+ * `endpoint` setting, and records the browser-measured latency on the message.
  *
  * `getSettings` is read at run time rather than captured so that changing the
  * model in the UI takes effect on the next message without rebuilding the runtime.
@@ -99,6 +106,9 @@ export const createRagAdapter = (
     if (!query) return;
 
     const settings = getSettings();
+    const startedAt = performance.now();
+    const elapsed = () => performance.now() - startedAt;
+
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -109,6 +119,7 @@ export const createRagAdapter = (
         top_k: settings.topK,
         use_hybrid: settings.useHybrid,
         categories: settings.categories ?? null,
+        endpoint: settings.endpoint,
       }),
     });
 
@@ -116,8 +127,28 @@ export const createRagAdapter = (
       throw new Error(await errorFrom(response));
     }
 
+    if (settings.endpoint === "ask") {
+      const body = (await response.json()) as AskResponse;
+      const latency: RagLatency = { endpoint: "ask", totalMs: elapsed() };
+      yield {
+        content: [
+          { type: "text", text: body.answer },
+          ...body.sources.map(toSourcePart),
+        ],
+        status: { type: "complete", reason: "stop" },
+        metadata: { custom: { latency } },
+      };
+      return;
+    }
+
     let text = "";
     let sources: SourceMessagePart[] = [];
+    let firstTokenMs: number | undefined;
+    const latency = (): RagLatency => ({
+      endpoint: "stream",
+      firstTokenMs,
+      totalMs: elapsed(),
+    });
 
     for await (const frame of readFrames(response.body)) {
       if (frame.error) throw new Error(frame.error);
@@ -127,6 +158,7 @@ export const createRagAdapter = (
       }
 
       if (frame.chunk) {
+        firstTokenMs ??= elapsed();
         text += frame.chunk;
       }
 
@@ -140,6 +172,7 @@ export const createRagAdapter = (
         yield {
           content: [{ type: "text", text }, ...sources],
           status: { type: "complete", reason: "stop" },
+          metadata: { custom: { latency: latency() } },
         };
         return;
       }
@@ -153,6 +186,7 @@ export const createRagAdapter = (
     yield {
       content: [{ type: "text", text }, ...sources],
       status: { type: "complete", reason: "unknown" },
+      metadata: { custom: { latency: latency() } },
     };
   },
 });
