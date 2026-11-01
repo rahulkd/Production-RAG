@@ -6,12 +6,13 @@ import uvicorn
 from fastapi import FastAPI
 from src.config import get_settings
 from src.db.factory import make_database
-from src.routers import hybrid_search, ping
+from src.routers import feedback, hybrid_search, ping
 from src.routers.ask import ask_router, stream_router
 from src.services.arxiv.factory import make_arxiv_client
 from src.services.cache.factory import make_cache_client
 from src.services.embeddings.factory import make_embeddings_service
 from src.services.langfuse.factory import make_langfuse_tracer
+from src.services.langfuse.judge import OnlineJudge
 from src.services.LLM.factory import make_bedrock_client
 from src.services.opensearch.factory import make_search_client
 from src.services.pdf_parser.factory import make_pdf_parser_service
@@ -80,6 +81,7 @@ async def lifespan(app: FastAPI):
     app.state.bedrock_client = make_bedrock_client()
     #app.state.ollama_client = make_ollama_client()  ## ollama
     app.state.langfuse_tracer = make_langfuse_tracer()
+    app.state.online_judge = OnlineJudge(app.state.bedrock_client, app.state.langfuse_tracer, settings)
     # The cache is optional: if Redis is unreachable, serve requests uncached
     # rather than failing startup.
     try:
@@ -93,6 +95,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Cleanup
+    await app.state.online_judge.aclose()  # let pending judgments send their scores
     app.state.langfuse_tracer.shutdown()  # flush buffered traces
     database.teardown()
     logger.info("API shutdown complete")
@@ -110,6 +113,7 @@ app.include_router(ping.router, prefix="/api/v1")  # Health check endpoint
 app.include_router(hybrid_search.router, prefix="/api/v1")  # Search chunks with BM25/hybrid
 app.include_router(ask_router, prefix="/api/v1")  # RAG question answering with LLM
 app.include_router(stream_router, prefix="/api/v1")  # Streaming RAG responses
+app.include_router(feedback.router, prefix="/api/v1")  # User feedback -> Langfuse scores
 
 
 if __name__ == "__main__":

@@ -88,10 +88,18 @@ rag_request                          (trace)
 │     input:  { chunk_count }
 │     output: { prompt_length, prompt_preview (first 200 chars) }
 │
-└── llm_generation                   (span)
-      input:  { model, prompt_length, prompt (full) }
+└── llm_generation                   (GENERATION)
+      model:  us.meta.llama3-3-70b-instruct-v1:0
+      input:  { prompt (full) }
       output: { response, response_length, model_used }
+      usage:  input / output / total tokens (from Bedrock) + cost in USD
+
+trace tags:  [ask | stream, cache_hit | cache_miss]
+trace scores (§3.1): retrieval_hit, unique_papers, hybrid_fallback,
+                     judge_refused, judge_answer_relevance, judge_faithfulness, user_feedback
 ```
+
+On a **cache hit** the trace has no spans: it is tagged `cache_hit`, its output is the cached answer, and the response carries this request's own `trace_id` (not that of the request that filled the cache), so feedback lands on the right trace.
 
 Every span records a start and end time, so Langfuse shows how long each step took.
 
@@ -117,17 +125,36 @@ Every span records a start and end time, so Langfuse shows how long each step to
 | `search_retrieval` output | `chunks_returned`, `unique_papers`, `arxiv_ids` | Did retrieval find anything? Is it all from one paper? Which papers back the answer? |
 | `query_embedding` output | `success: false` + error | How often does hybrid search silently fall back to BM25? |
 | `llm_generation` input/output | The exact prompt sent and the raw answer | Debugging hallucinations or poor answers against the actual context given |
-| Trace input with no output | Cache hits (no spans, no output) | Rough cache hit rate |
-| **Dashboard** | Trace volume and latency over time | Is load or latency trending up? |
+| **Generations** view, trace cost/token columns | Input/output tokens and USD cost per LLM call | What does a question cost? Which prompts are largest? |
+| Tags filter `cache_hit` / `cache_miss`, `ask` / `stream` | Which answers came from Redis, and through which endpoint | Cache hit rate; `/ask` vs `/stream` traffic |
+| **Scores** (per trace, and in the Scores view and dashboard) | The quality scores in §3.1 | Is answer quality drifting? Which questions get thumbs down? |
+| **Dashboard** | Trace volume, latency, cost and scores over time | Is load, latency, spend or quality trending? |
+
+### 3.1 Quality scores
+
+| Score | Type | Source | When |
+|---|---|---|---|
+| `retrieval_hit` | BOOLEAN | Heuristic: retrieval returned ≥ 1 chunk | Every uncached request |
+| `unique_papers` | NUMERIC | Heuristic: distinct papers among retrieved chunks | Uncached, with chunks |
+| `hybrid_fallback` | BOOLEAN | Heuristic: hybrid requested, but embeddings failed so BM25 ran | Uncached, `use_hybrid=true` |
+| `judge_refused` | BOOLEAN | LLM judge, Phase 4 `refusal` rubric | Uncached, sampled |
+| `judge_answer_relevance` | NUMERIC 0–3 | LLM judge, reference-free rubric (`prompts/answer_relevance_v1.txt`) | Attempted answers only |
+| `judge_faithfulness` | NUMERIC 0–1 | LLM judge, Phase 4 `claims` + `faithfulness` rubrics: supported / all claims (counts in the comment) | Attempted answers with claims |
+| `user_feedback` | BOOLEAN | 👍 = 1 / 👎 = 0 from the frontend via `POST /api/v1/feedback` | When the user votes; re-voting overwrites |
+
+**Heuristic scores** are computed in the request from data it already has, with no extra calls ([tracer.py](../tracer.py) `score_retrieval`).
+
+**Judge scores** come from [judge.py](../judge.py) (`OnlineJudge`). It reuses the offline evaluation's `Judge` class and rubrics, so live scores mean the same as the Phase 4 numbers. It runs as a background task after the response is sent, so it adds no user latency. It writes only scores, never spans, so it doesn't stretch the trace's latency.
+- A judged answer costs up to 4 DeepSeek V3.2 calls (refusal, relevance, claims, faithfulness). Refusals stop after the first call.
+- `LANGFUSE__JUDGE_SAMPLE_RATE` controls the fraction of answers judged.
+- On shutdown, the API waits up to 30 s for pending judgments.
+- Offline relevance compares against a golden answer. The online rubric can't, so it judges only whether the answer addresses the question.
+
+**User feedback:** the trace id reaches the frontend in `AskResponse.trace_id` (`/ask`) or the stream's first metadata frame (`/stream`). The 👍/👎 buttons appear only when a trace id is present. The score id is `{trace_id}-user_feedback`, so a changed vote overwrites the earlier one.
 
 ### Not yet observable
 
-These are features Langfuse has that the current instrumentation doesn't feed:
-
-1. **Token usage and cost.** `llm_generation` is recorded as a plain span, so Langfuse's token and cost columns stay empty. `LangfuseTracer.create_generation(...)` exists for this. Recording the LLM call through it, with Bedrock's `usage`, would populate them. Bedrock Llama pricing would also need adding as a custom model under Settings → Models.
-2. **Per-user views.** Every trace uses `user_id="api_user"`, so the Users and Sessions views show a single user. Passing a real user or session id from the frontend would split them.
-3. **Quality scores.** `LangfuseTracer.score_trace(...)` exists but isn't called. Evaluation results such as faithfulness from the Phase 4 judge could be attached to traces as scores.
-4. **Cache-hit tagging.** Cache hits are only recognizable as traces with no output. An explicit tag or metadata flag would make them filterable.
+- **Per-user views.** Every trace uses `user_id="api_user"`, so the Users and Sessions views show a single user. Passing a real user or session id from the frontend would split them.
 
 ## 4. PostgreSQL's role in Langfuse v2
 
@@ -166,7 +193,7 @@ flowchart LR
 | `rag_request` trace | `traces` | `id`, `project_id`, `name`, `timestamp`, `input`, `output`, `user_id`, `session_id`, `metadata`, `tags` |
 | Each span (`query_embedding`, `search_retrieval`, ...) | `observations` | `id`, `trace_id`, `parent_observation_id`, `type` (SPAN / GENERATION / EVENT), `name`, `start_time`, `end_time`, `input`, `output`, `model`, token and cost columns |
 | `session_api_user` | `trace_sessions` | `id`, `project_id` |
-| Quality scores (future, §3) | `scores` | `trace_id`, `observation_id`, `name`, `value`, `source` |
+| Quality scores (§3.1) | `scores` | `trace_id`, `observation_id`, `name`, `value`, `source` |
 
 `input`, `output` and `metadata` are JSONB columns, so the whole prompt and answer are stored as sent.
 
@@ -175,7 +202,7 @@ flowchart LR
 The UI doesn't read the raw tables directly for its lists. Langfuse defines two Postgres **views**:
 
 - **`traces_view`** joins a trace with its observations to derive trace-level latency and totals.
-- **`observations_view`** adds per-observation latency, time to first token, and cost. Cost comes from matching `model` against the `models` and `prices` tables. Because our LLM call is a SPAN with no usage (§3), cost is currently empty.
+- **`observations_view`** adds per-observation latency, time to first token, and cost. Cost normally comes from matching `model` against the `models` and `prices` tables. Our generation sends its cost explicitly in `usage` (priced from `BEDROCK__*_PRICE_PER_1M_TOKENS`), and Langfuse uses that as-is, so no model definition is needed in the Langfuse UI.
 
 Filtering, search and the dashboard charts are SQL queries over these tables and views, using indexes on `project_id`, `trace_id` and `start_time`. This is what limits v2 at very high volume (millions of traces). For this project's volume, a few hundred traces a day, Postgres is comfortably sufficient.
 
@@ -203,6 +230,11 @@ Langfuse v2 doesn't delete old traces automatically. Data grows in the `langfuse
 | `LANGFUSE__HOST` | `http://localhost:3000` | Overridden to `http://langfuse:3000` inside Docker by `compose.yml` |
 | `LANGFUSE__FLUSH_AT` / `LANGFUSE__FLUSH_INTERVAL` | `15` / `1.0` | SDK batch size / interval |
 | `LANGFUSE__DEBUG` | `false` | Verbose SDK logging |
+| `LANGFUSE__JUDGE_ENABLED` | `true` | Online LLM-as-judge on/off. **Set `false` during evaluation runs**: the harness already judges offline, and leaving it on doubles judge spend |
+| `LANGFUSE__JUDGE_MODEL` | `deepseek.v3.2` | Judge model (same as Phase 4) |
+| `LANGFUSE__JUDGE_SAMPLE_RATE` | `1.0` | Fraction of uncached answers judged |
+| `LANGFUSE__JUDGE_MAX_TOKENS` | `4000` | Judge reply budget |
+| `BEDROCK__INPUT_PRICE_PER_1M_TOKENS` / `BEDROCK__OUTPUT_PRICE_PER_1M_TOKENS` | `0.72` / `0.72` | USD price of the generator model, used for the cost sent to Langfuse. Update if the model or AWS price changes |
 
 First-time setup: open http://localhost:3000, sign up, create an organization and project, create API keys, put them in `.env`, then restart `rag-api`.
 

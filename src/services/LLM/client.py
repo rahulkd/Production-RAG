@@ -381,6 +381,9 @@ class BedrockClient:
                     citations = list(set(chunk.get("arxiv_id") for chunk in chunks if chunk.get("arxiv_id")))
                     parsed_response["citations"] = citations[:5]  # Limit to 5 citations
 
+                # Token counts for tracing (Converse: inputTokens / outputTokens / totalTokens)
+                parsed_response["usage"] = response.get("usage", {})
+
                 return parsed_response
             else:
                 raise BedrockException("No response generated from Bedrock")

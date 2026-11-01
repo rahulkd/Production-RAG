@@ -1,5 +1,6 @@
 import {
   useLocalRuntime,
+  type FeedbackAdapter,
   type RemoteThreadListAdapter,
 } from "@assistant-ui/react";
 import { createAssistantStream } from "assistant-stream";
@@ -21,8 +22,34 @@ export const setRagSettings = (settings: RagSettings) => {
 
 const ragChatAdapter = createRagAdapter(() => settingsHolder.current);
 
+/**
+ * Sends 👍/👎 to the API, which records it as a `user_feedback` score on the
+ * answer's Langfuse trace. Answers without a trace id (tracing off) show no
+ * feedback buttons, so they never reach here.
+ */
+const ragFeedbackAdapter: FeedbackAdapter = {
+  submit({ message, type }) {
+    const traceId = message.metadata.custom["traceId"];
+    if (typeof traceId !== "string") return;
+
+    void fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        trace_id: traceId,
+        value: type === "positive" ? 1 : 0,
+      }),
+    }).catch((error: unknown) => {
+      console.error("Failed to submit feedback:", error);
+    });
+  },
+};
+
 /** Per-thread runtime. One instance is kept alive per open thread. */
-export const useRagThreadRuntime = () => useLocalRuntime(ragChatAdapter);
+export const useRagThreadRuntime = () =>
+  useLocalRuntime(ragChatAdapter, {
+    adapters: { feedback: ragFeedbackAdapter },
+  });
 
 type StoredThread = {
   remoteId: string;

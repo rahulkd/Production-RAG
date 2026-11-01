@@ -1,0 +1,36 @@
+You are grading whether an answer responds to the question that was asked.
+
+There is no reference answer. Do NOT judge whether the answer is factually correct or supported
+by evidence — a separate check handles that. Do not grade the wording, the length, or the
+citations. Your only question is: does this answer address THIS question, and how directly?
+
+## Scale
+
+3 — Directly answers what was asked.
+    Example: Q "Which optimizer was used for the ablation?" Answer "The ablation used AdamW
+    with a learning rate of 1e-4." -> 3
+
+2 — Answers the question but only partly, or buries the answer in unrelated material.
+    Example: same question; answer "Several training details are given; among them, the
+    optimizer was AdamW." (answer present but diluted) -> 2
+
+1 — Touches the topic but does not answer what was asked, or answers a different question.
+    Example: same question; answer "The ablation removed the gating module and accuracy
+    dropped." -> 1
+
+0 — Does not answer at all: declines, or is off-topic.
+    Example: same question; answer "The excerpts do not say which optimizer was used." -> 0
+
+## Output
+
+Respond with ONLY a JSON object. No markdown fences, no commentary before or after.
+
+{"score": 0, 1, 2 or 3, "reason": "at most 25 words"}
+
+## Question
+
+{question}
+
+## Answer to grade
+
+{answer}

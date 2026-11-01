@@ -177,6 +177,87 @@ class LangfuseTracer:
         except Exception as e:
             logger.error(f"Error scoring trace: {e}")
 
+    def score_by_id(
+        self,
+        trace_id: str,
+        name: str,
+        value: float,
+        comment: Optional[str] = None,
+        data_type: Optional[str] = None,
+        score_id: Optional[str] = None,
+    ) -> bool:
+        """
+        Add a score to a trace by its id, for callers that no longer hold the
+        trace object (user feedback, background judge).
+
+        Args:
+            trace_id: Langfuse trace id
+            name: Score name
+            value: Score value
+            comment: Optional comment
+            data_type: "NUMERIC" or "BOOLEAN" (None lets Langfuse infer)
+            score_id: Stable id; re-sending the same id overwrites the score
+
+        Returns:
+            True if the score was queued, False if tracing is off or it failed
+        """
+        if not self.client:
+            return False
+
+        try:
+            self.client.score(
+                trace_id=trace_id,
+                name=name,
+                value=value,
+                comment=comment,
+                data_type=data_type,
+                id=score_id,
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Error scoring trace {trace_id}: {e}")
+            return False
+
+    def update_generation(self, generation, output: Optional[Any] = None, usage: Optional[Dict[str, Any]] = None):
+        """
+        Set a generation's output and token usage/cost.
+
+        Args:
+            generation: Generation object from create_generation
+            output: Generated output
+            usage: Langfuse usage dict (input, output, total, unit, *_cost)
+        """
+        if not generation:
+            return
+
+        try:
+            generation.update(output=output, usage=usage)
+        except Exception as e:
+            logger.error(f"Error updating generation: {e}")
+
+    def update_trace(self, trace, tags: Optional[list] = None, metadata: Optional[Dict[str, Any]] = None):
+        """
+        Set a trace's tags and/or metadata.
+
+        Args:
+            trace: Trace object
+            tags: Tags (replace the trace's tags)
+            metadata: Metadata
+        """
+        if not trace:
+            return
+
+        try:
+            fields: Dict[str, Any] = {}
+            if tags is not None:
+                fields["tags"] = tags
+            if metadata is not None:
+                fields["metadata"] = metadata
+            if fields:
+                trace.update(**fields)
+        except Exception as e:
+            logger.error(f"Error updating trace: {e}")
+
     def update_span(
         self,
         span,

@@ -33,6 +33,7 @@ class AskResponse(BaseModel):
     sources: List[str] = Field(..., description="PDF URLs of source papers")
     chunks_used: int = Field(..., description="Number of chunks used for generation")
     search_mode: str = Field(..., description="Search mode used: bm25 or hybrid")
+    trace_id: Optional[str] = Field(None, description="Langfuse trace id, for submitting feedback; None when tracing is off")
 
     class Config:
         json_schema_extra = {
@@ -44,3 +45,11 @@ class AskResponse(BaseModel):
                 "search_mode": "hybrid",
             }
         }
+
+
+class FeedbackRequest(BaseModel):
+    """User feedback on one answer, recorded as a score on its Langfuse trace."""
+
+    trace_id: str = Field(..., description="trace_id from the AskResponse or the stream's metadata frame", min_length=1)
+    value: int = Field(..., description="1 = helpful (thumbs up), 0 = not helpful (thumbs down)", ge=0, le=1)
+    comment: Optional[str] = Field(None, description="Optional free-text comment", max_length=1000)

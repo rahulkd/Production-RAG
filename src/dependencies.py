@@ -34,6 +34,7 @@ from src.services.pdf_parser.parser import PDFParserService
 from src.services.LLM.client import BedrockClient
 from src.services.cache.client import CacheClient
 from src.services.langfuse.client import LangfuseTracer
+from src.services.langfuse.judge import OnlineJudge
 ## from src.services.LLM.client_ollama import OllamaClient ## ollama
 
 
@@ -89,6 +90,11 @@ def get_langfuse_tracer(request: Request) -> LangfuseTracer:
     return request.app.state.langfuse_tracer
 
 
+def get_online_judge(request: Request) -> OnlineJudge:
+    """Get the background LLM-as-judge from the request state."""
+    return request.app.state.online_judge
+
+
 def get_cache_client(request: Request) -> CacheClient | None:
     """Get cache client from the request state (None if Redis is unavailable)."""
     return getattr(request.app.state, "cache_client", None)
@@ -111,4 +117,5 @@ EmbeddingsDep = Annotated[JinaEmbeddingsClient, Depends(get_embeddings_service)]
 BedrockDep = Annotated[BedrockClient, Depends(get_bedrock_client)]
 LangfuseDep = Annotated[LangfuseTracer, Depends(get_langfuse_tracer)]
 CacheDep = Annotated[CacheClient | None, Depends(get_cache_client)]
+JudgeDep = Annotated[OnlineJudge, Depends(get_online_judge)]
 #OllamaDep = Annotated[OllamaClient, Depends(get_ollama_client)]  ## ollama

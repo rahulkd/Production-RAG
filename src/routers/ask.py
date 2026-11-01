@@ -4,7 +4,7 @@ import time
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from src.dependencies import BedrockDep, CacheDep, EmbeddingsDep, LangfuseDep, OpenSearchDep
+from src.dependencies import BedrockDep, CacheDep, EmbeddingsDep, JudgeDep, LangfuseDep, OpenSearchDep
 from src.schemas.api.ask import AskRequest, AskResponse
 from src.services.langfuse.tracer import RAGTracer
 
@@ -92,6 +92,7 @@ async def ask_question(
     llm_client: BedrockDep,
     langfuse_tracer: LangfuseDep,
     cache_client: CacheDep,
+    online_judge: JudgeDep,
 ) -> AskResponse:
     """
     RAG endpoint for question answering.
@@ -101,7 +102,7 @@ async def ask_question(
     3. Passes chunks to LLM with prompt template
     4. Returns structured answer with sources
     """
-    rag_tracer = RAGTracer(langfuse_tracer)
+    rag_tracer = RAGTracer(langfuse_tracer, endpoint="ask")
     start_time = time.time()
 
     # Errors are captured inside the trace and raised after it closes: the
@@ -109,6 +110,7 @@ async def ask_question(
     error: HTTPException | None = None
 
     with rag_tracer.trace_request("api_user", request.query) as trace:
+        trace_id = rag_tracer.trace_id(trace)
         try:
             # Check exact cache first
             if cache_client:
@@ -116,9 +118,13 @@ async def ask_question(
                     cached_response = await cache_client.find_cached_response(request)
                     if cached_response:
                         logger.info("Returning cached response for exact query match")
-                        return cached_response
+                        rag_tracer.mark_cache(trace, hit=True)
+                        rag_tracer.end_request(trace, cached_response.answer, time.time() - start_time)
+                        # Feedback must land on this request's trace, not the one that filled the cache
+                        return cached_response.model_copy(update={"trace_id": trace_id})
                 except Exception as e:
                     logger.warning(f"Cache check failed, proceeding with normal flow: {e}")
+            rag_tracer.mark_cache(trace, hit=False)
 
             # Check service availability
             if not opensearch_client.health_check():
@@ -135,6 +141,7 @@ async def ask_question(
             chunks, sources, search_mode = await _prepare_chunks_and_sources(
                 request, opensearch_client, embeddings_service, rag_tracer, trace
             )
+            rag_tracer.score_retrieval(trace, chunks, request.use_hybrid, search_mode)
 
             if not chunks:
                 logger.warning(f"No chunks found for query: {request.query}")
@@ -144,6 +151,7 @@ async def ask_question(
                     sources=[],
                     chunks_used=0,
                     search_mode=search_mode,
+                    trace_id=trace_id,
                 )
                 rag_tracer.end_request(trace, response.answer, time.time() - start_time)
                 return response
@@ -159,7 +167,7 @@ async def ask_question(
             with rag_tracer.trace_generation(trace, request.model, final_prompt) as gen_span:
                 rag_response = await llm_client.generate_rag_answer(query=request.query, chunks=chunks, model=request.model)
                 answer = rag_response.get("answer", "Unable to generate answer")
-                rag_tracer.end_generation(gen_span, answer, request.model)
+                rag_tracer.end_generation(gen_span, answer, request.model, rag_response.get("usage"))
 
             logger.debug(f"RAG response: {rag_response}")
 
@@ -170,9 +178,11 @@ async def ask_question(
                 sources=sources,  # Use sources from search results
                 chunks_used=len(chunks),
                 search_mode=search_mode,
+                trace_id=trace_id,
             )
 
             rag_tracer.end_request(trace, answer, time.time() - start_time)
+            online_judge.schedule(trace_id, request.query, answer, chunks)
 
             # Store response in exact match cache
             if cache_client:
@@ -201,14 +211,16 @@ async def ask_question_stream(
     llm_client: BedrockDep,
     langfuse_tracer: LangfuseDep,
     cache_client: CacheDep,
+    online_judge: JudgeDep,
 ) -> StreamingResponse:
     """Streaming RAG endpoint - returns answer as it's generated."""
 
     async def generate_stream():
-        rag_tracer = RAGTracer(langfuse_tracer)
+        rag_tracer = RAGTracer(langfuse_tracer, endpoint="stream")
         start_time = time.time()
 
         with rag_tracer.trace_request("api_user", request.query) as trace:
+            trace_id = rag_tracer.trace_id(trace)
             try:
                 # Check exact cache first
                 if cache_client:
@@ -216,12 +228,14 @@ async def ask_question_stream(
                         cached_response = await cache_client.find_cached_response(request)
                         if cached_response:
                             logger.info("Returning cached response for exact streaming query match")
+                            rag_tracer.mark_cache(trace, hit=True)
 
                             # Send metadata first (same format as non-cached)
                             metadata_response = {
                                 "sources": cached_response.sources,
                                 "chunks_used": cached_response.chunks_used,
                                 "search_mode": cached_response.search_mode,
+                                "trace_id": trace_id,
                             }
                             yield f"data: {json.dumps(metadata_response)}\n\n"
 
@@ -231,9 +245,11 @@ async def ask_question_stream(
 
                             # Send completion signal with just the final answer
                             yield f"data: {json.dumps({'answer': cached_response.answer, 'done': True})}\n\n"
+                            rag_tracer.end_request(trace, cached_response.answer, time.time() - start_time)
                             return
                     except Exception as e:
                         logger.warning(f"Cache check failed, proceeding with normal flow: {e}")
+                rag_tracer.mark_cache(trace, hit=False)
 
                 if not opensearch_client.health_check():
                     yield f"data: {json.dumps({'error': 'Search service unavailable'})}\n\n"
@@ -245,13 +261,14 @@ async def ask_question_stream(
                 chunks, sources, search_mode = await _prepare_chunks_and_sources(
                     request, opensearch_client, embeddings_service, rag_tracer, trace
                 )
+                rag_tracer.score_retrieval(trace, chunks, request.use_hybrid, search_mode)
 
                 if not chunks:
                     yield f"data: {json.dumps({'answer': 'No relevant information found.', 'sources': [], 'done': True})}\n\n"
                     return
 
                 # Send metadata first
-                yield f"data: {json.dumps({'sources': sources, 'chunks_used': len(chunks), 'search_mode': search_mode})}\n\n"
+                yield f"data: {json.dumps({'sources': sources, 'chunks_used': len(chunks), 'search_mode': search_mode, 'trace_id': trace_id})}\n\n"
 
                 # Record the prompt the client will send (generate_rag_answer_stream builds the plain one)
                 with rag_tracer.trace_prompt_construction(trace, chunks) as prompt_span:
@@ -268,11 +285,12 @@ async def ask_question_stream(
                             yield f"data: {json.dumps({'chunk': text_chunk})}\n\n"
 
                         if chunk.get("done", False):
-                            rag_tracer.end_generation(gen_span, full_response, request.model)
+                            rag_tracer.end_generation(gen_span, full_response, request.model, chunk.get("usage"))
                             yield f"data: {json.dumps({'answer': full_response, 'done': True})}\n\n"
                             break
 
                 rag_tracer.end_request(trace, full_response, time.time() - start_time)
+                online_judge.schedule(trace_id, request.query, full_response, chunks)
 
                 # Store response in exact match cache
                 if cache_client and full_response:

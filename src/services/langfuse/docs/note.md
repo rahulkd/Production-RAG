@@ -77,4 +77,4 @@ Optional tuning once the blocking flush is gone:
 
 ## Related, not part of this task
 
-- The LLM call is recorded as a plain span, so token and cost columns in Langfuse are empty. See "Not yet observable" in [langfuse_design_workflow.md](langfuse_design_workflow.md).
+- The online LLM judge (`judge.py`) and the score/feedback calls send through the same SDK queue. They are not affected by this change; the per-request flush only ever blocked the request itself.

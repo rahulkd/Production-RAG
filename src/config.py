@@ -148,6 +148,12 @@ class BedrockSettings(BaseConfigSettings):
     rag_temperature: float = Field(0.0, ge=0.0, le=1.0)
     rag_top_p: float = Field(1.0, gt=0.0, le=1.0)
 
+    # On-demand price of model_id in USD per 1M tokens, used to report cost to
+    # Langfuse. Llama 3.3 70B on Bedrock: $0.72 in / $0.72 out. Update these if
+    # model_id or the AWS price changes.
+    input_price_per_1m_tokens: float = Field(0.72, ge=0.0)
+    output_price_per_1m_tokens: float = Field(0.72, ge=0.0)
+
     # Transport
     connect_timeout: int = 10
     read_timeout: int = 300
@@ -172,6 +178,15 @@ class LangfuseSettings(BaseConfigSettings):
     max_retries: int = 3
     timeout: int = 30
     debug: bool = False
+
+    # Online LLM-as-judge: scores each uncached answer in the background with
+    # the Phase 4 rubrics (src/evaluation/generation/prompts). Each judged
+    # answer costs up to 4 judge calls; lower the sample rate to cut that, and
+    # disable it during evaluation runs, which already judge offline.
+    judge_enabled: bool = True
+    judge_model: str = "deepseek.v3.2"
+    judge_sample_rate: float = Field(1.0, ge=0.0, le=1.0)
+    judge_max_tokens: int = 4000
 
 
 class RedisSettings(BaseConfigSettings):

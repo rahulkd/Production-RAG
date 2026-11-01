@@ -8,6 +8,7 @@ import { sourceTitle, type RagLatency, type RagSettings } from "@/lib/rag";
 /** One decoded `data:` frame from the backend's /api/v1/stream response. */
 type StreamFrame = {
   sources?: string[];
+  trace_id?: string | null;
   chunks_used?: number;
   search_mode?: string;
   chunk?: string;
@@ -78,6 +79,7 @@ async function* readFrames(body: ReadableStream<Uint8Array>) {
 type AskResponse = {
   answer: string;
   sources: string[];
+  trace_id?: string | null;
 };
 
 const errorFrom = async (response: Response) => {
@@ -136,7 +138,7 @@ export const createRagAdapter = (
           ...body.sources.map(toSourcePart),
         ],
         status: { type: "complete", reason: "stop" },
-        metadata: { custom: { latency } },
+        metadata: { custom: { latency, traceId: body.trace_id ?? undefined } },
       };
       return;
     }
@@ -144,6 +146,7 @@ export const createRagAdapter = (
     let text = "";
     let sources: SourceMessagePart[] = [];
     let firstTokenMs: number | undefined;
+    let traceId: string | undefined;
     const latency = (): RagLatency => ({
       endpoint: "stream",
       firstTokenMs,
@@ -155,6 +158,10 @@ export const createRagAdapter = (
 
       if (frame.sources) {
         sources = frame.sources.map(toSourcePart);
+      }
+
+      if (frame.trace_id) {
+        traceId = frame.trace_id;
       }
 
       if (frame.chunk) {
@@ -172,7 +179,7 @@ export const createRagAdapter = (
         yield {
           content: [{ type: "text", text }, ...sources],
           status: { type: "complete", reason: "stop" },
-          metadata: { custom: { latency: latency() } },
+          metadata: { custom: { latency: latency(), traceId } },
         };
         return;
       }
@@ -186,7 +193,7 @@ export const createRagAdapter = (
     yield {
       content: [{ type: "text", text }, ...sources],
       status: { type: "complete", reason: "unknown" },
-      metadata: { custom: { latency: latency() } },
+      metadata: { custom: { latency: latency(), traceId } },
     };
   },
 });
