@@ -187,6 +187,10 @@ class LangfuseSettings(BaseConfigSettings):
     judge_model: str = "deepseek.v3.2"
     judge_sample_rate: float = Field(1.0, ge=0.0, le=1.0)
     judge_max_tokens: int = 4000
+    # On-demand price of judge_model in USD per 1M tokens, for the cost on the
+    # rag_judge traces. DeepSeek V3.2 on Bedrock (US): $0.62 in / $1.85 out.
+    judge_input_price_per_1m_tokens: float = Field(0.62, ge=0.0)
+    judge_output_price_per_1m_tokens: float = Field(1.85, ge=0.0)
 
 
 class RedisSettings(BaseConfigSettings):

@@ -4,16 +4,19 @@ import time
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional
 
-from src.config import BedrockSettings, get_settings
+from src.config import get_settings
 
 from .client import LangfuseTracer
 
 
-def bedrock_usage(usage: Optional[Dict[str, Any]], prices: BedrockSettings) -> Optional[Dict[str, Any]]:
+def bedrock_usage(
+    usage: Optional[Dict[str, Any]], input_price_per_1m: float, output_price_per_1m: float
+) -> Optional[Dict[str, Any]]:
     """Convert Bedrock Converse usage into Langfuse usage with cost.
 
     :param usage: Converse ``usage`` (``inputTokens``, ``outputTokens``, ``totalTokens``).
-    :param prices: Settings holding the per-1M-token prices of the generator model.
+    :param input_price_per_1m: USD per 1M input tokens of the model that was called.
+    :param output_price_per_1m: USD per 1M output tokens.
     :returns: Langfuse usage dict, or None when Bedrock reported no usage.
     """
     if not usage:
@@ -21,8 +24,8 @@ def bedrock_usage(usage: Optional[Dict[str, Any]], prices: BedrockSettings) -> O
 
     input_tokens = int(usage.get("inputTokens", 0))
     output_tokens = int(usage.get("outputTokens", 0))
-    input_cost = input_tokens * prices.input_price_per_1m_tokens / 1_000_000
-    output_cost = output_tokens * prices.output_price_per_1m_tokens / 1_000_000
+    input_cost = input_tokens * input_price_per_1m / 1_000_000
+    output_cost = output_tokens * output_price_per_1m / 1_000_000
     return {
         "unit": "TOKENS",
         "input": input_tokens,
@@ -177,7 +180,7 @@ class RAGTracer:
         self.tracer.update_generation(
             generation,
             output={"response": response, "response_length": len(response), "model_used": model},
-            usage=bedrock_usage(usage, self.prices),
+            usage=bedrock_usage(usage, self.prices.input_price_per_1m_tokens, self.prices.output_price_per_1m_tokens),
         )
 
     def end_request(self, trace, response: str, total_duration: float):

@@ -70,6 +70,36 @@ class LangfuseTracer:
             logger.error(f"Error creating Langfuse trace: {e}")
             yield None
 
+    def create_trace(
+        self,
+        name: str,
+        trace_id: Optional[str] = None,
+        input_data: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        tags: Optional[list] = None,
+    ):
+        """
+        Create a standalone trace (outside a request), e.g. for background judging.
+
+        Args:
+            name: Trace name
+            trace_id: Optional explicit id
+            input_data: Trace input
+            metadata: Trace metadata
+            tags: Trace tags
+
+        Returns:
+            Trace object if successful, None otherwise
+        """
+        if not self.client:
+            return None
+
+        try:
+            return self.client.trace(id=trace_id, name=name, input=input_data, metadata=metadata or {}, tags=tags)
+        except Exception as e:
+            logger.error(f"Error creating trace {name}: {e}")
+            return None
+
     def create_span(
         self,
         trace,

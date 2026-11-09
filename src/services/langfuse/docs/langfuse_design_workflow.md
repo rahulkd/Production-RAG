@@ -144,7 +144,7 @@ Every span records a start and end time, so Langfuse shows how long each step to
 
 **Heuristic scores** are computed in the request from data it already has, with no extra calls ([tracer.py](../tracer.py) `score_retrieval`).
 
-**Judge scores** come from [judge.py](../judge.py) (`OnlineJudge`). It reuses the offline evaluation's `Judge` class and rubrics, so live scores mean the same as the Phase 4 numbers. It runs as a background task after the response is sent, so it adds no user latency. It writes only scores, never spans, so it doesn't stretch the trace's latency.
+**Judge scores** come from [judge.py](../judge.py) (`OnlineJudge`). It reuses the offline evaluation's `Judge` class and rubrics, so live scores mean the same as the Phase 4 numbers. It runs as a background task after the response is sent, so it adds no user latency. Its scores go on the `rag_request` trace. Its 4 calls (prompt, reply, tokens, cost) go in a **separate `rag_judge` trace** with id `<rag_request trace id>-judge`, tagged `judge`, with `parent_trace_id` in its metadata. Keeping them out of `rag_request` leaves that trace's latency at what the user waited for. It also lets the dashboard split generator cost from judge cost by trace name.
 - A judged answer costs up to 4 DeepSeek V3.2 calls (refusal, relevance, claims, faithfulness). Refusals stop after the first call.
 - `LANGFUSE__JUDGE_SAMPLE_RATE` controls the fraction of answers judged.
 - On shutdown, the API waits up to 30 s for pending judgments.
@@ -234,6 +234,7 @@ Langfuse v2 doesn't delete old traces automatically. Data grows in the `langfuse
 | `LANGFUSE__JUDGE_MODEL` | `deepseek.v3.2` | Judge model (same as Phase 4) |
 | `LANGFUSE__JUDGE_SAMPLE_RATE` | `1.0` | Fraction of uncached answers judged |
 | `LANGFUSE__JUDGE_MAX_TOKENS` | `4000` | Judge reply budget |
+| `LANGFUSE__JUDGE_INPUT_PRICE_PER_1M_TOKENS` / `LANGFUSE__JUDGE_OUTPUT_PRICE_PER_1M_TOKENS` | `0.62` / `1.85` | USD price of the judge model (DeepSeek V3.2, Bedrock US), used for the cost on `rag_judge` traces |
 | `BEDROCK__INPUT_PRICE_PER_1M_TOKENS` / `BEDROCK__OUTPUT_PRICE_PER_1M_TOKENS` | `0.72` / `0.72` | USD price of the generator model, used for the cost sent to Langfuse. Update if the model or AWS price changes |
 
 First-time setup: open http://localhost:3000, sign up, create an organization and project, create API keys, put them in `.env`, then restart `rag-api`.
